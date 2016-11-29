@@ -44,17 +44,19 @@ OmWebServer s;
 void setup() 
 {
   Serial.begin(115200);
+  Serial.print("\n\nHello OmEspHelpers\n");
 
   p.beginPage("Home");
-  p.addButton("ledOn", buttonProc, 0);
-  p.addButton("ledOff", buttonProc, 1);
+  p.addButton("ledOn", buttonProc, 0); // ref=0
+  p.addButton("ledOff", buttonProc, 1); // ref=1
   p.addButton("ledMomentary", buttonMomentaryProc);
   
-  s.addWifi("Omino Impulse", ""); // my home network, no password
+  s.addWifi("omino warp", ""); // my home network, no password
   s.setHandler(p);
   s.setStatusLedPin(-1); // tell the server not to blink the led; this app uses it.
 
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, 1); // off
 }
 
 void loop() 
@@ -63,3 +65,28 @@ void loop()
   delay(20);
 }
 ```
+
+When run the sketch, I see the following on the serial monitor:
+
+```
+0x2d
+csum 0x2d
+v7b32e6ad
+~ld
+
+
+Hello OmEspHelpers
+  15.53 (*) OmWebServer.80: On port 80
+  15.62 (*) OmWebServer.80: Attempting to join wifi network "omino warp"
+  22.34 (*) OmWebServer.80: Joined wifi network "omino warp"
+  22.34 (*) OmWebServer.80: Accessible at http://10.0.3.126:80
+  28.40 (*) OmWebServer.80: Request from 114.3.0.10:60383 /
+  28.40 (*) OmWebServer.80: Replying 2277 bytes
+  30.55 (*) OmWebServer.80: Request from 114.3.0.10:60386 /Home
+  30.57 (*) OmWebServer.80: Replying 2977 bytes
+  ...and so on ...
+```
+
+And when I point my browser at http://10.0.3.126:80 I see a simple UI:
+
+![screen shot](img/screenshot1.jpg)
