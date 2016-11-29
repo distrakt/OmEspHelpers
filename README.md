@@ -13,6 +13,11 @@ It is perhaps too limited for serious production, but you can decide.
 
 I have only run this library on a Wemos D1 Mini. It is expected to work on other Arduino ESP8266 boards.
 
+## Installation ##
+
+Put OmEspHelper/ into the Arduino libraries folder, like ```.../Documents/Arduino/libraries/OmEspHelper/``` on Mac. You 
+can read the headers and source in `.../OmEspHelpers/src```.
+
 ## Example ##
 
 Here is an example sketch which brings up a Web Controlled LED.
@@ -38,6 +43,8 @@ OmWebServer s;
 
 void setup() 
 {
+  Serial.begin(115200);
+
   p.beginPage("Home");
   p.addButton("ledOn", buttonProc, 0);
   p.addButton("ledOff", buttonProc, 1);
