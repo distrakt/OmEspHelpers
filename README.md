@@ -15,8 +15,10 @@ I have only run this library on a Wemos D1 Mini. It is expected to work on other
 
 ## Installation ##
 
-Put OmEspHelpers/ into the Arduino libraries folder, like ```.../Documents/Arduino/libraries/OmEspHelpers/``` on Mac. You 
-can read the headers and source in `.../OmEspHelpers/src```.
+1. Download and expand the zip file of this project.
+1. Rename the folder from OmEspHelpers-master to just OmEspHelpers. 
+1. Put OmEspHelpers/ into the Arduino libraries folder, like ```.../Documents/Arduino/libraries/OmEspHelpers/``` on Mac.
+1.You can read the headers and source in `.../OmEspHelpers/src```.
 
 ## Example ##
 
