@@ -27,23 +27,25 @@ void setup()
   // Configure the web pages
   // This is just setting them up; they'll be delivered
   // by the web server when queried.
-  p.beginPage("page_1");
-  p.addPageLink("page_2"); // shows up as a button.
+  p.beginPage("page 1");
+  p.addPageLink("page 2"); // shows up as a button.
 
   // This html code is executed on each request, so
   // current values and state can be shown.
   p.addHtml([] (OmXmlWriter &w, int ref1, void *ref2)
   {
     w.addContent("welcome to page 1");
-    w.addElement("br");
-    w.addContent("the milliseconds are:");
+    w.addElement("hr");
+    w.addContent("the milliseconds are...");
+    w.beginElement("center");
     w.beginElement("h1");
     w.addContentF("%dms", millis());
     w.endElement();
+    w.endElement();
   });
   
-  p.beginPage("page_2");
-  p.addPageLink("page_1");
+  p.beginPage("page 2");
+  p.addPageLink("page 1");
   p.addHtml([] (OmXmlWriter &w, int ref1, void *ref2)
   {
     w.addContent("welcome to page 2");

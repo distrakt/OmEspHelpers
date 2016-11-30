@@ -47,10 +47,21 @@ public:
     {
         this->path = "";
         this->query.clear();
+        int rIx = 0;
         for(int ix = 0; ix <= kRequestLengthMax; ix++)
         {
-            char c = request[ix];
-            this->request[ix] = c;
+            char c = request[rIx++];
+            if(c == '%' && request[rIx] && request[rIx + 1])
+            {
+                // handle %-hex character escapes
+                this->request[ix] = omHexToInt(request + rIx, 2);
+                rIx += 2;
+            }
+            else
+            {
+                this->request[ix] = c;
+            }
+
             if(c == 0)
                 break;
         }

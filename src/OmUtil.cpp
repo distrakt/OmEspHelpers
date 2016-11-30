@@ -74,3 +74,23 @@ const char *omIpToString(unsigned long ip)
     sprintf(s, "%d.%d.%d.%d", (int)(ip >> 24) & 0xff, (int)(ip >> 16) & 0xff, (int)(ip >> 8) & 0xff, (int)(ip >> 0) & 0xff);
     return s;
 }
+
+int omHexToInt(const char *s, int digitCount)
+{
+    int result = 0;
+    while(digitCount--)
+    {
+        int d;
+        char c = *s++;
+        if(c >= '0' && c <= '9')
+            d = c - '0';
+        else if(c >= 'a' && c <= 'f')
+            d = c - 'a' + 10;
+        else if(c >= 'A' && c <= 'F')
+            d = c - 'A' + 10;
+        else break;
+        
+        result = result * 16 + d;
+    }
+    return result;
+}

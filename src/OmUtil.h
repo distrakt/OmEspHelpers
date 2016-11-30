@@ -13,5 +13,6 @@ bool omStringEqual(const char *s1, const char *s2, int maxLen = 100);
 const char *omTime(unsigned long int millis);
 int omStringToInt(const char *s);
 const char *omIpToString(unsigned long ip);
+int omHexToInt(const char *s, int digitCount);
 
 #endif /* defined(__OmUtil__) */
