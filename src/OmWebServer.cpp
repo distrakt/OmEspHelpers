@@ -55,13 +55,6 @@ public:
     }
 };
 
-static const char *ipToString(unsigned long ip)
-{
-    static char s[20];
-    sprintf(s, "%d.%d.%d.%d", (int)(ip >> 24) & 0xff, (int)(ip >> 16) & 0xff, (int)(ip >> 8) & 0xff, (int)(ip >> 0) & 0xff);
-    return s;
-}
-
 OmWebServer::OmWebServer(int port)
 {
     this->p = new OmWebServerPrivates();
@@ -114,7 +107,7 @@ void OmWebServer::maybeStatusCallback(bool trying, bool failure, bool success)
     if(success)
     {
         this->p->printf("Joined wifi network \"%s\"\n", ssid);
-        this->p->printf("Accessible at http://%s:%d\n", ipToString(this->getIp()), this->getPort());
+        this->p->printf("Accessible at http://%s:%d\n", omIpToString(this->getIp()), this->getPort());
     }
     
     if(this->p->statusCallback)
@@ -246,8 +239,8 @@ void OmWebServer::handleRequest()
     }
     
     int remotePort = this->p->webServer->client().remotePort();
-    IPAddress remoteIp = this->p->webServer->client().remoteIP();
-    this->p->printf("Request from %s:%d %s\n", ipToString(remoteIp), remotePort, uriS.c_str());
+    IPAddress remoteIp = this->getClientIp();
+    this->p->printf("Request from %s:%d %s\n", omIpToString(remoteIp), remotePort, uriS.c_str());
     
     if(this->p->requestHandler)
     {
@@ -279,7 +272,6 @@ void OmWebServer::handleRequest()
         this->p->printf(h1);
         this->p->printf(h2);
     }
-    
 }
 
 const char *OmWebServer::getSsid()

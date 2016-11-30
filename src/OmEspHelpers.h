@@ -10,6 +10,7 @@
 #define OmEspHelpers_OminoEspHelpers_h
 
 #include "OmUtil.h"
+#include "OmWebServer.h"
 #include "OmWebPages.h"
 #include "OmWebRequest.h"
 #include "OmXmlWriter.h"

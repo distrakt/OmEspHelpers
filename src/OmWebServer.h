@@ -28,6 +28,8 @@
  * The IP address will also be "blinked" on the BUILTIN_LED.
  */
 
+#ifndef __OmWebServer__
+#define __OmWebServer__
 
 #include <vector>
 #include <ESP8266WebServer.h>
@@ -76,3 +78,5 @@ public:
     /// public for callback purposes, not user-useful
     void handleRequest();
 };
+
+#endif // __OmWebServer__

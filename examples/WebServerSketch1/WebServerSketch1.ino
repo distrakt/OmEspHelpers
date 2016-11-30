@@ -1,20 +1,15 @@
 
 /*
  * 2016-11-26 dvb
- * Work on OmServer, so that its messages tend to
- * help a new user bootstrap to it.
+ * An example server with two pages and buttons to go between them.
  */
-#include "Arduino.h"
-#include "OmBlinker.h"
-#include "OmWebServer.h"
 #include <OmEspHelpers.h>
 
 // These includes arent used in this file, but tells Arduino IDE that this project uses them.
 #include <ESP8266WebServer.h> 
 #include <ESP8266WiFi.h> 
 
-OmBlinker ob(-1);
-OmWebServer w;
+OmWebServer s;
 OmWebPages p;
 
 void setup() 
@@ -22,24 +17,49 @@ void setup()
   Serial.begin(115200);
   Serial.printf("\n\n\nWelcome to the Sketch\n\n");
 
-  ob.addNumber(1234);
+  // Add networks to attempt connection with.
+  // It will go down the list and repeat until on succeeds.
+  // This only happens when tick() is called.
+  s.addWifi("connection will fail", "haha");
+  s.addWifi("omino warp", "0123456789");
+  s.addWifi("caffe pergolesi", "yummylatte");
 
-  w.addWifi("noope", "haha");
-  w.addWifi("omino warp", "0123456789");
+  // Configure the web pages
+  // This is just setting them up; they'll be delivered
+  // by the web server when queried.
+  p.beginPage("page_1");
+  p.addPageLink("page_2"); // shows up as a button.
 
-  w.setHandler(p);
+  // This html code is executed on each request, so
+  // current values and state can be shown.
+  p.addHtml([] (OmXmlWriter &w, int ref1, void *ref2)
+  {
+    w.addContent("welcome to page 1");
+    w.addElement("br");
+    w.addContent("the milliseconds are:");
+    w.beginElement("h1");
+    w.addContentF("%dms", millis());
+    w.endElement();
+  });
+  
+  p.beginPage("page_2");
+  p.addPageLink("page_1");
+  p.addHtml([] (OmXmlWriter &w, int ref1, void *ref2)
+  {
+    w.addContent("welcome to page 2");
+    w.addElement("hr");
+    w.beginElement("pre");
+    w.addContentF("serverIp: %s\n", omIpToString(s.getIp()));
+    w.addContentF("  yourIp: %s\n", omIpToString(s.getClientIp()));
+    w.endElement();
+  });
+    
+  s.setHandler(p);
 }
 
 int ticks = 0;
 void loop() 
 {
   delay(10);
-  ob.tick();
-  w.tick();
-
-  ticks++;
-  if(ticks % 1000 == 0)
-  {
-    ob.addInterjection(10, 2);
-  }
+  s.tick();
 }

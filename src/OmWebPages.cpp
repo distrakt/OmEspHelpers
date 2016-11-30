@@ -426,16 +426,6 @@ void OmWebPages::renderTopMenu(OmXmlWriter &w)
     if(this->headerProc)
         this->headerProc(w, 0, 0);
     
-    if(this->pages.size() == 0)
-    {
-        w.addElement("hr");
-        w.beginElement("pre");
-        w.addContent("OmWebPages\n");
-        w.addContent("No pages, try omWebPages.beginPage(\"pageName\")");
-        w.addContent("              omWebPages.addButton(\"buttonName\")");
-        w.endElement();
-        w.addElement("hr");
-    }
     for(Page *page : this->pages)
     {
         w.beginElement("a");
@@ -494,6 +484,19 @@ PageItem *OmWebPages::findPageItem(const char *pageName, const char *itemName)
 bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAndQuery)
 {
     OmXmlWriter w(output, outputSize);
+    if(this->pages.size() == 0)
+    {
+        w.addElement("hr");
+        w.beginElement("pre");
+        w.addContent("OmWebPages\n");
+        w.addContent("No pages, try omWebPages.beginPage(\"pageName\")\n");
+        w.addContent("              omWebPages.addButton(\"buttonName\")\n");
+        w.addContent("\n");
+        w.endElement();
+        w.addElement("hr");
+        return false;
+    }
+
     Page *page = 0;
     
     output[0] = 0; // safety.
