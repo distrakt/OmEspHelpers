@@ -455,7 +455,8 @@ void OmWebPages::renderTopMenu(OmXmlWriter &w)
 
 void OmWebPages::renderPageButton(OmXmlWriter &w, const char *pageName)
 {
-    w.beginElement("a", "href", pageName);
+    w.beginElement("a");
+    w.addAttributeF("href", "/%s", pageName);
     w.beginElement("span", "class", "box2");
     w.addContent(pageName);
     w.endElement();
