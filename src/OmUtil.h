@@ -14,5 +14,6 @@ const char *omTime(unsigned long int millis);
 int omStringToInt(const char *s);
 const char *omIpToString(unsigned long ip);
 int omHexToInt(const char *s, int digitCount);
+void omHsvToRgb(unsigned char *hsvIn, unsigned char *rgbOut);
 
 #endif /* defined(__OmUtil__) */

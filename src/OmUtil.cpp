@@ -94,3 +94,51 @@ int omHexToInt(const char *s, int digitCount)
     }
     return result;
 }
+
+void omHsvToRgb(unsigned char *hsvIn, unsigned char *rgbOut)
+{
+    unsigned char h = hsvIn[0];
+    unsigned char s = hsvIn[1];
+    unsigned char v = hsvIn[2];
+    
+    s = 255 - s; // now it's more like the "whiteness level", or min per component
+    s = s * v / 255; // scaled by brightness.
+
+#define otrMap(_x, _inLow, _inHigh, _outLow, _outHigh) (_x - _inLow) * (_outHigh - _outLow) / (_inHigh - _inLow) + _outLow
+    if(h < 43)
+    {
+        rgbOut[0] = v;
+        rgbOut[1] = otrMap(h, 0, 43, s, v);
+        rgbOut[2] = s;
+    }
+    else if(h < 85)
+    {
+        rgbOut[0] = otrMap(h, 43, 85, v, s);
+        rgbOut[1] = v;
+        rgbOut[2] = s;
+    }
+    else if(h < 128)
+    {
+        rgbOut[0] = s;
+        rgbOut[1] = v;
+        rgbOut[2] = otrMap(h, 85, 128, s, v);
+    }
+    else if(h < 170)
+    {
+        rgbOut[0] = s;
+        rgbOut[1] = otrMap(h, 128, 170, v, s);
+        rgbOut[2] = v;
+    }
+    else if(h < 213)
+    {
+        rgbOut[0] = otrMap(h, 170, 217, s, v);
+        rgbOut[1] = s;
+        rgbOut[2] = v;
+    }
+    else if(h <= 255)
+    {
+        rgbOut[0] = v;
+        rgbOut[1] = s;
+        rgbOut[2] = otrMap(h, 213, 256, v, s);
+    }
+}

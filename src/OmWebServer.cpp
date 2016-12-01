@@ -33,6 +33,8 @@ public:
     int wifiIndex = 0; // which wifi currently trying or achieved.
     int requestCount = 0;
     
+    int lastWifiStatus = -99;
+    
     OmBlinker b = OmBlinker(LED_BUILTIN);
     
     bool doSerial = true;
@@ -151,6 +153,7 @@ void OmWebServer::begin()
     this->p->state = OWS_CONNECTING_TO_WIFI;
     this->startWifiTry();
     
+    // flash the "3-blinks" connecting pattern.
     this->p->b.clear();
     this->p->b.addBlink(1,1);
     this->p->b.addBlink(1,1);
@@ -168,6 +171,13 @@ static void handleRequest0(OmWebServer *instance)
 void OmWebServer::tick()
 {
     this->p->b.tick();
+    
+    int wifiStatus = WiFi.status();
+    if(wifiStatus != this->p->lastWifiStatus)
+    {
+        this->p->lastWifiStatus = wifiStatus;
+        this->p->printf("Wifi status became: %d\n", wifiStatus);
+    }
     
     switch(this->p->state)
     {
@@ -211,6 +221,12 @@ void OmWebServer::tick()
             
         case OWS_RUNNING:
         {
+            if(wifiStatus != WL_CONNECTED)
+            {
+                // Lost connection, jump back into loop. Pardon the clunky state machine.
+                this->p->state = OWS_BEGIN;
+            }
+
             this->p->webServer->handleClient();
         }
     }
