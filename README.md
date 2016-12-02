@@ -23,7 +23,7 @@ It is perhaps too limited for serious production, but you can decide.
 | Mobile ready        | The generated HTML works well on your phone, and is fine on desktop. |
 | LED status          | By default, LED_BUILTIN blinks out the last part of the device's IP address. Also flashes for network activity |
 | Easy to use         | The example below shows how a dozen lines of code or less brings up your IoT user interface in a browser |
-| Conformat HTML      | The generated HTML passes https://validator.w3.org/
+| Conformant HTML      | The generated HTML passes https://validator.w3.org/
 
 ## Platforms ##
 
@@ -33,8 +33,8 @@ I have only run this library on a Wemos D1 Mini. It is expected to work on other
 
 1. Download and expand the zip file of this project.
 1. Rename the folder from OmEspHelpers-master to just OmEspHelpers. 
-1. Put OmEspHelpers/ into the Arduino libraries folder, like ```.../Documents/Arduino/libraries/OmEspHelpers/``` on Mac.
-1. You can read the headers and source in `.../OmEspHelpers/src```.
+1. Put OmEspHelpers/ into the Arduino libraries folder, like `.../Documents/Arduino/libraries/OmEspHelpers/` on Mac.
+1. You can read the headers and source in `.../OmEspHelpers/src`.
 
 ## Example ##
 
