@@ -9,6 +9,22 @@ This library presents a very simple API for bringing up a web interface on your
 
 It is perhaps too limited for serious production, but you can decide.
 
+## Features ##
+
+| Name                | Description |
+| ------------------- | ----------- |
+| Non blocking        | A single tick() function does everything, never blocking |
+| Fast start          | Your main loop can be running other things, even while the initial wifi connection is established |
+| Connection management | Connection will be retried if lost |
+| Multiple WiFi credentials | You can specify a list of different WiFi credentials to try |
+| Basic UI elements   | With one line of code each, you can add buttons, sliders, or page links |
+| Custom HTML         | You can write a callback to provide custom content, such as a status page |
+| No stored pages     | To simplify development, you write only your sketch, no handwritten HTML pages |
+| Mobile ready        | The generated HTML works well on your phone, and is fine on desktop. |
+| LED status          | By default, LED_BUILTIN blinks out the last part of the device's IP address. Also flashes for network activity |
+| Easy to use         | The example below shows how a dozen lines of code or less brings up your IoT user interface in a browser |
+| Conformat HTML      | The generated HTML passes https://validator.w3.org/
+
 ## Platforms ##
 
 I have only run this library on a Wemos D1 Mini. It is expected to work on other Arduino ESP8266 boards.
