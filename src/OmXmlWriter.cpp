@@ -77,8 +77,13 @@ static int putSome(char *writeHere, const char *s)
 }
 
 // either for element or for attribute. attributes need &#10; and &#13; for line breaks.
-static void doEscapes(const char *sIn, char *sOut, bool forElement = false)
+// return 0 for ok, 1 for errors.
+static int doEscapes(const char *sIn, int outSize, char *sOut,
+                     bool forElement = false,
+                     bool isUrl = false)
 {
+    int position = 0;
+    
     if(forElement)
     {
         // if there's any '<' or some others do cdata.
@@ -99,35 +104,52 @@ static void doEscapes(const char *sIn, char *sOut, bool forElement = false)
         if(hasLt)
         {
             sInW = sIn;
-            sOut += putSome(sOut, "<![CDATA[");
+            position = putSome(position + sOut, "<![CDATA[");
             while(char c = *sIn++)
-                *sOut++ = c;
-            sOut += putSome(sOut, "]]>");
-            *sOut++ = 0;
-            return;
+            {
+                sOut[position++] = c;
+                if(position >= outSize - 3)
+                {
+                    sOut[position] = 0;
+                    return 1;
+                }
+            }
+            position += putSome(position + sOut, "]]>");
+            sOut[position++] = 0;
+            return 0;
         }
     }
     
     while(char c = *sIn++)
     {
+        if(outSize - position < 10)
+            return 1;
+        
         switch(c)
         {
             case '"':
-                sOut += putSome(sOut, "&quot;");
+                position += putSome(position + sOut, "&quot;");
                 break;
             case '<':
-                sOut += putSome(sOut, "&lt;");
+                position += putSome(position + sOut, "&lt;");
                 break;
             case 10:
-                sOut += putSome(sOut, "&#10;");
+                position += putSome(position + sOut, "&#10;");
+                break;
+            case ' ':
+                if(isUrl)
+                    position += putSome(position + sOut, "%20");
+                else
+                    sOut[position++] = c;
                 break;
                 
             default:
-                *sOut++ = c;
+                sOut[position++] = c;
                 break;
         }
     }
-    *sOut++ = 0;
+    sOut[position] = 0;
+    return 0;
 }
 
 #define TINY_XML_ADD_MAX 1000
@@ -154,8 +176,7 @@ void OmXmlWriter::addAttribute(const char *attribute, const char *value)
     if(attribute && value)
     {
         char valueEscaped[TINY_XML_ADD_MAX];
-        char *w = &valueEscaped[0];
-        doEscapes(value, w);
+        this->errorCount += doEscapes(value, sizeof(valueEscaped), valueEscaped);
         
         this->putf(" %s=\"%s\"",attribute,valueEscaped);
     }
@@ -167,8 +188,27 @@ void OmXmlWriter::addAttributeF(const char *attribute, const char *fmt,...)
     va_list ap;
     va_start(ap,fmt);
     vsnprintf(value,sizeof(value),fmt,ap);
-    putf(" %s=\"%s\"",attribute,value);
+    
+    char valueEscaped[TINY_XML_ADD_MAX];
+    this->errorCount += doEscapes(value, sizeof(valueEscaped), valueEscaped);
+
+    putf(" %s=\"%s\"",attribute,valueEscaped);
 }
+
+void OmXmlWriter::addAttributeUrlF(const char *attribute, const char *fmt,...)
+{
+    char value[TINY_XML_ADD_MAX];
+    va_list ap;
+    va_start(ap,fmt);
+    vsnprintf(value,sizeof(value),fmt,ap);
+    
+    char valueEscaped[TINY_XML_ADD_MAX];
+    this->errorCount += doEscapes(value, sizeof(valueEscaped), valueEscaped, false, true);
+    
+    putf(" %s=\"%s\"",attribute,valueEscaped);
+}
+
+
 
 void OmXmlWriter::addAttribute(const char *attribute, int value)
 {

@@ -81,6 +81,9 @@ public:
     /// Adds an attribute to an element, using printf semantics
     void addAttributeF(const char *attribute, const char *fmt,...);
     
+    /// Adds an attribute to an element, using printf semantics, and %20 escapes.
+    void addAttributeUrlF(const char *attribute, const char *fmt,...);
+    
     /// Adds an attribute to an element from an integer
     void addAttribute(const char *attribute, int value);
     

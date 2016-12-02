@@ -42,7 +42,7 @@ public:
             w.addContent("    ");
             
             w.beginElement("a");
-            w.addAttributeF("href", "/%s?page=%s&item=%s", button->pageLink, this->name, button->name);
+            w.addAttributeUrlF("href", "/%s?page=%s&item=%s", button->pageLink, this->name, button->name);
             w.addContentF("%s", button->name);
             w.endElement();
             
@@ -62,7 +62,7 @@ public:
     void render(OmXmlWriter &w, Page *inPage) override
     {
         w.beginElement("a");
-        w.addAttributeF("href", "/%s?page=%s&item=%s", this->pageLink, inPage->name, this->name);
+        w.addAttributeUrlF("href", "/%s?page=%s&item=%s", this->pageLink, inPage->name, this->name);
         
         w.beginElement("div");
         w.addAttribute("class", "box1");
@@ -118,6 +118,7 @@ public:
         w.addAttributeF("oninput", "sliderSlide(this,'%s','%s')", inPage->name, this->name);
         w.endElement(); // input
         w.endElement(); // form
+        w.addElement("br");
         w.endElement(); // div
     }
     
@@ -278,7 +279,7 @@ void OmWebPages::renderTree(OmXmlWriter &w)
     {
         w.beginElement("b");
         w.beginElement("a");
-        w.addAttributeF("href", "/%s", page->name);
+        w.addAttributeUrlF("href", "/%s", page->name);
         w.addContentF("%s", page->name);
         w.endElement();
         w.endElement();
@@ -303,6 +304,7 @@ void OmWebPages::renderStyle(OmXmlWriter &w)
                  "pre a:link {text-decoration: underline; }\n"
                  ".sliderValue { display:inline-block; width:100px } \n"
                  "\n");
+    w.addContent("h1,h2,h3 { text-align:center }\n");
     w.addContentF(" .box1,.box2,.button { font-size:30px; width:420px ; margin:10px; "
                  "padding:10px ; background:%s;"
                  "border-top-left-radius:15px;"
@@ -421,7 +423,7 @@ void OmWebPages::renderTopMenu(OmXmlWriter &w)
 {
     this->wp = &w;
     
-    this->renderPageBeginning(w, "");
+    this->renderPageBeginning(w, "top");
     
     if(this->headerProc)
         this->headerProc(w, 0, 0);
@@ -429,7 +431,7 @@ void OmWebPages::renderTopMenu(OmXmlWriter &w)
     for(Page *page : this->pages)
     {
         w.beginElement("a");
-        w.addAttributeF("href", "/%s", page->name);
+        w.addAttributeUrlF("href", "/%s", page->name);
         
         w.beginElement("div");
         w.addAttribute("class", "box1");
@@ -446,7 +448,7 @@ void OmWebPages::renderTopMenu(OmXmlWriter &w)
 void OmWebPages::renderPageButton(OmXmlWriter &w, const char *pageName)
 {
     w.beginElement("a");
-    w.addAttributeF("href", "/%s", pageName);
+    w.addAttributeUrlF("href", "/%s", pageName);
     w.beginElement("span", "class", "box2");
     w.addContent(pageName);
     w.endElement();
@@ -484,6 +486,9 @@ PageItem *OmWebPages::findPageItem(const char *pageName, const char *itemName)
 bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAndQuery)
 {
     OmXmlWriter w(output, outputSize);
+    output[0] = 0; // safety.
+
+    w.addContent("<!DOCTYPE html>\n");
     if(this->pages.size() == 0)
     {
         w.addElement("hr");
@@ -499,7 +504,6 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
 
     Page *page = 0;
     
-    output[0] = 0; // safety.
     
     bool result = false;
     this->requestsAll++;
@@ -557,17 +561,17 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     }
     
     this->renderPageBeginning(w, page->name);
+    w.addContent("\n");
     
     this->wp = &w;
     if(this->headerProc && page->allowHeader)
         this->headerProc(w, 0, 0);
     
     {
-        w.beginElement("center");
         w.beginElement("h2");
         w.addContent(page->name);
         w.endElement();
-        w.endElement();
+        w.addContent("\n");
     }
     
     for(PageItem *b : page->items)
@@ -579,6 +583,7 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     if(this->footerProc && page->allowFooter)
         this->footerProc(w, 0, 0);
     
+    w.addContent("\n");
     w.endElements();
     result = true;
     
