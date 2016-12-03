@@ -37,10 +37,8 @@ void setup()
     w.addContent("welcome to page 1");
     w.addElement("hr");
     w.addContent("the milliseconds are...");
-    w.beginElement("center");
     w.beginElement("h1");
     w.addContentF("%dms", millis());
-    w.endElement();
     w.endElement();
   });
   

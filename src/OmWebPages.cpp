@@ -406,13 +406,16 @@ void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle)
 {
     w.beginElement("html");
     w.beginElement("head");
-    w.addElement("title", pageTitle);
     
+    w.beginElement("meta", "charset", "UTF-8");
+    w.endElement();
     w.beginElement("meta");
     w.addAttribute("name", "viewport");
     w.addAttribute("content", "width=480");
     w.endElement();
     
+    w.addElement("title", pageTitle);
+
     this->renderStyle(w);
     this->renderScript(w);
     w.endElement();
