@@ -298,14 +298,14 @@ void OmWebPages::renderStyle(OmXmlWriter &w)
 {
     w.beginElement("style");
     w.addAttribute("type", "text/css");
-    w.addContent("* { font-family:arial} "
-                 "pre, pre a { font-size:24px ;font-family:Courier, monospace; word-wrap:break-word; overflow:auto; color:black}"
-                 "a:link { text-decoration: none; }\n"
-                 "pre a:link {text-decoration: underline; }\n"
-                 ".sliderValue { display:inline-block; width:100px } \n"
-                 "\n");
-    w.addContent("h1,h2,h3 { text-align:center }\n");
-    w.addContentF(" .box1,.box2,.button { font-size:30px; width:420px ; margin:10px; "
+    w.addContent("*{font-family:arial}\n");
+    w.addContent("pre, pre a{font-size:24px;font-family:Courier, monospace; word-wrap:break-word; overflow:auto; color:black}\n"
+                 "a:link { text-decoration: none;}\n"
+                 "pre a:link {text-decoration: underline;}\n"
+                 ".sliderValue { display:inline-block; width:100px}\n"
+                 );
+    w.addContent("h1,h2,h3{text-align:center}\n");
+    w.addContentF(".box1,.box2,.button{font-size:30px; width:420px ; margin:10px; "
                  "padding:10px ; background:%s;"
                  "border-top-left-radius:15px;"
                  "border-bottom-right-radius:15px;"
@@ -314,13 +314,13 @@ void OmWebPages::renderStyle(OmXmlWriter &w)
                  , colorItem
                  );
     // Not sure why I need to add more width to the button, to make it match
-    w.addContent(".button {borderz:2px solid black;width:440px;display:block}\n");
-    w.addContent(".box2 { display:inline-block ; "
-                 " font-size:22px; padding:7px ;"
-                 "width:auto ; overflow:hidden ; "
-                 "margin-right:0px; margin-top:0px}\n"); // no right margin, so they space nicely in a row
-    w.addContentF(".box1:hover,.box2:hover { background:%s;}", colorHover);
-    w.addContent(" body { width:470; padding:5px; margin:0px ; margin-top:5px}");
+    w.addContent(".button{borderz:2px solid black;width:440px;display:block}\n");
+    w.addContent(".box2{display:inline-block;"
+                 "font-size:22px; padding:7px;"
+                 "width:auto;overflow:hidden ; "
+                 "margin-right:0px;margin-top:0px}\n"); // no right margin, so they space nicely in a row
+    w.addContentF(".box1:hover,.box2:hover{background:%s;}\n", colorHover);
+    w.addContent("body{width:470px;padding:5px;margin:0px;margin-top:5px}\n");
     
     // slider styling, from http://brennaobrien.com/blog/2014/05/style-input-type-range-in-every-browser.html
     
