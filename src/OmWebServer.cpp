@@ -22,6 +22,7 @@ typedef enum
 class OmWebServerPrivates
 {
 public:
+    unsigned int ticks = 0;
     std::vector<String> ssids;
     std::vector<String> passwords;
     EOwsState state = OWS_BEGIN;
@@ -83,6 +84,7 @@ void OmWebServer::setHandler(OmRequestHandler requestHandler)
 void OmWebServer::setHandler(OmWebPages &requestHandlerPages)
 {
     this->p->requestHandlerPages = &requestHandlerPages;
+    requestHandlerPages.setOmWebServer(this);
 }
 
 
@@ -170,6 +172,7 @@ static void handleRequest0(OmWebServer *instance)
 /// call this in loop to give time to run.
 void OmWebServer::tick()
 {
+    this->p->ticks++;
     this->p->b.tick();
     
     int wifiStatus = WiFi.status();
@@ -319,4 +322,9 @@ unsigned int OmWebServer::getClientIp()
     IPAddress clientIp = this->p->webServer->client().remoteIP();
     unsigned int clientIpInt = (clientIp[0] << 24) | (clientIp[1] << 16) | (clientIp[2] << 8) | (clientIp[3] << 0);
     return clientIpInt;
+}
+
+unsigned int OmWebServer::getTicks()
+{
+    return this->p->ticks;
 }

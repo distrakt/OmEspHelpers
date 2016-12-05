@@ -74,6 +74,7 @@ public:
     unsigned int getIp();
     int getClientPort();
     unsigned int getClientIp();
+    unsigned int getTicks();
     
     /// public for callback purposes, not user-useful
     void handleRequest();

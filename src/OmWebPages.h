@@ -61,16 +61,11 @@ class Page;
 /// Internal class of OmWebPages
 class PageItem;
 
+/// External class reference to OmWebServer, for a particular back-connect use
+class OmWebServer;
+
 class OmWebPages
 {
-    std::vector<Page *> pages;
-    Page *currentPage = 0; // if a page is active.
-    
-    HtmlProc headerProc = 0;
-    HtmlProc footerProc = 0;
-    
-    OmXmlWriter *wp = 0; // writer pointer during callbacks.
-
 public:
     // +----------------------------------
     // | Setting up your pages
@@ -136,13 +131,18 @@ public:
     
     /// Maximum size of pages served
     unsigned int greatestRenderLength = 0;
+    
+    /// +----------------------------------
+    /// | For _info page only
+    void setOmWebServer(OmWebServer *omWebServer);
 
 private:
     // +----------------------------------
     // | Internal methods
     // |
     bool doAction(const char *pageName, const char *itemName);
-    void renderTree(OmXmlWriter &w);
+    void renderTree(OmXmlWriter &w); // builtin "tree" page
+    void renderInfo(OmXmlWriter &w); // builtin "_info" page
     void renderStyle(OmXmlWriter &w);
     void renderScript(OmXmlWriter &w);
     
@@ -153,6 +153,16 @@ private:
     
     Page *findPage(const char *pageName);
     PageItem *findPageItem(const char *pageName, const char *itemName);
+    
+    OmWebServer *omWebServer = NULL; // if directly connected, can show some helpful _info.
+    
+    std::vector<Page *> pages;
+    Page *currentPage = 0; // if a page is active.
+    
+    HtmlProc headerProc = 0;
+    HtmlProc footerProc = 0;
+    
+    OmXmlWriter *wp = 0; // writer pointer during callbacks.
 };
 
 #endif /* defined(__OmWebPages__) */

@@ -7,6 +7,13 @@
 
 #include "OmWebPages.h"
 
+#ifndef NOT_ARDUINO
+#include "OmWebServer.h"
+extern "C" {
+#include "user_interface.h" // system_free_space and others.
+}
+#endif
+
 class PageItem
 {
 public:
@@ -290,6 +297,40 @@ void OmWebPages::renderTree(OmXmlWriter &w)
     w.endElements();
 }
 
+
+void OmWebPages::renderInfo(OmXmlWriter &w)
+{
+    this->renderPageBeginning(w, "(tree)");
+    w.addElement("h1", "_info");
+    
+    w.addElement("hr");
+    w.beginElement("pre");
+
+    w.addContentF("requests:    %d\n", this->requestsAll);
+    w.addContentF("paramReqs:   %d\n", this->requestsParam);
+    w.addContentF("longestHtml: %d\n", this->greatestRenderLength);
+
+#ifndef NOT_ARDUINO
+    w.addContentF("uptime:      %s\n", omTime(millis()));
+    w.addContentF("freeBytes:   %d\n", system_get_free_heap_size());
+    w.addContentF("chipId:      0x%08x\n", system_get_chip_id());
+    w.addContentF("systemSdk:   %s[%d]\n", system_get_sdk_version(), system_get_boot_version());
+    
+    if(this->omWebServer)
+    {
+        w.addContentF("ticks:       %d\n", this->omWebServer->getTicks());
+        w.addContentF("serverIp:    %s:%d\n", omIpToString(this->omWebServer->getIp()), this->omWebServer->getPort());
+        w.addContentF("clientIp:    %s:%d\n", omIpToString(this->omWebServer->getClientIp()), this->omWebServer->getClientPort());
+    }
+#endif
+    
+    w.endElement();
+    w.addElement("hr");
+    
+    w.endElements();
+}
+
+
 const char *colorItem = "#e0e0e0";
 const char *colorHover = "#e0ffe0";
 const char *colorButtonPress = "#707070";
@@ -543,8 +584,6 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
         }
     }
     
-    
-    
     // the URLs are just the page name with a leading slash. so.
     requestPath++;
     page = this->findPage(requestPath);
@@ -552,6 +591,12 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     if(!page && omStringEqual(requestPath, "_tree"))
     {
         this->renderTree(w);
+        result = true;
+        goto goHome;
+    }
+    else if(!page && omStringEqual(requestPath, "_info"))
+    {
+        this->renderInfo(w);
         result = true;
         goto goHome;
     }
@@ -600,4 +645,9 @@ goHome:
         sprintf(output, "error generating page");
     }
     return result;
+}
+
+void OmWebPages::setOmWebServer(OmWebServer *omWebServer)
+{
+    this->omWebServer = omWebServer;
 }
