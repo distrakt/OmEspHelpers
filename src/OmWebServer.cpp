@@ -144,6 +144,7 @@ void OmWebServer::begin()
         return;
     }
     
+    WiFi.persistent(false);
     WiFi.disconnect();
     if(this->p->webServer)
     {

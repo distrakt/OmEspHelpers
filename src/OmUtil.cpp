@@ -59,11 +59,19 @@ const char *omTime(unsigned long int millis)
 int omStringToInt(const char *s)
 {
     int x = 0;
+    bool sign = false;
     while(char c = *s++)
     {
-        x = x * 10;
-        x += c - '0';
+        if(c == '-')
+            sign = !sign;
+        else
+        {
+            x = x * 10;
+            x += c - '0';
+        }
     }
+    if(sign)
+        x = -x;
     return x;
 }
 

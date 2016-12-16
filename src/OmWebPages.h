@@ -72,7 +72,7 @@ public:
     // |
     
     /// Start defining a new page. Subsequent calls like addButton() affect this page.
-    void beginPage(const char *pageName, const char *pageDisplayName = 0);
+    void beginPage(const char *pageName);
 
     /// Add a link on the current page that goes to another page. Also can call an action proc.
     void addPageLink(const char *pageLink, OmWebActionProc proc = 0, int ref1 = 0, void *ref2 = 0);
@@ -80,8 +80,11 @@ public:
     /// Add a button on the current page. Calls the action proc with value 1 for press, 0 for release.
     void addButton(const char *buttonName, OmWebActionProc proc = 0, int ref1 = 0, void *ref2 = 0);
     
-    /// Add a slider control on the current page. The range is always 0 to 100, and calls your param proc when changed.
+    /// Add a slider control on the current page. The range is 0 to 100, and calls your param proc when changed.
     void addSlider(const char *sliderName, OmWebActionProc proc = 0, int value = 0, int ref1 = 0, void *ref2 = 0);
+
+    /// Add a slider control on the current page, with a specific range.
+    void addSlider(int rangeLow, int rangeHigh, const char *sliderName, OmWebActionProc proc = 0, int value = 0, int ref1 = 0, void *ref2 = 0);
 
     /// Add a block of custom HTML to the page. Your proc is called each time the page is requested.
     void addHtml(HtmlProc proc, int ref1 = 0, void *ref2 = 0);
@@ -156,6 +159,7 @@ private:
     
     OmWebServer *omWebServer = NULL; // if directly connected, can show some helpful _info.
     
+    Page *homePage = NULL;
     std::vector<Page *> pages;
     Page *currentPage = 0; // if a page is active.
     

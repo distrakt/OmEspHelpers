@@ -18,7 +18,6 @@ class PageItem
 {
 public:
     const char *name = "";
-    const char *displayName = "";
     const char *pageLink = "";
     int ref1 = 0;
     void *ref2 = 0;
@@ -34,7 +33,6 @@ class Page
 {
 public:
     const char *name = "";
-    const char *displayName = "";
     std::vector<PageItem *> items;
     
     // set to false to inhibit this pages's default header or footer.
@@ -98,6 +96,8 @@ class PageSlider : public PageItem
 {
 public:
     OmWebActionProc proc = 0;
+    int min = 0;
+    int max = 100;
     
     void render(OmXmlWriter &w, Page *inPage) override
     {
@@ -123,6 +123,10 @@ public:
         w.addAttributeF("id", "%s_%s", inPage->name, this->name);
         w.addAttributeF("onchange", "sliderChange(this,'%s', '%s')", inPage->name, this->name);
         w.addAttributeF("oninput", "sliderSlide(this,'%s','%s')", inPage->name, this->name);
+        if(this->min != 0)
+            w.addAttribute("min", this->min);
+        if(this->max != 100)
+            w.addAttribute("max", this->max);
         w.endElement(); // input
         w.endElement(); // form
         w.addElement("br");
@@ -192,13 +196,14 @@ public:
     }
 };
 
-void OmWebPages::beginPage(const char *pageName, const char *pageDisplayName)
+void OmWebPages::beginPage(const char *pageName)
 {
     Page *page = new Page();
     page->name = pageName;
-    page->displayName = pageDisplayName;
     this->pages.push_back(page);
     this->currentPage = page;
+    if(!this->homePage)
+        this->homePage = page;
 }
 
 void OmWebPages::allowHeader(bool allowHeader)
@@ -225,7 +230,6 @@ void OmWebPages::addPageLink(const char *pageLink, OmWebActionProc proc, int ref
 {
     PageLink *b = new PageLink();
     b->name = pageLink;
-    b->displayName = pageLink;
     b->pageLink = pageLink;
     b->proc = proc;
     b->ref1 = ref1;
@@ -237,7 +241,6 @@ void OmWebPages::addButton(const char *buttonName, OmWebActionProc proc, int ref
 {
     PageButton *b = new PageButton();
     b->name = buttonName;
-    b->displayName = buttonName;
     b->proc = proc;
     b->ref1 = ref1;
     b->ref2 = ref2;
@@ -246,21 +249,27 @@ void OmWebPages::addButton(const char *buttonName, OmWebActionProc proc, int ref
 
 void OmWebPages::addSlider(const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
+    this->addSlider(0, 100, sliderName, proc, value, ref1, ref2);
+}
+
+void OmWebPages::addSlider(int rangeLow, int rangeHigh, const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+{
     PageSlider *p = new PageSlider();
     p->name = sliderName;
-    p->displayName = sliderName;
     p->value = value;
     p->ref1 = ref1;
     p->ref2 = ref2;
     p->proc = proc;
+    p->min = rangeLow;
+    p->max = rangeHigh;
     this->currentPage->items.push_back(p);
 }
+
 
 void OmWebPages::addHtml(HtmlProc proc, int ref1, void *ref2)
 {
     HtmlItem *h = new HtmlItem();
     h->name = "_";
-    h->displayName = h->name;
     h->ref1 = ref1;
     h->ref2 = ref2;
     h->proc = proc;
@@ -300,14 +309,14 @@ void OmWebPages::renderTree(OmXmlWriter &w)
 
 void OmWebPages::renderInfo(OmXmlWriter &w)
 {
-    this->renderPageBeginning(w, "(tree)");
+    this->renderPageBeginning(w, "(info)");
     w.addElement("h1", "_info");
     
     w.addElement("hr");
     w.beginElement("pre");
 
     w.addContentF("requests:    %d\n", this->requestsAll);
-    w.addContentF("paramReqs:   %d\n", this->requestsParam);
+//    w.addContentF("paramReqs:   %d\n", this->requestsParam);
     w.addContentF("longestHtml: %d\n", this->greatestRenderLength);
 
 #ifndef NOT_ARDUINO
@@ -325,7 +334,9 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
 #endif
     
     w.endElement();
-    w.addElement("hr");
+    
+    if(this->footerProc)
+        this->footerProc(w, 0, 0);
     
     w.endElements();
 }
@@ -463,6 +474,19 @@ void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle)
     w.beginElement("body");
 }
 
+static void renderLink(OmXmlWriter &w, const char *pageName)
+{
+    w.beginElement("a");
+    w.addAttributeUrlF("href", "/%s", pageName);
+    
+    w.beginElement("div");
+    w.addAttribute("class", "box1");
+    w.addContentF("%s", pageName);
+    w.endElement();
+    
+    w.endElement();
+}
+
 void OmWebPages::renderTopMenu(OmXmlWriter &w)
 {
     this->wp = &w;
@@ -474,16 +498,12 @@ void OmWebPages::renderTopMenu(OmXmlWriter &w)
     
     for(Page *page : this->pages)
     {
-        w.beginElement("a");
-        w.addAttributeUrlF("href", "/%s", page->name);
-        
-        w.beginElement("div");
-        w.addAttribute("class", "box1");
-        w.addContentF("%s", page->name);
-        w.endElement();
-        
-        w.endElement();
+        renderLink(w, page->name);
     }
+    w.addElement("hr");
+    renderLink(w, "_info");
+    renderLink(w, "_tree");
+    
     if(this->footerProc)
         this->footerProc(w, 0, 0);
     this->wp = 0;
@@ -587,6 +607,10 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     // the URLs are just the page name with a leading slash. so.
     requestPath++;
     page = this->findPage(requestPath);
+    
+    // Empty path is "the home page"
+    if(!page && omStringEqual(requestPath, ""))
+        page = this->homePage;
     
     if(!page && omStringEqual(requestPath, "_tree"))
     {
