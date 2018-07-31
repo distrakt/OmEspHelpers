@@ -39,21 +39,6 @@ public:
     // replace with different via Html items if you like.
     bool allowHeader = true;
     bool allowFooter = true;
-    
-    void renderTree(OmXmlWriter &w)
-    {
-        for(PageItem *button : this->items)
-        {
-            w.addContent("    ");
-            
-            w.beginElement("a");
-            w.addAttributeUrlF("href", "/%s?page=%s&item=%s", button->pageLink, this->name, button->name);
-            w.addContentF("%s", button->name);
-            w.endElement();
-            
-            w.addContent("\n");
-        }
-    }
 };
 
 
@@ -196,6 +181,31 @@ public:
     }
 };
 
+void infoHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
+{
+    OmWebPages *owp = (OmWebPages *)ref2;
+    owp->renderInfo(w);
+}
+
+void defaultFooterHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
+{
+    OmWebPages *owp = (OmWebPages *)ref2;
+    owp->renderDefaultFooter(w);
+}
+
+OmWebPages::OmWebPages()
+{
+    // create the built-in pages
+    this->beginPage("_info");
+    this->addHtml(infoHtmlProc, 0, this);
+    
+    // default navigation buttons
+    this->setFooterProc(defaultFooterHtmlProc);
+    
+    // Make sure none of the built-in pages become the user's home page.
+    this->homePage = NULL;
+}
+
 void OmWebPages::beginPage(const char *pageName)
 {
     Page *page = new Page();
@@ -287,60 +297,40 @@ bool OmWebPages::doAction(const char *pageName, const char *itemName)
     return false;
 }
 
-void OmWebPages::renderTree(OmXmlWriter &w)
-{
-    this->renderPageBeginning(w, "(tree)");
-    w.beginElement("pre");
-    for(Page *page : this->pages)
-    {
-        w.beginElement("b");
-        w.beginElement("a");
-        w.addAttributeUrlF("href", "/%s", page->name);
-        w.addContentF("%s", page->name);
-        w.endElement();
-        w.endElement();
-        w.addContent("\n");
-        
-        page->renderTree(w);
-    }
-    w.endElements();
-}
-
-
 void OmWebPages::renderInfo(OmXmlWriter &w)
 {
-    this->renderPageBeginning(w, "(info)");
-    w.addElement("h1", "_info");
-    
     w.addElement("hr");
     w.beginElement("pre");
 
-    w.addContentF("requests:    %d\n", this->requestsAll);
-//    w.addContentF("paramReqs:   %d\n", this->requestsParam);
-    w.addContentF("longestHtml: %d\n", this->greatestRenderLength);
+    w.addContentF("requests:  %d\n", this->requestsAll);
+    w.addContentF("maxHtml:   %d\n", this->greatestRenderLength);
 
 #ifndef NOT_ARDUINO
-    w.addContentF("uptime:      %s\n", omTime(millis()));
-    w.addContentF("freeBytes:   %d\n", system_get_free_heap_size());
-    w.addContentF("chipId:      0x%08x\n", system_get_chip_id());
-    w.addContentF("systemSdk:   %s[%d]\n", system_get_sdk_version(), system_get_boot_version());
+    w.addContentF("uptime:    %s\n", omTime(millis()));
+    w.addContentF("freeBytes: %d\n", system_get_free_heap_size());
+    w.addContentF("chipId:    0x%08x\n", system_get_chip_id());
+    w.addContentF("systemSdk: %s[%d]\n", system_get_sdk_version(), system_get_boot_version());
     
     if(this->omWebServer)
     {
-        w.addContentF("ticks:       %d\n", this->omWebServer->getTicks());
-        w.addContentF("serverIp:    %s:%d\n", omIpToString(this->omWebServer->getIp()), this->omWebServer->getPort());
-        w.addContentF("clientIp:    %s:%d\n", omIpToString(this->omWebServer->getClientIp()), this->omWebServer->getClientPort());
+        w.addContentF("ticks:     %d\n", this->omWebServer->getTicks());
+        w.addContentF("serverIp:  %s:%d\n", omIpToString(this->omWebServer->getIp()), this->omWebServer->getPort());
+        w.addContentF("clientIp:  %s:%d\n", omIpToString(this->omWebServer->getClientIp()), this->omWebServer->getClientPort());
     }
 #endif
+    w.addContentF("built:     %s %s\n", __DATE__, __TIME__);
     
     w.endElement();
-    
-    if(this->footerProc)
-        this->footerProc(w, 0, 0);
-    
-    w.endElements();
 }
 
+void OmWebPages::renderDefaultFooter(OmXmlWriter &w)
+{
+    w.addElement("hr");
+    for(auto page : this->pages)
+    {
+        this->renderPageButton(w, page->name);
+    }
+}
 
 const char *colorItem = "#e0e0e0";
 const char *colorHover = "#e0ffe0";
@@ -366,7 +356,7 @@ void OmWebPages::renderStyle(OmXmlWriter &w)
                  , colorItem
                  );
     // Not sure why I need to add more width to the button, to make it match
-    w.addContent(".button{borderz:2px solid black;width:440px;display:block}\n");
+    w.addContent(".button{border:2px solid black;width:440px;display:block}\n");
     w.addContent(".box2{display:inline-block;"
                  "font-size:22px; padding:7px;"
                  "width:auto;overflow:hidden ; "
@@ -498,14 +488,18 @@ void OmWebPages::renderTopMenu(OmXmlWriter &w)
     
     for(Page *page : this->pages)
     {
-        renderLink(w, page->name);
+        if(page->name[0] != '_')
+            renderLink(w, page->name);
     }
     w.addElement("hr");
-    renderLink(w, "_info");
-    renderLink(w, "_tree");
+    for(Page *page : this->pages)
+    {
+        if(page->name[0] == '_')
+            renderLink(w, page->name);
+    }
     
     if(this->footerProc)
-        this->footerProc(w, 0, 0);
+        this->footerProc(w, 0, this);
     this->wp = 0;
 }
 
@@ -612,19 +606,6 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     if(!page && omStringEqual(requestPath, ""))
         page = this->homePage;
     
-    if(!page && omStringEqual(requestPath, "_tree"))
-    {
-        this->renderTree(w);
-        result = true;
-        goto goHome;
-    }
-    else if(!page && omStringEqual(requestPath, "_info"))
-    {
-        this->renderInfo(w);
-        result = true;
-        goto goHome;
-    }
-    
     if(!page)
     {
         this->renderTopMenu(w);
@@ -653,7 +634,7 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     }
     
     if(this->footerProc && page->allowFooter)
-        this->footerProc(w, 0, 0);
+        this->footerProc(w, 0, this);
     
     w.addContent("\n");
     w.endElements();

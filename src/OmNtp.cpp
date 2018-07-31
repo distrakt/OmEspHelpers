@@ -77,6 +77,8 @@ void OmNtp::begin()
     {
         this->begun = true;
     }
+
+    OmNtp::lastNtpBegun = this;
 }
 
 void OmNtp::checkForPacket()
@@ -157,4 +159,11 @@ void OmNtp::tick()
     udp.write(packetBuffer, kNtpPacketSize);
     udp.endPacket();
     OMLOG("sent ntp request\n", 1);
+}
+
+OmNtp *OmNtp::lastNtpBegun = NULL;
+
+OmNtp *OmNtp::ntp()
+{
+    return OmNtp::lastNtpBegun;
 }

@@ -64,6 +64,9 @@ public:
     /// (It's a static char[], by the way.)
     const char *getTimeString();
 
+    /// Get the last-created ntp instance, if any
+    static OmNtp *ntp();
+
 private:
     // Internal implementation methods and details.
     void begin();
@@ -83,6 +86,8 @@ private:
     static const int kNtpPacketSize = 48;
     byte packetBuffer[kNtpPacketSize]; //buffer to hold incoming and outgoing packets
     IPAddress ntpServerIp; // resolved IP address (time.nist.gov)
+
+    static OmNtp *lastNtpBegun;
 };
 
 #endif __OmNtp__

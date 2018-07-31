@@ -67,6 +67,9 @@ class OmWebServer;
 class OmWebPages
 {
 public:
+    /// No argument constructor
+    OmWebPages();
+    
     // +----------------------------------
     // | Setting up your pages
     // |
@@ -139,13 +142,13 @@ public:
     /// | For _info page only
     void setOmWebServer(OmWebServer *omWebServer);
 
-private:
     // +----------------------------------
     // | Internal methods
     // |
-    bool doAction(const char *pageName, const char *itemName);
-    void renderTree(OmXmlWriter &w); // builtin "tree" page
     void renderInfo(OmXmlWriter &w); // builtin "_info" page
+    void renderDefaultFooter(OmXmlWriter &w); // builtin footer nav buttons
+private:
+    bool doAction(const char *pageName, const char *itemName);
     void renderStyle(OmXmlWriter &w);
     void renderScript(OmXmlWriter &w);
     

@@ -281,7 +281,7 @@ void OmWebServer::handleRequest()
     {
         String s = "<pre>\n";
         const char *h1 = "No handler, try omWebServer.setHandler(yourRequestHandlerProc);\n";
-        const char *h2 = "   or use OmWebPages wtih omWebServer.setHandler(omWebPages);\n";
+        const char *h2 = "   or use OmWebPages with omWebServer.setHandler(omWebPages);\n";
         s += "<hr />\n";
         s += "OmWebServer\n";
         s += h1;
