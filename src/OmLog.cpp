@@ -40,4 +40,9 @@ void OmLog::logS(const char *file, int line, const char *format, ...)
     
     Serial.printf("%4d.%02d (*) %s.%d: ", tS, tH, file + fileStringOffset, line);
     Serial.print(s);
+    
+    // add trailing CR if missing
+    int len = (int)strlen(format);
+    if(len == 0 || format[len - 1] > 13)
+        Serial.print("\n");
 }

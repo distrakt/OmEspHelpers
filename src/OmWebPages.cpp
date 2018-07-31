@@ -339,7 +339,6 @@ const char *colorButtonPress = "#707070";
 void OmWebPages::renderStyle(OmXmlWriter &w)
 {
     w.beginElement("style");
-    w.addAttribute("type", "text/css");
     w.addContent("*{font-family:arial}\n");
     w.addContent("pre, pre a{font-size:24px;font-family:Courier, monospace; word-wrap:break-word; overflow:auto; color:black}\n"
                  "a:link { text-decoration: none;}\n"
@@ -447,6 +446,7 @@ void OmWebPages::renderScript(OmXmlWriter &w)
 void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle)
 {
     w.beginElement("html");
+    w.addAttribute("lang", "en");
     w.beginElement("head");
     
     w.beginElement("meta", "charset", "UTF-8");

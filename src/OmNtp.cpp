@@ -5,6 +5,8 @@
  */
 
 #include "OmNtp.h"
+#include "OmUtil.h"
+#include <ESP8266HTTPClient.h>
 
 static const unsigned int kLocalPort = 2390;      // local port to listen for UDP packets
 const char *kNtpServerName = "time.nist.gov";
@@ -20,6 +22,26 @@ void OmNtp::setWifiAvailable(bool wifiAvailable)
 void OmNtp::setTimeZone(int hourOffset)
 {
     this->timeZone = hourOffset;
+}
+
+void OmNtp::setCaTimeZone()
+{
+    // TEST, do a client reauest
+    const char *ominoTimeService = "http://omino.com/time/time.php";
+    HTTPClient http;
+    http.begin(ominoTimeService);
+    int httpCode = http.GET();
+    OMLOG("%s: %d", ominoTimeService, httpCode);
+    if (httpCode == HTTP_CODE_OK)
+    {
+        String payload = http.getString();
+        OMLOG("got: %s", payload.c_str());
+        this->caHour = omStringToInt(payload.substring(11,13).c_str()); // String is not the same as std::string, by the way.
+        this->caMinute = omStringToInt(payload.substring(14,16).c_str());
+        this->caSecond = omStringToInt(payload.substring(17,19).c_str());
+        OMLOG("ca hms: %d %d %d", this->caHour, this->caMinute, this->caSecond);
+        this->caTimeGot = true;
+    }
 }
 
 bool OmNtp::getTime(int &hourOut, int &minuteOut, int &secondOut)
@@ -120,6 +142,23 @@ void OmNtp::checkForPacket()
     this->uTime = epoch;
     this->uTimeAcquiredMillis = millis();
     OMLOG("Time: %s\n", this->getTimeString());
+    
+    // and, if we've recently got a CA time, derive the apparent time zone.
+    if(this->caTimeGot)
+    {
+        this->caTimeGot = false;
+        int uSeconds = this->hour * 3600 + this->minute * 60 + this->second;
+        int caSeconds = this->caHour * 3600 + this->caMinute * 60 + this->caSecond;
+        OMLOG("utc seconds: %d, ca seconds: %d", uSeconds, caSeconds);
+        
+        int diffSeconds = caSeconds - uSeconds;
+        if(diffSeconds < 0)
+            diffSeconds += (24 * 3600);
+        int diffHours = (diffSeconds + 1800) / 3600;
+        diffHours = (diffHours + 36) % 24 - 12; // -12 to +12
+        this->timeZone = diffHours;
+        OMLOG("CA Time Zone appears to be: %d", this->timeZone);
+    }
 }
 
 void OmNtp::tick()
@@ -167,3 +206,5 @@ OmNtp *OmNtp::ntp()
 {
     return OmNtp::lastNtpBegun;
 }
+
+// end of file

@@ -56,6 +56,10 @@ public:
     /// This number gets added to UTC for your time zone. It ranges
     /// from -12 to +12. California in December needs -8.
     void setTimeZone(int hourOffset);
+    
+    /// Issue a request to my personal service, omino.com/time/time.php, which returns
+    /// current California time, and set the time zone based on that.
+    void setCaTimeZone();
 
     /// Get the time of day in three handy integers.
     bool getTime(int &hourOut, int &minuteOut, int &secondOut);
@@ -88,6 +92,11 @@ private:
     IPAddress ntpServerIp; // resolved IP address (time.nist.gov)
 
     static OmNtp *lastNtpBegun;
+    
+    bool caTimeGot = false;
+    int caHour = -1;
+    int caMinute = -1;
+    int caSecond = -1;
 };
 
 #endif __OmNtp__
