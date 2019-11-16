@@ -11,11 +11,13 @@
 
 void buttonProc(const char *page, const char *item, int value, int ref1, void *ref2)
 {
+    analogWrite(LED_BUILTIN, 0); // makes on/off work again.
     digitalWrite(LED_BUILTIN, ref1);
 }
 
 void buttonMomentaryProc(const char *page, const char *item, int value, int ref1, void *ref2)
 {
+    analogWrite(LED_BUILTIN, 0); // makes on/off work again.
     digitalWrite(LED_BUILTIN, !value);
 }
 
