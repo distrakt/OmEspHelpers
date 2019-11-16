@@ -6,8 +6,14 @@
  */
 
 #include "OmEspHelpers.h"
-#include <ESP8266WebServer.h>
-#include <ESP8266WiFi.h>
+
+#ifdef ARDUINO_ARCH_ESP32
+#define analogWrite(_x1, _x2) // alas esp32 doesnt support analogWrite that way. just disable it.
+#endif
+
+#ifdef ARDUINO_ARCH_ESP8266
+// we dont need anything for this example.
+#endif
 
 void buttonProc(const char *page, const char *item, int value, int ref1, void *ref2)
 {
