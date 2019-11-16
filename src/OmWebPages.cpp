@@ -319,7 +319,7 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
 #endif
 #ifdef ARDUINO_ARCH_ESP8266
     w.addContentF("chipId:    0x%08x '8266\n", system_get_chip_id());
-    w.addContentF("systemSdk: %s[%d]\n", system_get_sdk_version(), system_get_boot_version());
+    w.addContentF("systemSdk: %s/%d\n", system_get_sdk_version(), system_get_boot_version());
 #endif
 #ifdef ARDUINO_ARCH_ESP32
     w.addContentF("chipId:    '32\n");
