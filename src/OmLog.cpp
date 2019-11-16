@@ -7,7 +7,7 @@
 #include "OmLog.h"
 #include "OmUtil.h"
 
-const char *ipAddressToString(IPAddress &ip)
+const char *ipAddressToString(IPAddress ip)
 {
     unsigned int localIpInt = (ip[0] << 24) | (ip[1] << 16) | (ip[2] << 8) | (ip[3] << 0);
     return omIpToString(localIpInt);
@@ -46,3 +46,4 @@ void OmLog::logS(const char *file, int line, const char *format, ...)
     if(len == 0 || format[len - 1] > 13)
         Serial.print("\n");
 }
+

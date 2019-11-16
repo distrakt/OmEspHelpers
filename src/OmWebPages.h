@@ -50,6 +50,17 @@
 #include "OmUtil.h"
 #include "OmWebRequest.h"
 
+// just for IPAddress :-/
+#ifdef ARDUINO_ARCH_ESP8266
+#include "ESP8266WiFi.h"
+#endif
+#ifdef ARDUINO_ARCH_ESP32
+#include "WiFi.h"
+#endif
+#if NOT_ARDUINO
+typedef unsigned char IPAddress[4];
+#endif
+
 /// A callback you provide for parameter sliders on a web page.
 typedef void (* OmWebActionProc)(const char *pageName, const char *parameterName, int value, int ref1, void *ref2);
 
@@ -61,8 +72,15 @@ class Page;
 /// Internal class of OmWebPages
 class PageItem;
 
-/// External class reference to OmWebServer, for a particular back-connect use
-class OmWebServer;
+
+typedef struct OmRequestInfo
+{
+  IPAddress clientIp;
+  int clientPort;
+  IPAddress serverIp;
+  int serverPort;
+  const char *bonjourName;
+} OmRequestInfo;
 
 class OmWebPages
 {
@@ -107,7 +125,7 @@ public:
     /// this is called by the web server on your behalf. In other scenarios
     /// you can call it directly with the output buffer and request. The request
     /// is the part of the URI after the host name, like "/somepage" or "/info?arg=value".
-    bool handleRequest(char *output, int outputSize, const char *request);
+    bool handleRequest(char *output, int outputSize, const char *request, OmRequestInfo *requestInfo = 0);
     
     // +----------------------------------
     // | HtmlProc helpers
@@ -137,10 +155,6 @@ public:
     
     /// Maximum size of pages served
     unsigned int greatestRenderLength = 0;
-    
-    /// +----------------------------------
-    /// | For _info page only
-    void setOmWebServer(OmWebServer *omWebServer);
 
     // +----------------------------------
     // | Internal methods
@@ -160,8 +174,6 @@ private:
     Page *findPage(const char *pageName);
     PageItem *findPageItem(const char *pageName, const char *itemName);
     
-    OmWebServer *omWebServer = NULL; // if directly connected, can show some helpful _info.
-    
     Page *homePage = NULL;
     std::vector<Page *> pages;
     Page *currentPage = 0; // if a page is active.
@@ -170,6 +182,7 @@ private:
     HtmlProc footerProc = 0;
     
     OmXmlWriter *wp = 0; // writer pointer during callbacks.
+    OmRequestInfo *ri = 0; // request metadate during callbacks
 };
 
 #endif /* defined(__OmWebPages__) */

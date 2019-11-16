@@ -51,7 +51,7 @@ public:
     void setWifiAvailable(bool wifiAvailable);
 
     /// Call this in your loop(). Assumes about 20-50 ms interval.
-    void tick();
+    void tick(long milliseconds); // pass in the current apparent "millis", we'll pace ourselves accordingly.
     
     /// This number gets added to UTC for your time zone. It ranges
     /// from -12 to +12. California in December needs -8.
@@ -60,9 +60,13 @@ public:
     /// Issue a request to my personal service, omino.com/time/time.php, which returns
     /// current California time, and set the time zone based on that.
     void setCaTimeZone();
+    
+    void setTimeUrl(const char *timeUrl);
 
     /// Get the time of day in three handy integers.
     bool getTime(int &hourOut, int &minuteOut, int &secondOut);
+    /// Get the time of day in two handy integers and a float.
+    bool getTime(int &hourOut, int &minuteOut, float &secondOut);
 
     /// Get the time of day in a handy string like HH:MM:SS.
     /// (It's a static char[], by the way.)
@@ -77,8 +81,7 @@ private:
     void checkForPacket();
 
     WiFiUDP udp; // the connection
-    int interval = 6000; // ticks between NTP queries; 2 minutes at 20ms/tick.
-    int countdown = -1;
+    long intervalMilliseconds = 120017; // ticks between NTP queries; 2 minutes
     int timeZone; // offset the hour reported by this much.
     unsigned long int uTimeAcquiredMillis = 0; // the millis() when this last time was got
     unsigned long int uTime = 0; // time since 1970-01-01
@@ -93,10 +96,16 @@ private:
 
     static OmNtp *lastNtpBegun;
     
+    bool ntpRequestSent = 0; // is set "true" after sending ntp request, and cleared when we get answer.
+
+    const char *timeUrl = 0;
     bool caTimeGot = false;
     int caHour = -1;
     int caMinute = -1;
     int caSecond = -1;
+
+    long countdownMilliseconds = -1;
+    long lastMilliseconds = 0;
 };
 
 #endif __OmNtp__

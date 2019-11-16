@@ -8,10 +8,18 @@
 #include "OmWebPages.h"
 
 #ifndef NOT_ARDUINO
-#include "OmWebServer.h"
-extern "C" {
+#include "Arduino.h"
+//extern "C" {
+#ifdef ARDUINO_ARCH_ESP8266
 #include "user_interface.h" // system_free_space and others.
-}
+#include "ESP8266WiFi.h"
+#endif
+#ifdef ARDUINO_ARCH_ESP32
+#include "esp32-hal.h"
+#include "esp_system.h"
+#include "WiFi.h"
+#endif
+//}
 #endif
 
 class PageItem
@@ -308,14 +316,28 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
 #ifndef NOT_ARDUINO
     w.addContentF("uptime:    %s\n", omTime(millis()));
     w.addContentF("freeBytes: %d\n", system_get_free_heap_size());
-    w.addContentF("chipId:    0x%08x\n", system_get_chip_id());
+#endif
+#ifdef ARDUINO_ARCH_ESP8266
+    w.addContentF("chipId:    0x%08x '8266\n", system_get_chip_id());
     w.addContentF("systemSdk: %s[%d]\n", system_get_sdk_version(), system_get_boot_version());
-    
-    if(this->omWebServer)
+#endif
+#ifdef ARDUINO_ARCH_ESP32
+    w.addContentF("chipId:    '32\n");
+    w.addContentF("systemSdk: %s\n", system_get_sdk_version());
+#endif
+#ifdef NOT_ARDUINO
+    w.addContentF("what:      Not Arduino\n");
+#endif
+#ifndef NOT_ARDUINO
+    if(this->ri)
     {
-        w.addContentF("ticks:     %d\n", this->omWebServer->getTicks());
-        w.addContentF("serverIp:  %s:%d\n", omIpToString(this->omWebServer->getIp()), this->omWebServer->getPort());
-        w.addContentF("clientIp:  %s:%d\n", omIpToString(this->omWebServer->getClientIp()), this->omWebServer->getClientPort());
+        w.addContentF("clientIp:  %s:%d\n", omIpToString(ri->clientIp), ri->clientPort);
+        w.addContentF("serverIp:  <a href='http://%s:%d/'>%s:%d</a>\n",
+                      omIpToString(ri->serverIp), ri->serverPort,
+                      omIpToString(ri->serverIp), ri->serverPort);
+        String bonjourName = ri->bonjourName;
+        if(ri->bonjourName && ri->bonjourName[0])
+            w.addContentF("bonjour:   <a href='http://%s.local/'>%s.local</a>\n", ri->bonjourName, ri->bonjourName);
     }
 #endif
     w.addContentF("built:     %s %s\n", __DATE__, __TIME__);
@@ -382,20 +404,21 @@ void OmWebPages::renderScript(OmXmlWriter &w)
                  "function reqListener () \n"
                  "{ console.log(this.responseText) } \n;"
                  
+                 "var sliderCallbacks = [];\n"
+                 "var sliderEmbargos = [];\n"
                  "function sliderSlide(slider, page, sliderName) \n"
                  "{ \n"
                  "var textId = slider.id + '_value'; \n"
                  "var text = document.getElementById(textId); \n"
                  "text.style.color = '#a0a0a0'; \n"
                  "text.innerHTML = slider.value; \n"
-#if 0
-                  // sending every slider nudge ends up queueing a lot of
-                  // messages and adding delay. TODO: do some sort of rate limiting, but
-                  // always including the lastly paused spot.
-                  "var oReq = new XMLHttpRequest(); \n"
-                  "oReq.addEventListener('load', reqListener); \n"
-                  "oReq.open('GET', '/_control?page=' + page + '&item=' + sliderName + '&value=' + slider.value); \n"
-                  "oReq.send(); \n"
+#if 1
+                  // try embargo strategy
+                  "if(!Boolean(sliderEmbargos[sliderName]))\n"
+                  "{\n"
+                  " sliderChange(slider, page, sliderName);\n"
+                  " sliderEmbargos[sliderName] = setTimeout(function(){ sliderEmbargos[sliderName] = null; sliderChange(slider, page, sliderName);},100);\n"
+                  "}\n"
 #endif
                  "} \n"
                   );
@@ -403,6 +426,7 @@ void OmWebPages::renderScript(OmXmlWriter &w)
                  
                  "function sliderChange(slider, page, sliderName) \n"
                  "{ \n"
+                 "clearTimeout(sliderCallbacks[sliderName]);\n"
                  "var textId = slider.id + '_value'; \n"
                  "var text = document.getElementById(textId); \n"
                  
@@ -448,6 +472,13 @@ void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle)
     w.beginElement("html");
     w.addAttribute("lang", "en");
     w.beginElement("head");
+
+    // discourage favicon requests with <link rel="icon" href="data:,">
+    // as per https://stackoverflow.com/questions/1321878/how-to-prevent-favicon-ico-requests
+    w.beginElement("link");
+    w.addAttribute("rel", "icon");
+    w.addAttribute("href", "data:,");
+    w.endElement();
     
     w.beginElement("meta", "charset", "UTF-8");
     w.endElement();
@@ -541,7 +572,7 @@ PageItem *OmWebPages::findPageItem(const char *pageName, const char *itemName)
     return NULL;
 }
 
-bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAndQuery)
+bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAndQuery, OmRequestInfo *requestInfo)
 {
     OmXmlWriter w(output, outputSize);
     output[0] = 0; // safety.
@@ -617,6 +648,7 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     w.addContent("\n");
     
     this->wp = &w;
+    this->ri = requestInfo;
     if(this->headerProc && page->allowHeader)
         this->headerProc(w, 0, 0);
     
@@ -641,6 +673,7 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     result = true;
     
     this->wp = 0;
+    this->ri = NULL;
     
 goHome:
     if(w.position > greatestRenderLength)
@@ -652,7 +685,3 @@ goHome:
     return result;
 }
 
-void OmWebPages::setOmWebServer(OmWebServer *omWebServer)
-{
-    this->omWebServer = omWebServer;
-}

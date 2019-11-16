@@ -20,13 +20,19 @@
 #ifndef __OmLog__
 #define __OmLog__
 
+// just for IPAddress type.
+#ifdef ARDUINO_ARCH_ESP8266
 #include <ESP8266WiFi.h>
+#endif
+#ifdef ARDUINO_ARCH_ESP32
+#include <WiFi.h>
+#endif
 
 /// This macro is what you'll call. It adds the file and line number to the output.
 #define OMLOG(_args...) OmLog::logS(__FILE__, __LINE__, _args)
 
 /// Utility to convert an ESP8266 ip address to a printable string.
-const char *ipAddressToString(IPAddress &ip);
+const char *ipAddressToString(IPAddress ip);
 
 class OmLog
 {

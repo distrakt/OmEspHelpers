@@ -32,9 +32,15 @@
 #define __OmWebServer__
 
 #include <vector>
-#include <ESP8266WebServer.h>
+#ifdef ARDUINO_ARCH_ESP8266
+#include <ESP8266WiFi.h>
+#endif
+#ifdef ARDUINO_ARCH_ESP32
+#include <WiFi.h>
+#endif
 
 #include "OmWebPages.h"
+#include "OmNtp.h"
 
 typedef const char *(* OmRequestHandler)(const char *request);
 typedef void (* OmConnectionStatus)(const char *ssid, bool trying, bool failure, bool success);
@@ -50,13 +56,20 @@ class OmWebServer
 public:
     OmWebServer(int port = 80);
     ~OmWebServer();
+
+    void setVerbose(int verbose); // turn off to print less stuff
     
     /// add to the list of known networks to try.
     void addWifi(String ssid, String password);
     
+    void setBonjourName(String bonjourName);
+    String getBonjourName();
+    
     void setHandler(OmRequestHandler requestHandler);
     void setHandler(OmWebPages &requestHandler);
     void setStatusCallback(OmConnectionStatus statusCallback);
+    
+    void setNtp(OmNtp *ntp);
     
     /// defaults to 80
     void setPort(int port);
@@ -77,7 +90,13 @@ public:
     unsigned int getTicks();
     
     /// public for callback purposes, not user-useful
-    void handleRequest();
+    void handleRequest(String request, WiFiClient &client);
+
+    // connection in progress...
+    WiFiClient client;
+    long clientStartMillis = 0;
+    String request;
+    
 };
 
 #endif // __OmWebServer__

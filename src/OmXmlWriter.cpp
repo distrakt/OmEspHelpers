@@ -228,6 +228,17 @@ void OmXmlWriter::addElement(const char *elementName, const char *content)
     this->endElement();
 }
 
+void OmXmlWriter::addElementF(const char *elementName, const char *fmt,...)
+{
+    char value[TINY_XML_ADD_MAX];
+    va_list ap;
+    va_start(ap,fmt);
+    vsnprintf(value,sizeof(value),fmt,ap);
+
+    this->addElement(elementName, value);
+}
+
+
 
 void OmXmlWriter::endElement()
 {

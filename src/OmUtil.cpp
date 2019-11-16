@@ -83,6 +83,13 @@ const char *omIpToString(unsigned long ip)
     return s;
 }
 
+const char *omIpToString(unsigned char ip[4])
+{
+    static char s[20];
+    sprintf(s, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+    return s;
+}
+
 int omHexToInt(const char *s, int digitCount)
 {
     int result = 0;
@@ -149,4 +156,38 @@ void omHsvToRgb(unsigned char *hsvIn, unsigned char *rgbOut)
         rgbOut[1] = s;
         rgbOut[2] = otrMap(h, 213, 256, v, s);
     }
+}
+
+int omMigrate(int x, int dest, int delta)
+{
+    if(x < dest)
+    {
+        x += delta;
+        if(x > dest)
+            x = dest;
+    }
+    else if(x > dest)
+    {
+        x -= delta;
+        if(x < dest)
+            x = dest;
+    }
+    return x;
+}
+
+
+/// pin range EXCLUSIVE of top
+int omPinRange(int x, int low, int high)
+{
+    if(low > high)
+    {
+        int t = low;
+        low = high;
+        high = t;
+    }
+    if(x < low)
+        x = low;
+    else if(x >= high)
+        x = high - 1;
+    return x;
 }

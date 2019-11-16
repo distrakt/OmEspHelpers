@@ -18,9 +18,9 @@
  * char myBuffer[1000];
  * OmXmlWriter w(myBuffer, 1000); // tell it the space limit
  *
- * w.beginElement("<html>");
- * w.beginElement("<head>");
- * w.beginElement("<title>");
+ * w.beginElement("html");
+ * w.beginElement("head");
+ * w.beginElement("title");
  * w.addContent("A Web Page");
  * w.endElement(); // ends title
  * w.endElement(); // ends head
@@ -92,6 +92,9 @@ public:
     
     /// Adds an element with content (no need for endElement()) like <h1>Content</h1>
     void addElement(const char *elementName, const char *content);
+    
+    /// Adds an element with content (no need for endElement()) like <h1>Content</h1>
+    void addElementF(const char *elementName, const char *fmt,...);
     
     /// Ends the most recent beginElement(). Caps them with either <element/> or </element>.
     void endElement();
