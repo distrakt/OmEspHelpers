@@ -26,6 +26,27 @@
 #define __OmWebRequest__
 
 #include "OmUtil.h"
+#include <vector>
+
+static void inplaceRequestDecode(char *r)
+{
+    // given a legit zero-terminated char string, do, in place, the decoding
+    // of %xx and +'s. This can only make it shorter.
+    char *w = r;
+    while(char c = *r++)
+    {
+        if(c == '+')
+            c = ' ';
+        if(c == '%' && r[0] && r[1])
+        {
+            // handle %-hex character escapes
+            c = omHexToInt(r, 2);
+            r += 2;
+        }
+        *w++ = c;
+    }
+    *w++ = 0;
+}
 
 /// This class is only about the part of a Uri past the host & port. Just the path & query.
 /// Doesn't handle hex coding or quotes and stuff.
@@ -34,7 +55,7 @@ class OmWebRequest
     static const int kRequestLengthMax = 320;
 public:
     const char *path;
-    std::vector<const char *> query;
+    std::vector<char *> query; // vector of alternating keys & values.
     char request[kRequestLengthMax + 1];
     
     OmWebRequest()
@@ -51,16 +72,7 @@ public:
         for(int ix = 0; ix <= kRequestLengthMax; ix++)
         {
             char c = request[rIx++];
-            if(c == '%' && request[rIx] && request[rIx + 1])
-            {
-                // handle %-hex character escapes
-                this->request[ix] = omHexToInt(request + rIx, 2);
-                rIx += 2;
-            }
-            else
-            {
-                this->request[ix] = c;
-            }
+            this->request[ix] = c;
 
             if(c == 0)
                 break;
@@ -72,6 +84,7 @@ public:
         this->path = this->request;
         
         // walk it and insert breaks.
+        // not very robust -- will get confused if ? = & occur in wrong order. %20s and +s figured out below.
         char *w = this->request;
         while(char c = *w)
         {
@@ -85,6 +98,13 @@ public:
             }
             w++;
         }
+
+        // now, re-walk the request local copy, and maybe swap in % and + substitutions.
+        inplaceRequestDecode(this->request);
+        for(char *r : this->query)
+        {
+            inplaceRequestDecode(r);
+        }
     }
     
     const char *getValue(const char *key)
@@ -95,6 +115,24 @@ public:
                 return this->query[ix + 1];
         }
         return 0;
+    }
+
+    int getQueryCount()
+    {
+        int k = (int)this->query.size() / 2;
+        return k;
+    }
+    const char *getQueryKey(int ix)
+    {
+        if(ix < 0 || ix >= this->getQueryCount())
+            return "";
+        return this->query[ix * 2];
+    }
+    const char *getQueryValue(int ix)
+    {
+        if(ix < 0 || ix >= this->getQueryCount())
+            return "";
+        return this->query[ix * 2 + 1];
     }
 };
 #endif /* defined(__OmWebRequest__) */

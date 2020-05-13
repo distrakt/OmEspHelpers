@@ -8,6 +8,7 @@
 
 #include "OmUtil.h"
 #include <stdio.h>
+#include <string.h>
 
 bool omStringEqual(const char *s1, const char *s2, int maxLen)
 {
@@ -30,34 +31,61 @@ bool omStringEqual(const char *s1, const char *s2, int maxLen)
     return false; // reached the end. 
 }
 
-const char *omTime(unsigned long int millis)
+const char *omTime(long long millis, int secondsDecimals)
 {
     static char s[100];
-    unsigned long int seconds = millis / 1000;
-    int minutes = (int)seconds / 60;
-    int hours = minutes / 60;
-    int days = hours / 24;
+    if(secondsDecimals < 0)
+        secondsDecimals = 0;
+    if(secondsDecimals > 3)
+        secondsDecimals = 3;
+    long long seconds = millis / 1000;
+    long long minutes = (int)seconds / 60;
+    long long hours = minutes / 60;
+    long long days = hours / 24;
     
     seconds %= 60;
     minutes %= 60;
     hours %= 24;
     
     char *w = s;
+    w[0] = 0;
+
+    bool showSeconds = seconds || secondsDecimals || (millis < 1000);
+
     if(days)
-        w += sprintf(w, "%dd", days);
+        w += sprintf(w, "%lldd", days);
     if(hours)
-        w += sprintf(w, "%dh", hours);
+        w += sprintf(w, "%lldh", hours);
     if(minutes)
-        w += sprintf(w, "%dm", minutes);
-    if(seconds)
-        w += sprintf(w, "%ds", (int)seconds);
-    
+        w += sprintf(w, "%lldm", minutes);
+    if(showSeconds)
+        w += sprintf(w, "%lld", seconds);
+    if(secondsDecimals)
+    {
+        char f[6];
+        strcpy(f,".%0^d");
+        f[3] = '0' + secondsDecimals;
+        int x = millis % 1000;
+        for(int ix = secondsDecimals; ix < 3; ix++)
+            x /= 10;
+        w += sprintf(w, f, x);
+    }
+    if(showSeconds)
+        w += sprintf(w, "s");
+
     return s;
 }
 
 
 int omStringToInt(const char *s)
 {
+    int k = (int)strlen(s);
+    int radix = 10;
+    if(k >= 3 && s[0] == '0' && s[1] == 'x') // detect 0x for hex.
+    {
+        radix = 16;
+        s += 2;
+    }
     int x = 0;
     bool sign = false;
     while(char c = *s++)
@@ -66,8 +94,15 @@ int omStringToInt(const char *s)
             sign = !sign;
         else
         {
-            x = x * 10;
-            x += c - '0';
+            int d = 0;
+            if(c >= 'A' && c <= 'Z')
+                c += 'a' - 'A';
+            if(c >= 'a' && c <= 'f')
+                d = c - 'a' + 10;
+            else
+                d = c - '0';
+            x = x * radix;
+            x += d;
         }
     }
     if(sign)
@@ -76,10 +111,13 @@ int omStringToInt(const char *s)
 }
 
 
-const char *omIpToString(unsigned long ip)
+const char *omIpToString(unsigned long ip, bool flip)
 {
     static char s[20];
-    sprintf(s, "%d.%d.%d.%d", (int)(ip >> 24) & 0xff, (int)(ip >> 16) & 0xff, (int)(ip >> 8) & 0xff, (int)(ip >> 0) & 0xff);
+    if(!flip)
+        sprintf(s, "%d.%d.%d.%d", (int)(ip >> 24) & 0xff, (int)(ip >> 16) & 0xff, (int)(ip >> 8) & 0xff, (int)(ip >> 0) & 0xff);
+    else
+        sprintf(s, "%d.%d.%d.%d", (int)(ip >> 0) & 0xff, (int)(ip >> 8) & 0xff, (int)(ip >> 16) & 0xff, (int)(ip >> 24) & 0xff);
     return s;
 }
 

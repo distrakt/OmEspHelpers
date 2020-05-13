@@ -6,7 +6,7 @@
  */
 
 #include "OmWebPages.h"
-
+#include "OmLog.h"
 #ifndef NOT_ARDUINO
 #include "Arduino.h"
 //extern "C" {
@@ -22,6 +22,8 @@
 //}
 #endif
 
+
+
 class PageItem
 {
 public:
@@ -30,12 +32,55 @@ public:
     int ref1 = 0;
     void *ref2 = 0;
     int value = 0;
+    bool visible = true;
     
     virtual void render(OmXmlWriter &w, Page *inPage) = 0;
     virtual bool doAction(Page *fromPage) = 0;
     void setValue(int value) { this->value = value; }
+
+    OmWebPageItem item;
+    PageItem() : item(this)
+    {
+        return;
+    }
 };
 
+OmWebPageItem::OmWebPageItem(PageItem *privateItem)
+{
+    this->privateItem = privateItem;
+}
+
+const char *OmWebPageItem::getName()
+{
+    return this->privateItem->name;
+}
+
+void OmWebPageItem::setName(const char *name)
+{
+    this->privateItem->name = name;
+}
+
+void OmWebPageItem::setVisible(bool visible)
+{
+    this->privateItem->visible = visible;
+}
+
+void OmWebPageItem::setVisible(bool visible, const char *name, int value)
+{
+    this->privateItem->visible = visible;
+    this->privateItem->name = name;
+    this->privateItem->value = value;
+}
+
+
+int OmWebPageItem::getValue()
+{
+    return this->privateItem->value;
+}
+void OmWebPageItem::setValue(int value)
+{
+    this->privateItem->value = value;
+}
 
 class Page
 {
@@ -49,6 +94,14 @@ public:
     bool allowFooter = true;
 };
 
+class UrlHandler
+{
+public:
+    const char *url = "";
+    OmUrlHandlerProc handlerProc = NULL;
+    int ref1 = 0;
+    void *ref2 = 0;
+};
 
 
 
@@ -107,22 +160,22 @@ public:
         w.addContent(this->name);
         w.beginElement("form");
         w.beginElement("span", "class", "sliderValue");
+        w.addAttribute("style", "margin-bottom:15px");
         w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
         w.addContentF("%d", this->value);
         w.endElement(); // span
         w.beginElement("input", "type", "range");
         w.addAttributeF("value", "%d", this->value);
-        w.addAttribute("style", "width: 300px");
+        w.addAttribute("style", "width: 330px");
         w.addAttributeF("id", "%s_%s", inPage->name, this->name);
-        w.addAttributeF("onchange", "sliderChange(this,'%s', '%s')", inPage->name, this->name);
-        w.addAttributeF("oninput", "sliderSlide(this,'%s','%s')", inPage->name, this->name);
+        w.addAttributeF("onchange", "sliderInput(this,'%s', '%s')", inPage->name, this->name);
+        w.addAttributeF("oninput", "sliderInput(this,'%s','%s')", inPage->name, this->name);
         if(this->min != 0)
             w.addAttribute("min", this->min);
         if(this->max != 100)
             w.addAttribute("max", this->max);
         w.endElement(); // input
         w.endElement(); // form
-        w.addElement("br");
         w.endElement(); // div
     }
     
@@ -139,6 +192,119 @@ public:
         }
     }
 };
+
+/// Show a visual time input, which call back on changes
+class PageTime : public PageItem
+{
+public:
+    OmWebActionProc proc = 0;
+
+    static char *minutesToTimeString(int minutes)
+    {
+        // this control type uses minutes within the 24 hour day to express a time of day.
+        static char t[10];
+        minutes &= 2047; // 1440 is tops but ok.
+        sprintf(t, "%02d:%02d", minutes/60, minutes % 60);
+        return t;
+    }
+
+    void render(OmXmlWriter &w, Page *inPage) override
+    {
+        /*
+         <form>
+         <span id="id1" style="display:inline-block;width:100px">100</span>
+         <input id="id2" type="range" onchange="aChange(this, 'id1')"
+         oninput="aSlide(this, 'id1')" />
+
+         <input id="id3" type="range" onchange="aChange(this, this.value)" />
+         </form>
+         */
+        w.beginElement("div", "class", "box1");
+        w.addContent(this->name);
+        w.beginElement("form");
+        w.beginElement("span", "class", "sliderValue");
+        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+//        w.addContentF("%s", minutesToTimeString(this->value));
+        w.endElement(); // span
+        w.beginElement("input", "type", "time");
+        w.addAttributeF("value", "%s", minutesToTimeString(this->value));
+        w.addAttributeF("id", "%s_%s", inPage->name, this->name);
+        w.addAttributeF("onchange", "timeChange(this,'%s', '%s')", inPage->name, this->name);
+        w.endElement(); // input
+        w.beginElement("input", "type", "checkbox");
+        w.addAttributeF("id", "%s_%s_checkbox", inPage->name, this->name);
+        if(this->value & 0x8000)
+            w.addAttribute("checked", "checked");
+        w.addAttributeF("onchange", "timeChange(this,'%s', '%s')", inPage->name, this->name);
+        w.endElement();
+        w.endElement(); // form
+        w.endElement(); // div
+    }
+
+    bool doAction(Page *fromPage) override
+    {
+        if(this->proc)
+        {
+            this->proc(fromPage->name, this->name, this->value, this->ref1, this->ref2);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};
+
+class PageColor : public PageItem
+{
+public:
+    OmWebActionProc proc = 0;
+
+    void render(OmXmlWriter &w, Page *inPage) override
+    {
+        /*
+         <form>
+         <span id="id1" style="display:inline-block;width:100px">100</span>
+         <input id="id2" type="range" onchange="aChange(this, 'id1')"
+         oninput="aSlide(this, 'id1')" />
+
+         <input id="id3" type="range" onchange="aChange(this, this.value)" />
+         </form>
+         */
+        w.beginElement("div", "class", "box1");
+        w.addContent(this->name);
+        w.beginElement("form");
+        w.beginElement("input", "type", "color");
+        w.addAttributeF("value", "#%06x", this->value);
+        w.addAttributeF("id", "%s_%s", inPage->name, this->name);
+        // change just like a slider -- it's a numeric value... ish.
+        w.addAttributeF("onchange", "colorInput(this,'%s', '%s')", inPage->name, this->name);
+        w.addAttributeF("oninput", "colorInput(this,'%s', '%s')", inPage->name, this->name);
+        w.endElement(); // input
+
+        w.beginElement("span", "class", "colorValue");
+        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+        w.addContentF(" #%06x", this->value);
+        w.endElement(); // span
+
+        w.endElement(); // form
+        w.endElement(); // div
+    }
+
+    bool doAction(Page *fromPage) override
+    {
+        if(this->proc)
+        {
+            this->proc(fromPage->name, this->name, this->value, this->ref1, this->ref2);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};
+
 
 class PageButton : public PageItem
 {
@@ -203,6 +369,8 @@ void defaultFooterHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
 
 OmWebPages::OmWebPages()
 {
+    this->__date__ = __DATE__;
+    this->__time__ = __TIME__;
     // create the built-in pages
     this->beginPage("_info");
     this->addHtml(infoHtmlProc, 0, this);
@@ -212,6 +380,12 @@ OmWebPages::OmWebPages()
     
     // Make sure none of the built-in pages become the user's home page.
     this->homePage = NULL;
+}
+
+void OmWebPages::setBuildDateAndTime(const char *date, const char *time)
+{
+    this->__date__ = date;
+    this->__time__ = time;
 }
 
 void OmWebPages::beginPage(const char *pageName)
@@ -255,7 +429,7 @@ void OmWebPages::addPageLink(const char *pageLink, OmWebActionProc proc, int ref
     this->currentPage->items.push_back(b);
 }
 
-void OmWebPages::addButton(const char *buttonName, OmWebActionProc proc, int ref1, void *ref2)
+OmWebPageItem *OmWebPages::addButton(const char *buttonName, OmWebActionProc proc, int ref1, void *ref2)
 {
     PageButton *b = new PageButton();
     b->name = buttonName;
@@ -263,14 +437,15 @@ void OmWebPages::addButton(const char *buttonName, OmWebActionProc proc, int ref
     b->ref1 = ref1;
     b->ref2 = ref2;
     this->currentPage->items.push_back(b);
+    return &b->item;
 }
 
-void OmWebPages::addSlider(const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+OmWebPageItem *OmWebPages::addSlider(const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
-    this->addSlider(0, 100, sliderName, proc, value, ref1, ref2);
+    return this->addSlider(0, 100, sliderName, proc, value, ref1, ref2);
 }
 
-void OmWebPages::addSlider(int rangeLow, int rangeHigh, const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+OmWebPageItem *OmWebPages::addSlider(int rangeLow, int rangeHigh, const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
     PageSlider *p = new PageSlider();
     p->name = sliderName;
@@ -281,8 +456,32 @@ void OmWebPages::addSlider(int rangeLow, int rangeHigh, const char *sliderName, 
     p->min = rangeLow;
     p->max = rangeHigh;
     this->currentPage->items.push_back(p);
+    return &p->item;
 }
 
+OmWebPageItem *OmWebPages::addTime(const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+{
+    PageTime *p = new PageTime();
+    p->name = sliderName;
+    p->value = value;
+    p->ref1 = ref1;
+    p->ref2 = ref2;
+    p->proc = proc;
+    this->currentPage->items.push_back(p);
+    return &p->item;
+}
+
+OmWebPageItem *OmWebPages::addColor(const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+{
+    PageColor *p = new PageColor();
+    p->name = sliderName;
+    p->value = value;
+    p->ref1 = ref1;
+    p->ref2 = ref2;
+    p->proc = proc;
+    this->currentPage->items.push_back(p);
+    return &p->item;
+}
 
 void OmWebPages::addHtml(HtmlProc proc, int ref1, void *ref2)
 {
@@ -305,43 +504,72 @@ bool OmWebPages::doAction(const char *pageName, const char *itemName)
     return false;
 }
 
+static const char *fileName(const char *filePath)
+{
+    if(!filePath)
+        return "";
+
+    int len = (int)strlen(filePath);
+    for(int ix = len; ix >= 0; ix--)
+    {
+        if(filePath[ix] == '/')
+            return filePath + ix;
+    }
+    return filePath;
+}
+
 void OmWebPages::renderInfo(OmXmlWriter &w)
 {
     w.addElement("hr");
     w.beginElement("pre");
 
-    w.addContentF("requests:  %d\n", this->requestsAll);
-    w.addContentF("maxHtml:   %d\n", this->greatestRenderLength);
+    long long now;
+    if(this->ri)
+        now = this->ri->uptimeMillis;
+    else
+    {
+#ifndef NOT_ARDUINO
+        now= millis();
+#else
+        now = 101;
+#endif
+    }
+    w.addContentF("requests:    %d\n", this->requestsAll);
+    w.addContentF("maxHtml:     %d\n", this->greatestRenderLength);
 
 #ifndef NOT_ARDUINO
-    w.addContentF("uptime:    %s\n", omTime(millis()));
-    w.addContentF("freeBytes: %d\n", system_get_free_heap_size());
+    w.addContentF("uptime:      %s\n", omTime(now));
+    w.addContentF("freeBytes:   %d\n", system_get_free_heap_size());
 #endif
 #ifdef ARDUINO_ARCH_ESP8266
-    w.addContentF("chipId:    0x%08x '8266\n", system_get_chip_id());
-    w.addContentF("systemSdk: %s/%d\n", system_get_sdk_version(), system_get_boot_version());
+    w.addContentF("chipId:      0x%08x '8266\n", system_get_chip_id());
+    w.addContentF("systemSdk:   %s/%d\n", system_get_sdk_version(), system_get_boot_version());
 #endif
 #ifdef ARDUINO_ARCH_ESP32
-    w.addContentF("chipId:    '32\n");
-    w.addContentF("systemSdk: %s\n", system_get_sdk_version());
+    w.addContentF("chipId:      '32\n");
+    w.addContentF("systemSdk:   %s\n", system_get_sdk_version());
 #endif
 #ifdef NOT_ARDUINO
-    w.addContentF("what:      Not Arduino\n");
+    w.addContentF("what:        Not Arduino\n");
 #endif
 #ifndef NOT_ARDUINO
     if(this->ri)
     {
-        w.addContentF("clientIp:  %s:%d\n", omIpToString(ri->clientIp), ri->clientPort);
-        w.addContentF("serverIp:  <a href='http://%s:%d/'>%s:%d</a>\n",
+        w.addContentF("clientIp:    %s:%d\n", omIpToString(ri->clientIp, true), ri->clientPort);
+        w.addContentF("serverIp:    <a href='http://%s:%d/'>%s:%d</a>\n",
                       omIpToString(ri->serverIp), ri->serverPort,
                       omIpToString(ri->serverIp), ri->serverPort);
         String bonjourName = ri->bonjourName;
         if(ri->bonjourName && ri->bonjourName[0])
-            w.addContentF("bonjour:   <a href='http://%s.local/'>%s.local</a>\n", ri->bonjourName, ri->bonjourName);
+            w.addContentF("bonjour:     <a href='http://%s.local/'>%s.local</a>\n", ri->bonjourName, ri->bonjourName);
+        if(ri->ap && ri->ap[0])
+            w.addContentF(    "accessPoint: %s\n", ri->ap);
+        else
+            w.addContentF(    "wifiNetwork: %s\n", ri->ssid);
     }
 #endif
-    w.addContentF("built:     %s %s\n", __DATE__, __TIME__);
-    
+    w.addContentF("built:     %s %s\n", this->__date__, this->__time__);
+
     w.endElement();
 }
 
@@ -358,16 +586,22 @@ const char *colorItem = "#e0e0e0";
 const char *colorHover = "#e0ffe0";
 const char *colorButtonPress = "#707070";
 
-void OmWebPages::renderStyle(OmXmlWriter &w)
+void OmWebPages::renderStyle(OmXmlWriter &w, int bgColor)
 {
     w.beginElement("style");
     w.addContent("*{font-family:arial}\n");
-    w.addContent("pre, pre a{font-size:24px;font-family:Courier, monospace; word-wrap:break-word; overflow:auto; color:black}\n"
-                 "a:link { text-decoration: none;}\n"
-                 "pre a:link {text-decoration: underline;}\n"
-                 ".sliderValue { display:inline-block; width:100px}\n"
-                 );
-    w.addContent("h1,h2,h3{text-align:center}\n");
+    // http://jkorpela.fi/forms/extraspace.html suggests margin:0 for forms to remove strange extra verticals.
+    w.addContent(R"JS(
+                 pre, pre a, .t {font-size:23px;font-family:Courier, monospace; word-wrap:break-word; overflow:auto; color:black}
+                 form {margin-bottom:0px}
+                 a:link { text-decoration: none;}
+                 pre a:link {text-decoration: underline;}
+                 .sliderValue { display:inline-block; font-size:16px; width:75px}
+                 .colorValue { font-size:16px; margin-left:20px}
+                 h1,h2,h3{text-align:center}
+                 )JS"
+    );
+
     w.addContentF(".box1,.box2,.button{font-size:30px; width:420px ; margin:10px; "
                  "padding:10px ; background:%s;"
                  "border-top-left-radius:15px;"
@@ -392,54 +626,124 @@ void OmWebPages::renderStyle(OmXmlWriter &w)
                  "input[type=range]::-webkit-slider-runnable-track { height: 5px; background: #663; border: none; border-radius: 3px; } \n"
                  "input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; border: none; height: 50px; width: 50px; border-radius: 10%; background: goldenrod; margin-top: -22px; } \n"
                  );
+
+    w.addContentF("body { background-color: #%06x }", bgColor);
     w.endElement();
 }
 
 void OmWebPages::renderScript(OmXmlWriter &w)
 {
     w.beginElement("script");
-    
-    
-    w.addContentF(
-                 "function reqListener () \n"
-                 "{ console.log(this.responseText) } \n;"
-                 
-                 "var sliderCallbacks = [];\n"
-                 "var sliderEmbargos = [];\n"
-                 "function sliderSlide(slider, page, sliderName) \n"
-                 "{ \n"
-                 "var textId = slider.id + '_value'; \n"
-                 "var text = document.getElementById(textId); \n"
-                 "text.style.color = '#a0a0a0'; \n"
-                 "text.innerHTML = slider.value; \n"
-#if 1
-                  // try embargo strategy
-                  "if(!Boolean(sliderEmbargos[sliderName]))\n"
-                  "{\n"
-                  " sliderChange(slider, page, sliderName);\n"
-                  " sliderEmbargos[sliderName] = setTimeout(function(){ sliderEmbargos[sliderName] = null; sliderChange(slider, page, sliderName);},100);\n"
-                  "}\n"
-#endif
-                 "} \n"
-                  );
-    w.addContentF(
-                 
-                 "function sliderChange(slider, page, sliderName) \n"
-                 "{ \n"
-                 "clearTimeout(sliderCallbacks[sliderName]);\n"
-                 "var textId = slider.id + '_value'; \n"
-                 "var text = document.getElementById(textId); \n"
-                 
-                 "text.style.color = '#000000'; \n"
-                 "text.innerHTML = slider.value; \n"
-                 
-                 "var oReq = new XMLHttpRequest(); \n"
-                 "oReq.addEventListener('load', reqListener); \n"
 
-                 "oReq.open('GET', '/_control?page=' + page + '&item=' + sliderName + '&value=' + slider.value); \n"
-                 "oReq.send(); \n"
-                 "} \n"
-                  );
+    /*
+     * So, about live updates. Sliders and Color input types are defined to send input/oninput() events
+     * as you drag the mouse, and change/onchange() when you release/commit. Experimentally, however,
+     * I see on chrome that color picker sends oninput and onchange on every movement AND mouseup. And
+     * on firefox, the color picker sends exclusively oninput, and never onchange.
+     *
+     * So, I treat change and input the same, and the timeout performs a commit on the last received
+     * event of either type.
+     */
+    
+    w.addContent(
+R"JS(
+
+    function reqListener ()
+    {
+        console.log(this.responseText)
+    }
+
+    var itemEmbargoes = [];
+    function doOrEmbargo(itemName, commitProc)
+    {
+        // the commitProc should include the itemName, and commit the current (latest) value, and send the http update.
+        if(!Boolean(itemEmbargoes[itemName]))
+        {
+            commitProc(); // nothing in-waiting, so do it now... and set a timeout to do it again with the latest value.
+            itemEmbargoes[itemName] = setTimeout(function()
+                                                 {
+                                                     itemEmbargoes[itemName] = null; // clear the embargo
+                                                     commitProc();
+                                                 }, 100);
+        }
+    }
+                 function clearEmbargo(itemName)
+                 {
+                     clearTimeout(itemEmbargoes[itemName]);
+                     itemEmbargoes[itemName] = null;
+                 }
+
+    function colorInput(item, page, itemName)
+    {
+//        var textId = item.id + '_value';
+//        var text = document.getElementById(textId);
+//        text.style.color = '#a0a0a0'; // update in grey until actually committed
+//        text.innerHTML = item.value;
+        doOrEmbargo(itemName, function(){colorCommit(item, page, itemName);});
+    }
+    function sliderInput(slider, page, sliderName)
+    {
+        var textId = slider.id + '_value';
+        var text = document.getElementById(textId);
+        text.style.color = '#a0a0a0'; // update in grey until actually committed
+        text.innerHTML = slider.value;
+        doOrEmbargo(sliderName, function(){sliderCommit(slider, page, sliderName);});
+    }
+
+    function colorCommit(slider, page, sliderName)
+    {
+        clearEmbargo(sliderName);
+        var textId = slider.id + '_value';
+        var text = document.getElementById(textId);
+
+        text.style.color = '#000000';
+        text.innerHTML = slider.value;
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener('load', reqListener);
+
+        var cv = '0x' + slider.value.substring(1);
+        var uu = '/_control?page=' + page + '&item=' + sliderName + '&value=' + cv;
+        oReq.open('GET', uu);
+        oReq.send();
+    }
+
+    function sliderCommit(slider, page, sliderName)
+    {
+        clearEmbargo(sliderName);
+        var textId = slider.id + '_value';
+        var text = document.getElementById(textId);
+
+        text.style.color = '#000000';
+        text.innerHTML = slider.value;
+
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener('load', reqListener);
+
+        oReq.open('GET', '/_control?page=' + page + '&item=' + sliderName + '&value=' + slider.value);
+        oReq.send();
+    }
+    function timeChange(timeInput_nope, page, timeInputName)
+    {
+    //                  var textId = timeInput.id + '_value';
+    //                  var text = document.getElementById(textId);
+
+    //                  text.style.color = '#000000';
+    //                  text.innerHTML = timeInput.value;
+
+        var s = page + '_' + timeInputName;
+        var timeInput = document.getElementById(s);
+        var timeCheckbox = document.getElementById(s + '_checkbox');
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener('load', reqListener);
+
+        var value = timeInput.value + '/' + (timeCheckbox.checked ? '1' : '0');
+        oReq.open('GET', '/_control?page=' + page + '&item=' + timeInputName + '&value=' + value);
+        oReq.send();
+    }
+
+    )JS"
+    );
+
 
                  /*
                   * Getting the momentary button to work was tricky.
@@ -467,8 +771,9 @@ void OmWebPages::renderScript(OmXmlWriter &w)
 }
 
 /// Render the beginning of the page, leaving <body> element open and ready.
-void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle)
+void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle, int bgColor)
 {
+    w.addContent("<!DOCTYPE html>\n");
     w.beginElement("html");
     w.addAttribute("lang", "en");
     w.beginElement("head");
@@ -489,7 +794,7 @@ void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle)
     
     w.addElement("title", pageTitle);
 
-    this->renderStyle(w);
+    this->renderStyle(w, bgColor);
     this->renderScript(w);
     w.endElement();
     w.beginElement("body");
@@ -572,14 +877,41 @@ PageItem *OmWebPages::findPageItem(const char *pageName, const char *itemName)
     return NULL;
 }
 
-bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAndQuery, OmRequestInfo *requestInfo)
+static int stringToIntMaybeTimeString(const char *valueS)
 {
-    OmXmlWriter w(output, outputSize);
-    output[0] = 0; // safety.
+    int value;
+    // if it's a time string, do minutes of day.
+    if(strlen(valueS) == 7 && valueS[2] == ':' && valueS[5] == '/')
+    {
+        int hour = (valueS[0] & 0xf) * 10 + (valueS[1] & 0xf);
+        int minute = (valueS[3] & 0xf) * 10 + (valueS[4] & 0xf);
+        int checked = (valueS[6] & 1); // ends with /0 or /1 for is the alarm set.
+        value = hour * 60 + minute;
+        if(checked)
+            value |= 0x8000;
+    }
+    else
+        value = omStringToInt(valueS);
+    return value;
+}
 
-    w.addContent("<!DOCTYPE html>\n");
+bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery, OmRequestInfo *requestInfo)
+{
+    bool result = false;
+    OmXmlWriter w = OmXmlWriter(consumer);
+    Page *page = 0;
+
+    this->wp = &w;
+    this->ri = requestInfo;
+
+    this->requestsAll++;
+    static OmWebRequest request;
+    request.init(pathAndQuery);
+    const char *requestPath = request.path;
+
     if(this->pages.size() == 0)
     {
+        this->renderHttpResponseHeader("text/html", 200);
         w.addElement("hr");
         w.beginElement("pre");
         w.addContent("OmWebPages\n");
@@ -588,18 +920,10 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
         w.addContent("\n");
         w.endElement();
         w.addElement("hr");
-        return false;
+        result = false;
+        goto goHome;
     }
 
-    Page *page = 0;
-    
-    
-    bool result = false;
-    this->requestsAll++;
-    static OmWebRequest request;
-    request.init(pathAndQuery);
-    const char *requestPath = request.path;
-    
     {
         // Do the previous action, if any.
         const char *pageName = request.getValue("page");
@@ -609,7 +933,8 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
         bool setParam = false;
         if(valueS)
         {
-            int value = omStringToInt(valueS);
+            // if it's a time string, do minutes of day.
+            int value = stringToIntMaybeTimeString(valueS);
             PageItem *item = this->findPageItem(pageName, itemName);
             if(item)
             {
@@ -623,7 +948,8 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
         if(omStringEqual("/_control", requestPath))
         {
             this->requestsParam++;
-            sprintf(output, "%s", setParam ? "ok" : "notok");
+            this->renderHttpResponseHeader("text/html", 200);
+            w.addContentF("%s", setParam ? "ok" : "notok");
             result = true;
             goto goHome;
         }
@@ -636,19 +962,36 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     // Empty path is "the home page"
     if(!page && omStringEqual(requestPath, ""))
         page = this->homePage;
-    
+
+    // Take a pocket-universe detour to maybe do a plain old URL handler.
     if(!page)
     {
+        for(UrlHandler *uh : this->urlHandlers)
+        {
+            if(omStringEqual(requestPath, uh->url))
+            {
+                // found a handler.
+                // Handler must do their own http response header.
+                uh->handlerProc(w, request, uh->ref1, uh->ref2);
+                result = true;
+                goto goHome;
+            }
+        }
+    }
+
+    if(!page)
+    {
+        OMLOG("no page found, just do top menu");
         this->renderTopMenu(w);
         result = false;
         goto goHome;
     }
-    
-    this->renderPageBeginning(w, page->name);
+
+    // Do a page, starting with the response headers.
+    this->renderHttpResponseHeader("text/html", 200);
+    this->renderPageBeginning(w, page->name, this->bgColor);
     w.addContent("\n");
     
-    this->wp = &w;
-    this->ri = requestInfo;
     if(this->headerProc && page->allowHeader)
         this->headerProc(w, 0, 0);
     
@@ -661,8 +1004,11 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     
     for(PageItem *b : page->items)
     {
-        b->render(w, page);
-        w.addContent("\n");
+        if(b->visible)
+        {
+            b->render(w, page);
+            w.addContent("\n");
+        }
     }
     
     if(this->footerProc && page->allowFooter)
@@ -672,16 +1018,49 @@ bool OmWebPages::handleRequest(char *output, int outputSize, const char *pathAnd
     w.endElements();
     result = true;
     
-    this->wp = 0;
-    this->ri = NULL;
-    
+
 goHome:
-    if(w.position > greatestRenderLength)
-        this->greatestRenderLength = w.position;
+    if(w.getByteCount() > this->greatestRenderLength)
+        this->greatestRenderLength = w.getByteCount();
     if(w.getErrorCount())
     {
-        sprintf(output, "error generating page");
+        // TODO: consider showing the partial page anyways? dvb2019
+        w.addContent("\n\nerror generating page\n\n");
     }
+    this->ri = 0;
+    this->wp = 0;
     return result;
 }
 
+void OmWebPages::setBgColor(int bgColor)
+{
+    this->bgColor = bgColor;
+}
+
+void OmWebPages::addUrlHandler(const char *path, OmUrlHandlerProc proc, int ref1, void *ref2)
+{
+    UrlHandler *uh = new UrlHandler();
+    // skip leading slash, it's implied throughout in our code here.
+    if(path && path[0] == '/')
+        path++;
+    uh->url = path;
+    uh->handlerProc = proc;
+    uh->ref1 = ref1;
+    uh->ref2 = ref2;
+    this->urlHandlers.push_back(uh);
+}
+
+void OmWebPages::renderHttpResponseHeader(const char *contentType, int response)
+{
+    this->wp->addContentF("HTTP/1.1 %d OK\n"
+                   "Content-type:%s\n"
+                   "Connection: close\n"
+                   "\n", response, contentType);
+}
+
+void OmWebPages::setValue(const char *pageName, const char *itemName, int value)
+{
+    PageItem *pi = this->findPageItem(pageName, itemName);
+    if(pi)
+        pi->setValue(value);
+}

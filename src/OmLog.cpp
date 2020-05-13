@@ -6,6 +6,18 @@
 
 #include "OmLog.h"
 #include "OmUtil.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#if NOT_ARDUINO
+static long millis()
+{
+    return 0;
+}
+#else
+#define printf Serial.printf
+#endif
 
 const char *ipAddressToString(IPAddress ip)
 {
@@ -38,12 +50,12 @@ void OmLog::logS(const char *file, int line, const char *format, ...)
     }
     
     
-    Serial.printf("%4d.%02d (*) %s.%d: ", tS, tH, file + fileStringOffset, line);
-    Serial.print(s);
+    printf("%4d.%02d (*) %s.%d: ", tS, tH, file + fileStringOffset, line);
+    printf("%s", s);
     
     // add trailing CR if missing
     int len = (int)strlen(format);
     if(len == 0 || format[len - 1] > 13)
-        Serial.print("\n");
+        printf("%s", "\n");
 }
 

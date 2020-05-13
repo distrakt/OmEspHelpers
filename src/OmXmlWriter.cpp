@@ -7,30 +7,31 @@
 //
 
 #include "OmXmlWriter.h"
+#include <stdlib.h>
 
 static const int HAS_ANYTHING = 1;
 static const int HAS_SUBELEMENT = 2;
 static const int HAS_TEXT = 4;
 
-OmXmlWriter::OmXmlWriter(char *outputBuffer, int outputBufferSize)
+/// Instantiate an XML writer to write into the specified buffer
+OmXmlWriter::OmXmlWriter(OmIByteStream *consumer)
 {
-    this->outputBuffer = outputBuffer;
-    this->outputBufferSize = outputBufferSize;
-    
-    this->outputBuffer[0] = 0;
+    this->consumer = consumer;
 }
+
+
 
 void OmXmlWriter::indent()
 {
     if(this->indenting)
         for(int i = 0; i < depth; i++)
-            put(" ");
+            puts(" ");
 }
 
 void OmXmlWriter::cr()
 {
     if(this->indenting)
-        put("\n");
+        puts("\n");
 }
 
 void OmXmlWriter::addingToElement(bool addContent)
@@ -38,7 +39,7 @@ void OmXmlWriter::addingToElement(bool addContent)
     // call this before inserting content or another element, in an elemnet.
     if(depth > 0 && this->hasAnything[depth] == 0)
     {
-        put(">");
+        puts(">");
         if(!addContent) // for embedded text content, we omit line feeds and indents around it. at least a little.
             this->cr();
     }
@@ -50,6 +51,8 @@ void OmXmlWriter::addingToElement(bool addContent)
 
 void OmXmlWriter::beginElement(const char *elementName)
 {
+    this->endAttribute(); // close any such open element.
+
     this->addingToElement(false);
     this->depth++;
     this->hasAnything[depth] = 0;
@@ -78,6 +81,7 @@ static int putSome(char *writeHere, const char *s)
 
 // either for element or for attribute. attributes need &#10; and &#13; for line breaks.
 // return 0 for ok, 1 for errors.
+// TODO: this could be a class method, this->putWithEscapes(), in every instance, to avoid intermediate buffer. dvb2019.
 static int doEscapes(const char *sIn, int outSize, char *sOut,
                      bool forElement = false,
                      bool isUrl = false)
@@ -123,7 +127,9 @@ static int doEscapes(const char *sIn, int outSize, char *sOut,
     while(char c = *sIn++)
     {
         if(outSize - position < 10)
+        {
             return 1;
+        }
         
         switch(c)
         {
@@ -156,7 +162,7 @@ static int doEscapes(const char *sIn, int outSize, char *sOut,
 void OmXmlWriter::addContent(const char *content)
 {
     this->addingToElement(true);
-    this->put(content);
+    this->puts(content);
 }
 
 void OmXmlWriter::addContentF(const char *fmt,...)
@@ -173,6 +179,7 @@ void OmXmlWriter::addContentF(const char *fmt,...)
 
 void OmXmlWriter::addAttribute(const char *attribute, const char *value)
 {
+    this->endAttribute(); // just in case
     if(attribute && value)
     {
         char valueEscaped[TINY_XML_ADD_MAX];
@@ -184,6 +191,7 @@ void OmXmlWriter::addAttribute(const char *attribute, const char *value)
 
 void OmXmlWriter::addAttributeF(const char *attribute, const char *fmt,...)
 {
+    this->endAttribute(); // just in case
     char value[TINY_XML_ADD_MAX];
     va_list ap;
     va_start(ap,fmt);
@@ -194,6 +202,48 @@ void OmXmlWriter::addAttributeF(const char *attribute, const char *fmt,...)
 
     putf(" %s=\"%s\"",attribute,valueEscaped);
 }
+
+void OmXmlWriter::addAttributeFBig(int reserve, const char *attribute, const char *fmt,...)
+{
+    this->endAttribute(); // just in case
+
+    char *value = NULL;
+    char *valueEscaped = NULL;
+    value = (char *)calloc(1, reserve);
+    int wrote;
+    if(!value)
+    {
+        this->errorCount++;
+        goto goHome;
+    }
+    valueEscaped = (char *)calloc(1, reserve);
+    if(!valueEscaped)
+    {
+        this->errorCount++;
+        goto goHome;
+    }
+
+    va_list ap;
+    va_start(ap,fmt);
+    wrote = vsnprintf(value,reserve - 1,fmt,ap);
+    if(wrote < 0 || wrote >= reserve - 1)
+        this->errorCount++;
+
+    this->errorCount += doEscapes(value, reserve, valueEscaped);
+
+    puts(" ");
+    puts(attribute);
+    puts("=\"");
+    puts(valueEscaped);
+    puts("\"");
+
+goHome:
+    if(value)
+        free(value);
+    if(valueEscaped)
+        free(valueEscaped);
+}
+
 
 void OmXmlWriter::addAttributeUrlF(const char *attribute, const char *fmt,...)
 {
@@ -210,9 +260,10 @@ void OmXmlWriter::addAttributeUrlF(const char *attribute, const char *fmt,...)
 
 
 
-void OmXmlWriter::addAttribute(const char *attribute, int value)
+void OmXmlWriter::addAttribute(const char *attribute, long long int value)
 {
-    putf(" %s=\"%d\"",attribute,value);
+    this->endAttribute(); // just in case
+    putf(" %s=\"%lld\"",attribute,value);
 }
 
 void OmXmlWriter::addElement(const char *elementName)
@@ -238,10 +289,19 @@ void OmXmlWriter::addElementF(const char *elementName, const char *fmt,...)
     this->addElement(elementName, value);
 }
 
-
-
 void OmXmlWriter::endElement()
 {
+    this->endElement(NULL);
+}
+
+void OmXmlWriter::endElement(const char *elementName)
+{
+    if(elementName)
+    {
+        if(strcmp(elementName, this->elementName[this->depth]))
+            this->errorCount++;
+    }
+
     if(this->hasAnything[depth])
     {
         if(!(this->hasAnything[depth] & HAS_TEXT)) // no indent if an element has character content
@@ -249,7 +309,7 @@ void OmXmlWriter::endElement()
         putf("</%s>",this->elementName[depth]);
     }
     else
-        put("/>");
+        puts("/>");
     this->cr();
     this->depth--;
 }
@@ -259,7 +319,6 @@ void OmXmlWriter::endElements()
     while(this->depth)
         this->endElement();
 }
-
 
 void OmXmlWriter::putf(const char *fmt,...)
 {
@@ -273,24 +332,33 @@ void OmXmlWriter::putf(const char *fmt,...)
     if(len >= sizeof(putfBuffer))
         this->errorCount++;
         
-    this->put(putfBuffer);
+    this->puts(putfBuffer);
 }
 
-void OmXmlWriter::put(const char *stuff)
+void OmXmlWriter::puts(const char *stuff)
 {
     long len = strlen(stuff);
     bool error = false;
-    if(len + this->position < this->outputBufferSize)
+
+    // TODO here is where we could consider checking
+    // running flags like addingToElement and addingToAttribute
+    // to see how best to escape them.
+    // TODO: right now CDATA never happens, we never do escapes
+    // on content blocks.
+    // sometimes this is good, to let you manually add
+    // in XML/HTML directives but you have to be rigorous.
+    // Maybe we need addContent and addContentRaw.
+    if(this->consumer)
     {
-        this->position += sprintf(this->outputBuffer + this->position, "%s", stuff);
+        bool result = true; // success
+        for(int ix = 0; ix < len; ix++)
+        {
+            this->byteCount++;
+            result &= this->consumer->put(stuff[ix]);
+        }
+        if(!result)
+            error = true;
     }
-    else
-    {
-        error = true;
-    }
-    this->outputBuffer[this->position] = 0;
-    if(error)
-        this->errorCount++;
 }
 
 void OmXmlWriter::setIndenting(int onOff)
@@ -301,4 +369,42 @@ void OmXmlWriter::setIndenting(int onOff)
 int OmXmlWriter::getErrorCount()
 {
     return this->errorCount;
+}
+
+int OmXmlWriter::getByteCount()
+{
+    return this->byteCount;
+}
+
+bool OmXmlWriter::put(uint8_t ch)
+{
+    /// currently only supported for long attributes. Could easily support element content too.
+    bool result = true;
+    if(this->attributeName)
+    {
+        this->byteCount++;
+        result &= this->consumer->put(ch);
+    }
+    return result;
+}
+
+bool OmXmlWriter::done()
+{
+    return this->consumer->done(); // should probably really be "flush"
+}
+
+void OmXmlWriter::beginAttribute(const char *attributeName)
+{
+    this->endAttribute(); // really, almost every method should call this. Just in case it's sitting open.
+    this->attributeName = attributeName;
+    this->putf(" %s=\"", attributeName);
+}
+void OmXmlWriter::endAttribute()
+{
+    if(this->attributeName)
+    {
+        // an attribute is open, so close it.
+        this->put('"');
+        this->attributeName = 0;
+    }
 }

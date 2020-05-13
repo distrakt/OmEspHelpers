@@ -47,6 +47,8 @@
 class OmNtp
 {
 public:
+    OmNtp();
+
     /// Call this after wifi properly established
     void setWifiAvailable(bool wifiAvailable);
 
@@ -56,10 +58,18 @@ public:
     /// This number gets added to UTC for your time zone. It ranges
     /// from -12 to +12. California in December needs -8.
     void setTimeZone(int hourOffset);
+
+    int getTimeZone();
     
-    /// Issue a request to my personal service, omino.com/time/time.php, which returns
-    /// current California time, and set the time zone based on that.
-    void setCaTimeZone();
+    /// Issue a request to an http service, omino.com/time/time.php, which returns
+    /// current local time of your choosing.
+    /// The service should look like:
+    /// <?
+    /// print date("Y-m-d H:i:s");
+    /// print " + ";
+    /// print date("e");
+    /// ?>
+    void setLocalTimeZone();
     
     void setTimeUrl(const char *timeUrl);
 
@@ -71,6 +81,10 @@ public:
     /// Get the time of day in a handy string like HH:MM:SS.
     /// (It's a static char[], by the way.)
     const char *getTimeString();
+
+    bool getUTime(uint32_t &uTimeOut, int &uFracOut); // seconds of 1970-1-1, and milliseconds.
+    uint32_t getUTime(); // lite version
+    bool uTimeToTime(uint32_t uTime, int uFrac, int &hourOut, int &minuteOut, float &secondOut); // in local time zone
 
     /// Get the last-created ntp instance, if any
     static OmNtp *ntp();
@@ -99,10 +113,13 @@ private:
     bool ntpRequestSent = 0; // is set "true" after sending ntp request, and cleared when we get answer.
 
     const char *timeUrl = 0;
-    bool caTimeGot = false;
-    int caHour = -1;
-    int caMinute = -1;
-    int caSecond = -1;
+    bool localTimeGot = false; // set when we get it, and cleared when used
+    bool localTimeEverGot = false; // set if it has ever ever worked.
+    int localHour = -1;
+    int localMinute = -1;
+    int localSecond = -1;
+
+    int localTimeRefetchCountdown = 0; // now and then, reget local time.
 
     long countdownMilliseconds = -1;
     long lastMilliseconds = 0;

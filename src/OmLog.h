@@ -27,6 +27,9 @@
 #ifdef ARDUINO_ARCH_ESP32
 #include <WiFi.h>
 #endif
+#if NOT_ARDUINO
+typedef unsigned char IPAddress[4];
+#endif
 
 /// This macro is what you'll call. It adds the file and line number to the output.
 #define OMLOG(_args...) OmLog::logS(__FILE__, __LINE__, _args)

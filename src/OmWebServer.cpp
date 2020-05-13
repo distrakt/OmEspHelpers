@@ -21,9 +21,12 @@
 typedef enum
 {
     OWS_BEGIN = 0,
-    OWS_NO_WIFIS, // just sit here, can't do anything.
-    OWS_CONNECTING_TO_WIFI,
-    OWS_RUNNING
+    OWS_NO_WIFIS, // Means no ssid/pwd have been set. Just sit here, can't do anything.
+    OWS_CONNECTING_TO_WIFI, // aka trying
+    OWS_RUNNING,
+
+    OWS_AP_START,
+    OWS_AP_RUNNING,
 } EOwsState;
 
 /// This class reduces clutter in the public header file.
@@ -33,25 +36,45 @@ public:
     unsigned int ticks = 0;
     std::vector<String> ssids;
     std::vector<String> passwords;
+    String ssid; // current or attempting ssid.
     String bonjourName;
     EOwsState state = OWS_BEGIN;
+    long long wifiTryStartedMillis = 0; // so we know when to time-out on one of the ssid/password combos, and try the next
     int port = 80;
     OmRequestHandler requestHandler = 0;
     OmWebPages *requestHandlerPages = 0;
     OmConnectionStatus statusCallback = 0;
-//    ESP8266WebServer *webServer = 0;
     WiFiServer *wifiServer = 0;
     OmNtp *ntp = 0;
     int wifiIndex = 0; // which wifi currently trying or achieved.
     int requestCount = 0;
-    
+
+    bool streamToClient = false; // set to true when we're open for busines, handling request.
+#define STREAM_BLOCK 1200
+    uint8_t streamBlock[STREAM_BLOCK + 1];
+    int streamBlockIndex = 0;
+    int streamCount = 0;
+
     int lastWifiStatus = -99;
     
     OmBlinker b = OmBlinker(LED_BUILTIN);
     
     bool doSerial = true;
     int verbose = 2;
-    
+
+    long lastMillis;
+    long long uptimeMillis;
+
+    // connection in progress...
+    WiFiClient client;
+    long long clientStartMillis = 0;
+    String request;
+
+    bool accessPoint = false; // set to true if an access point is actually running.
+    String accessPointSsid;
+    String accessPointPassword;
+    long long accessPointStartMillis = 0; // set when we fire up the ap, and any client access to prolong it.
+
     void printf(const char *format, ...)
     {
         if(!this->doSerial)  // serial disabled?
@@ -67,19 +90,39 @@ public:
         auto tH = (t / 10) % 100;
         Serial.printf("%4d.%02d (*) OmWebServer.%d: ", tS, tH, this->port);
         Serial.print(s);
+        int k = (int)strlen(s);
+        if(s[k - 1] != '\n')
+            Serial.print('\n');
     }
 };
+
+static OmWebServer *recentOmWebServer = 0; // dumbest trick ever, so plain-C callbacks can access. :-/
+static OmWebServerPrivates *recentOmWebServerPrivates = 0;
 
 OmWebServer::OmWebServer(int port)
 {
     this->p = new OmWebServerPrivates();
     this->p->port = port;
+    this->p->lastMillis = millis();
+
+    recentOmWebServer = this;
+    recentOmWebServerPrivates = this->p;
 }
 
 OmWebServer::~OmWebServer()
 {
     delete this->p;
+    recentOmWebServer = 0;
+    recentOmWebServerPrivates = 0;
 }
+
+void OmWebServer::setAccessPoint(String ssid, String password)
+{
+    this->p->accessPoint = false; // will be set true if running
+    this->p->accessPointSsid = ssid;
+    this->p->accessPointPassword = password;
+}
+
 
 void OmWebServer::setBonjourName(String bonjourName)
 {
@@ -96,6 +139,13 @@ void OmWebServer::addWifi(String ssid, String password)
 {
     this->p->ssids.push_back(ssid);
     this->p->passwords.push_back(password);
+}
+
+/// empty the wifis list.
+void OmWebServer::clearWifis()
+{
+    this->p->ssids.clear();
+    this->p->passwords.clear();
 }
 
 void OmWebServer::setHandler(OmRequestHandler requestHandler)
@@ -142,7 +192,7 @@ void OmWebServer::maybeStatusCallback(bool trying, bool failure, bool success)
     }
 }
 
-void OmWebServer::startWifiTry()
+void OmWebServer::initiateConnectionTry(String wifi, String password)
 {
     if(this->p->ssids.size() == 0)
     {
@@ -150,35 +200,49 @@ void OmWebServer::startWifiTry()
         return;
     }
     
-    this->p->wifiIndex %= this->p->ssids.size();
     this->maybeStatusCallback(true, false, false);
     WiFi.persistent(false);
-    WiFi.begin(this->p->ssids[this->p->wifiIndex].c_str(), this->p->passwords[this->p->wifiIndex].c_str());
+    WiFi.begin(wifi.c_str(), password.c_str());
+    this->p->ssid = wifi;
+
+    this->p->state = OWS_CONNECTING_TO_WIFI;
+    this->p->wifiTryStartedMillis = this->p->uptimeMillis;
 }
 
-void OmWebServer::begin()
+void OmWebServer::owsBegin()
 {
     this->p->printf("On port %d\n", this->p->port);
-    if(this->p->ssids.size() == 0)
-    {
-        this->p->state = OWS_NO_WIFIS;
-        this->p->printf("No wifis. Try omWebServer->addWifi(ssid, password);\n");
-        return;
-    }
-    
+
     WiFi.persistent(false);
     WiFi.disconnect();
+    if(this->p->ntp)
+        this->p->ntp->setWifiAvailable(false);
+
+    this->p->accessPoint = false; // if it was an access point, it is not any more.
+    this->p->wifiIndex = 0; // start the wifi-search loop.
+
     if(this->p->wifiServer)
     {
         delete this->p->wifiServer;
         this->p->wifiServer = 0;
     }
-//    if(this->p->webServer)
-//    {
-//        delete this->p->webServer;
-//        this->p->webServer = 0;
-//    }
-    
+
+    // Normal station mode, connect to a netowrk and keep working.
+    if(this->p->ssids.size() == 0)
+    {
+        // no ssids, so we'll try an access point.
+        if(this->p->accessPointSsid.length())
+        {
+            this->p->state = OWS_AP_START;
+        }
+        else
+        {
+            this->p->state = OWS_NO_WIFIS;
+            this->p->printf("No wifis. Try omWebServer->addWifi(ssid, password); or ->setAccessPoint(ssid, password);\n");
+        }
+        return;
+    }
+
     WiFi.mode(WIFI_STA);
     if(this->p->bonjourName.length() > 0)
     {
@@ -189,22 +253,31 @@ void OmWebServer::begin()
         WiFi.setHostname(this->p->bonjourName.c_str());
 #endif
     }
+
+    // and fire up the first attempt. (later attempts will stay on OWS_CONNECTING_TO_WIFI state.)
+    this->p->wifiIndex = 0;
+    this->initiateConnectionTry(this->p->ssids[this->p->wifiIndex], this->p->passwords[this->p->wifiIndex]);
     this->p->state = OWS_CONNECTING_TO_WIFI;
-    this->startWifiTry();
-    
+
     // flash the "3-blinks" connecting pattern.
     this->p->b.clear();
     this->p->b.addBlink(1,1);
     this->p->b.addBlink(1,1);
     this->p->b.addBlink(1,1);
     this->p->b.addOffTime(5);
+
 }
 
-//// bindable non-member function, for callback purpose
-//static void handleRequest0(OmWebServer *instance)
-//{
-//    instance->handleRequest();
-//}
+void OmWebServer::end()
+{
+    WiFi.persistent(false);
+    WiFi.disconnect();
+    if(this->p->wifiServer)
+    {
+        delete this->p->wifiServer;
+        this->p->wifiServer = 0;
+    }
+}
 
 static bool endsWithCrlfCrlf(String &s)
 {
@@ -238,15 +311,118 @@ static String urlFromRequest(String r)
   return url;
 }
 
+/*
+ Handy cheat sheet
+ typedef enum {
+ WL_NO_SHIELD        = 255,   // for compatibility with WiFi Shield library
+ WL_IDLE_STATUS      = 0,
+ WL_NO_SSID_AVAIL    = 1,
+ WL_SCAN_COMPLETED   = 2,
+ WL_CONNECTED        = 3,
+ WL_CONNECT_FAILED   = 4,
+ WL_CONNECTION_LOST  = 5,
+ WL_DISCONNECTED     = 6
+ } wl_status_t;
+*/
+
+const char *statusString(int wifiStatus)
+{
+#define SSCASE(_x) if(wifiStatus == _x) return #_x;
+    SSCASE(WL_NO_SHIELD);
+    SSCASE(WL_NO_SHIELD);
+    SSCASE(WL_IDLE_STATUS);
+    SSCASE(WL_NO_SSID_AVAIL);
+    SSCASE(WL_SCAN_COMPLETED);
+    SSCASE(WL_CONNECTED);
+    SSCASE(WL_CONNECT_FAILED);
+    SSCASE(WL_CONNECTION_LOST);
+    SSCASE(WL_DISCONNECTED);
+    return "?";
+#undef SSCASE
+}
+
+void OmWebServer::pollForClient()
+{
+    // (TODO this could be a method on OmWebServerPrivates, to keep it inside.)
+
+    // do our funny polling.
+
+    // maybe kill an open client if it's been a little while
+    // You see, this library only manages a single open client at a time. We only ask
+    // for a client when the last one we got is no longer active.
+    // but Chrome (for example) opens a connection immediately, to make the next
+    // action snappier to the user. So here, we just shut that down. Chrome spots it,
+    // and initiates a fresh connection _WHEN the TIME comes_.
+
+#define CLIENT_DEADLINE 300
+    if(this->p->client || this->p->client.connected())
+    {
+        if(this->p->uptimeMillis - this->p->clientStartMillis > CLIENT_DEADLINE)
+        {
+            this->p->client.stop();
+            // Serial.printf("\nKILLED CLIENT\n"); // excrutiating verbose
+        }
+    }
+
+
+    if(!this->p->client || !this->p->client.connected())
+    {
+        this->p->client = this->p->wifiServer->available();
+        if(this->p->client.connected())
+        {
+            // Serial.printf("\nNEW CLIENT\n"); // excrutiating verbose
+            this->p->request = "";
+            this->p->clientStartMillis = this->p->uptimeMillis;
+            this->p->accessPointStartMillis = this->p->clientStartMillis; // keep the AP mode alive longer, it is in use.
+        }
+    }
+
+    if(this->p->client && this->p->client.connected())
+    {
+        while(this->p->client.available())
+        {
+            char c = this->p->client.read();
+            // Serial.printf("%c", c); // excrutiating verbose
+            this->p->request += c;
+            if(endsWithCrlfCrlf(this->p->request))
+            {
+                // looks like the request finished. Ok, so:
+                String url = urlFromRequest(this->p->request);
+
+                this->handleRequest(url, this->p->client); // performs the SEND.
+            }
+        }
+    }
+}
+
+#ifdef ARDUINO_ARCH_ESP32
+void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+    Serial.println("Event: client connected to access point");
+    if(recentOmWebServerPrivates)
+        recentOmWebServerPrivates->accessPointStartMillis = recentOmWebServerPrivates->uptimeMillis; // reset the timeout
+}
+
+void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+    Serial.println("Event: client disconnected from access point");
+}
+#endif
 
 /// call this in loop to give time to run.
 void OmWebServer::tick()
 {
-    long now = millis();
+    {
+        long nowMillis = millis();
+        long deltaMillis = nowMillis - this->p->lastMillis;;
+        this->p->uptimeMillis += deltaMillis;
+        this->p->lastMillis = nowMillis;
+    }
+
     this->p->ticks++;
     this->p->b.tick();
     if(this->p->ntp)
-        this->p->ntp->tick(1); // TODO pass me millis
+        this->p->ntp->tick(this->p->lastMillis);
 #if ARDUINO_ARCH_ESP8266
     if(this->p->bonjourName.length())
         MDNS.update();
@@ -256,7 +432,7 @@ void OmWebServer::tick()
     if(wifiStatus != this->p->lastWifiStatus)
     {
         this->p->lastWifiStatus = wifiStatus;
-        this->p->printf("Wifi status became: %d\n", wifiStatus);
+        this->p->printf("Wifi status became: %d:%s\n", wifiStatus, statusString(wifiStatus));
     }
     
     switch(this->p->state)
@@ -264,9 +440,10 @@ void OmWebServer::tick()
         case OWS_BEGIN:
         {
             // the very first tick.
-            this->begin();
-        }
+            this->owsBegin();
             break;
+        }
+
         case OWS_NO_WIFIS:
             break;
             
@@ -274,11 +451,10 @@ void OmWebServer::tick()
         {
             // Wait for connection
             auto wifiStatus = WiFi.status();
-            if(wifiStatus == WL_IDLE_STATUS || wifiStatus == WL_DISCONNECTED)
-                break;
-            else if(wifiStatus == WL_CONNECTED)
+            if(wifiStatus == WL_CONNECTED)
             {
-                this->maybeStatusCallback(false, false, true);
+                // hooray, we've achieved connection.
+                this->maybeStatusCallback(false, false, true); // tell the world.
                 // got ssid
                 // maybe bonjour?
                 if(this->p->bonjourName.length() > 0)
@@ -291,32 +467,45 @@ void OmWebServer::tick()
                 this->p->wifiServer = new WiFiServer(this->p->port);
                 this->p->wifiServer->begin();
                 
-//                this->p->webServer = 0;
-//                this->p->webServer = new ESP8266WebServer(this->p->port);
-//                auto hr0 = std::bind(handleRequest0, this);
-//                this->p->webServer->onNotFound(hr0);
-//                this->p->webServer->begin();
-                this->p->state = OWS_RUNNING;
                 this->p->b.clear();
                 this->p->b.addNumber(this->getIp() & 0xff); // blink out the last Octet, like 192.168.0.234, blink the 234.
                 
                 // and tell NTP that they're open for business
                 if(this->p->ntp)
                     this->p->ntp->setWifiAvailable(true);
+
+                // Enter the Running State. This is good.
+                this->p->state = OWS_RUNNING;
             }
             else
             {
-                this->maybeStatusCallback(false, true, false);
-                // connection failed, try next known network
-                this->p->wifiIndex = (this->p->wifiIndex + 1) % this->p->ssids.size();
-                this->startWifiTry();
+                // we're not connected. if it's been enough time, try the next wifi.
+                // We only care about WL_CONNECTED vs every other status. The sequence of status
+                // changes isn't rigorously followed the same between ESP32 and EPS8266, so we do timeout instead.
+                int howLong = this->p->uptimeMillis - this->p->wifiTryStartedMillis;
+                if(howLong > 7000)
+                {
+                    this->maybeStatusCallback(false, true, false);
+                    // connection failed, try next known network
+                    this->p->wifiIndex += 1;
+                    // if we've tried them all, AND there's an access point, go do that.
+                    if(this->p->wifiIndex >= this->p->ssids.size() && this->p->accessPointSsid.length())
+                    {
+                        this->p->state = OWS_AP_START;
+                    }
+                    else
+                    {
+                        this->p->wifiIndex %= this->p->ssids.size();
+                        this->initiateConnectionTry(this->p->ssids[this->p->wifiIndex], this->p->passwords[this->p->wifiIndex]);
+                    }
+                }
             }
             break;
         }
-            
+
         case OWS_RUNNING:
         {
-            if(wifiStatus != WL_CONNECTED)
+            if(wifiStatus != WL_CONNECTED && !this->p->accessPoint)
             {
                 // Lost connection, jump back into loop. Pardon the clunky state machine.
                 this->p->state = OWS_BEGIN;
@@ -326,65 +515,68 @@ void OmWebServer::tick()
             }
             else
             {
-              // do our funny polling.
-//              static WiFiClient client;
-//              static String request = "";
-            
-              // maybe kill an open client if it's been a little while
-              // You see, this library only manages a single open client at a time. We only ask
-              // for a client when the last one we got is no longer active.
-              // but Chrome (for example) opens a connection immediately, to make the next
-              // action snappier to the user. So here, we just shut that down. Chrome spots it,
-              // and initiates a fresh connection _WHEN the TIME comes_.
-
-              #define CLIENT_DEADLINE 300
-              if(client || client.connected())
-              {
-                if(now - this->clientStartMillis > CLIENT_DEADLINE)
-                {
-                  client.stop();
-                  // Serial.printf("\nKILLED CLIENT\n"); // excrutiating verbose
-                }
-              }
-            
-
-              if(!this->client || !this->client.connected())
-              {
-                client = this->p->wifiServer->available();
-                if(client.connected())
-                {
-                  // Serial.printf("\nNEW CLIENT\n"); // excrutiating verbose
-                  request = "";
-                  this->clientStartMillis = now;
-                }
-              }
-
-              if(client && client.connected())
-              {
-                while(client.available())
-                {
-                  char c = client.read();
-                  // Serial.printf("%c", c); // excrutiating verbose
-                  request += c;
-                  if(endsWithCrlfCrlf(request))
-                  {
-                    // looks like the request finished. Ok, so:
-                    // Serial.printf("request: %s\n", request.c_str());
-                    String url = urlFromRequest(request);
-                    // Serial.printf("url: %s\n", url.c_str());
-//                    Serial.printf("remoteIp: %s, remotePort: %d\n", ipAddressToString(client.remoteIP()), client.remotePort());
-
-                    handleRequest(url, client); // performs the SEND.
-                  }
-                }
-              }
-
-
-
-              
+                this->pollForClient();
             }
+            break;
+        }
 
-//            this->p->webServer->handleClient();
+        case OWS_AP_START:
+        {
+            if(this->p->accessPointSsid.length())
+            {
+                // beginning is easy for access point, there's no further state to consider.
+                WiFi.disconnect();
+                delay(200);
+                WiFi.mode(WIFI_AP);
+                delay(200);
+                WiFi.disconnect();
+                delay(200);
+                WiFi.mode(WIFI_AP);
+                WiFi.softAP(this->p->accessPointSsid.c_str(), this->p->accessPointPassword.length() ? this->p->accessPointPassword.c_str() : 0);
+#ifdef ARDUINO_ARCH_ESP32
+                WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_AP_STACONNECTED);
+                WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_AP_STADISCONNECTED);
+#endif
+                IPAddress apIp = WiFi.softAPIP();
+                this->p->printf("Access Point IP Address: %s\n", omIpToString(apIp, true));
+                // instantiate right here, now.
+                this->p->wifiServer = new WiFiServer(this->p->port);
+                this->p->wifiServer->begin();
+                this->p->state = OWS_RUNNING;
+                this->p->printf("Access point name:     %s\n", this->p->accessPointSsid.c_str());
+                this->p->printf("Access point password: %s\n", this->p->accessPointPassword.length() ? this->p->accessPointPassword.c_str() : "<none>");
+                this->p->state = OWS_AP_RUNNING;
+                this->p->accessPoint = true;
+
+                this->p->accessPointStartMillis = this->p->uptimeMillis; // for timing out the Access Point mode.
+            }
+            else
+            {
+                // shouldnt have got here, entered AP_START but no ap name given. so.
+                this->p->state = OWS_NO_WIFIS;
+            }
+            break;
+        }
+
+        case OWS_AP_RUNNING:
+        {
+            this->pollForClient();
+            // TODO: if no connections for a while, go back to OWS_BEGIN to reestablish station mode.
+            // this for an appliance that's connected, then the wifi fails a while, but comes back.
+            // no need to lapse into permanant AP mode.
+
+#define AP_TIMEOUT_SECONDS 60
+            // after AP_TIMEOUT_SECONDS, go ahead and retry the available wifis, if any.
+            if(this->p->ssids.size())
+            {
+                int secondsSinceLastClientAccess = (this->p->uptimeMillis - this->p->accessPointStartMillis) / 1000;
+                if(secondsSinceLastClientAccess > AP_TIMEOUT_SECONDS)
+                {
+                    this->p->printf("Access point %s unused for %d seconds; retrying wifis", this->p->accessPointSsid.c_str(), AP_TIMEOUT_SECONDS);
+                    this->p->state = OWS_BEGIN;
+                }
+            }
+            break;
         }
     }
 }
@@ -394,8 +586,53 @@ void OmWebServer::setStatusLedPin(int statusLedPin)
     this->p->b.setLedPin(statusLedPin);
 }
 
+bool OmWebServer::put(uint8_t ch)
+{
+    // our streaming implementation.
+    // used entirely for URL transmission.
+
+    bool result = true;
+    if(this->p->streamToClient)
+    {
+        this->p->streamCount++;
+        this->p->streamBlock[this->p->streamBlockIndex++] = ch;
+        if(this->p->streamBlockIndex == STREAM_BLOCK)
+        {
+            this->p->client.write(this->p->streamBlock, this->p->streamBlockIndex);
+            this->p->streamBlockIndex = 0;
+        }
+    }
+    else
+        result = false;
+
+    return result;
+}
+
+bool OmWebServer::put(const char *s)
+{
+    bool result = true;
+    while(*s)
+        result &= this->put(*s++);
+    return result;
+}
+bool OmWebServer::put(uint8_t *d, int size)
+{
+    bool result = true;
+    while(size-- > 0)
+        result &= this->put(*d++);
+    return result;
+}
+
+
+bool OmWebServer::done()
+{
+    this->p->client.write(this->p->streamBlock, this->p->streamBlockIndex);
+    this->p->streamBlockIndex = 0;
+}
+
 void OmWebServer::handleRequest(String request, WiFiClient &client)
 {
+    // TODO: this could be on OmWebServerPrivates, to hide fully.
     this->p->requestCount++;
     this->p->b.addInterjection(2,2); // blink LED to show incoming
 
@@ -408,16 +645,24 @@ void OmWebServer::handleRequest(String request, WiFiClient &client)
     {
       this->p->printf("Request from %s:%d %s\n", omIpToString(remoteIp), remotePort, uriS.c_str());
     }
-    
-    String responseS = "HTTP/1.1 200 OK\n"
-              "Content-type:text/html\n"
-              "Connection: close\n"
-              "\n";
+
+    this->p->streamToClient = true; // streaming available!
+    this->p->streamBlockIndex = 0;
+    this->p->streamCount = 0;
 
     if(this->p->requestHandler)
     {
+        // raw handler is old-fashioned. Should let client
+        // determine the response code & type. should let it stream, not
+        // require a const char * return.
+        // TODO reconsider. dvb2019-11
+        this->put("HTTP/1.1 200 OK\n"
+                              "Content-type:text/html\n"
+                              "Connection: close\n"
+                              "\n");
+
         const char *response = (this->p->requestHandler)(uriS.c_str());
-        responseS += String(response);
+        this->put(response);
     }
     else if(this->p->requestHandlerPages)
     {
@@ -427,84 +672,35 @@ void OmWebServer::handleRequest(String request, WiFiClient &client)
         ri.serverIp = this->getIp();
         ri.serverPort = this->getPort();
         ri.bonjourName = this->p->bonjourName.c_str();
+        ri.uptimeMillis = this->p->uptimeMillis;
+        if(this->p->accessPoint)
+            ri.ap = this->p->accessPointSsid.c_str();
+        else
+            ri.ssid = this->getSsid();
 
-        static char response[6500];
-        this->p->requestHandlerPages->handleRequest(response, sizeof(response), uriS.c_str(), &ri);
-        responseS += String(response);
+        // callee needs to render the response header, content type, 200, &c.
+        this->p->requestHandlerPages->handleRequest(this, uriS.c_str(), &ri); // first "this" is us as an OmIByteStream.
     }
     else
     {
-        responseS += "<pre>\n";
+        this->put("<pre>\n");
         const char *h1 = "No handler, try omWebServer.setHandler(yourRequestHandlerProc);\n";
         const char *h2 = "   or use OmWebPages with omWebServer.setHandler(omWebPages);\n";
-        responseS += "<hr />\n";
-        responseS += "OmWebServer\n";
-        responseS += h1;
-        responseS += h2;
-        responseS += "<hr />\n";
-        responseS += "</pre>\n";
-//        this->p->printf(h1);
-//        this->p->printf(h2);
+        this->put("<hr />\n");
+        this->put("OmWebServer\n");
+        this->put(h1);
+        this->put(h2);
+        this->put("<hr />\n");
+        this->put("</pre>\n");
     }
 
-    client.print(responseS);
-    //Serial.printf("sending response[%d\]\n\n\n", r.length());
-    //Serial.printf("%s", r.c_str());
+    this->done(); // flush the stream.
     client.stop();
+    this->p->streamToClient = false;
     if(this->p->verbose >= 2)
     {
-      this->p->printf("Replying %d bytes\n", responseS.length());
+      this->p->printf("Replying %d bytes\n", this->p->streamCount);
     }
-
-
-
-    
-//    String uriS = this->p->webServer->uri();
-//    for(int ix = 0; ix < this->p->webServer->args(); ix++)
-//    {
-//        if(ix == 0)
-//            uriS += '?';
-//        else
-//            uriS += '&';
-//        uriS += this->p->webServer->argName(ix);
-//        uriS += '=';
-//        uriS += this->p->webServer->arg(ix);
-//    }
-//    
-//    int remotePort = this->p->webServer->client().remotePort();
-//    IPAddress remoteIp = this->getClientIp();
-//    this->p->printf("Request from %s:%d %s\n", omIpToString(remoteIp), remotePort, uriS.c_str());
-//    
-//    if(this->p->requestHandler)
-//    {
-//        const char *response = (this->p->requestHandler)(uriS.c_str());
-//        String responseS = String(response);
-//        this->p->webServer->send(200, "text/html", responseS);
-//        this->p->printf("Replying %d bytes\n", responseS.length());
-//    }
-//    else if(this->p->requestHandlerPages)
-//    {
-//        static char response[6500];
-//        this->p->requestHandlerPages->handleRequest(response, sizeof(response), uriS.c_str());
-//        String responseS = String(response);
-//        this->p->webServer->send(200, "text/html", responseS);
-//        this->p->printf("Replying %d bytes\n", responseS.length());
-//    }
-//    else
-//    {
-//        String s = "<pre>\n";
-//        const char *h1 = "No handler, try omWebServer.setHandler(yourRequestHandlerProc);\n";
-//        const char *h2 = "   or use OmWebPages with omWebServer.setHandler(omWebPages);\n";
-//        s += "<hr />\n";
-//        s += "OmWebServer\n";
-//        s += h1;
-//        s += h2;
-//        s += "<hr />\n";
-//        s += "</pre>\n";
-//        this->p->webServer->send(200, "text/html", s);
-//        this->p->printf(h1);
-//        this->p->printf(h2);
-//    }
 }
 
 const char *OmWebServer::getSsid()
@@ -522,6 +718,12 @@ int OmWebServer::getPort()
 unsigned int OmWebServer::getIp()
 {
     IPAddress localIp = WiFi.localIP();
+    if(this->p->accessPoint)
+    {
+        // we're serving a wifi network, as an access point. Return our
+        // ip address for that then.
+        localIp = WiFi.softAPIP();
+    }
     unsigned int localIpInt = (localIp[0] << 24) | (localIp[1] << 16) | (localIp[2] << 8) | (localIp[3] << 0);
     return localIpInt;
 }
@@ -551,5 +753,16 @@ void OmWebServer::setNtp(OmNtp *ntp)
 void OmWebServer::setVerbose(int verbose)
 {
   this->p->verbose = verbose;
+}
+
+bool OmWebServer::isWifiConnected()
+{
+    bool result = this->p->state == OWS_RUNNING;
+    return result;
+}
+
+long long OmWebServer::uptimeMillis()
+{
+    return this->p->uptimeMillis;
 }
 

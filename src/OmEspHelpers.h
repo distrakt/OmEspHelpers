@@ -15,5 +15,6 @@
 #include "OmWebRequest.h"
 #include "OmXmlWriter.h"
 #include "OmNtp.h"
+#include "OmBmp.h"
 
 #endif

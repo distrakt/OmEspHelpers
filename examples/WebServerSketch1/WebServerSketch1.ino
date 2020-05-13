@@ -1,16 +1,22 @@
-
 /*
  * 2016-11-26 dvb
+ * 2019-11-15 updated for Esp32
  * An example server with two pages and buttons to go between them.
  */
 #include <OmEspHelpers.h>
 
-// These includes arent used in this file, but tells Arduino IDE that this project uses them.
-#include <ESP8266WebServer.h> 
-#include <ESP8266WiFi.h> 
-
 OmWebServer s;
 OmWebPages p;
+
+void connectionStatus(const char *ssid, bool trying, bool failure, bool success)
+{
+  const char *what = "?";
+  if(trying) what = "trying";
+  else if(failure) what = "failure";
+  else if(success) what = "success";
+
+  Serial.printf("%s: connectionStatus for '%s' is now '%s'\n", __func__, ssid, what);
+}
 
 void setup() 
 {
@@ -23,6 +29,9 @@ void setup()
   s.addWifi("connection will fail", "haha");
   s.addWifi("omino warp", "0123456789");
   s.addWifi("caffe pergolesi", "yummylatte");
+
+  // let us know when we are connected or disconnected
+  s.setStatusCallback(connectionStatus);
 
   // Configure the web pages
   // This is just setting them up; they'll be delivered
@@ -49,8 +58,7 @@ void setup()
     w.addContent("welcome to page 2");
     w.addElement("hr");
     w.beginElement("pre");
-    w.addContentF("serverIp: %s\n", omIpToString(s.getIp()));
-    w.addContentF("  yourIp: %s\n", omIpToString(s.getClientIp()));
+    w.addContentF("abcdefg");
     w.endElement();
   });
     

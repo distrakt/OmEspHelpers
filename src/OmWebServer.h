@@ -41,6 +41,7 @@
 
 #include "OmWebPages.h"
 #include "OmNtp.h"
+#include "OmXmlWriter.h" // for the streaming api
 
 typedef const char *(* OmRequestHandler)(const char *request);
 typedef void (* OmConnectionStatus)(const char *ssid, bool trying, bool failure, bool success);
@@ -48,19 +49,29 @@ typedef void (* OmConnectionStatus)(const char *ssid, bool trying, bool failure,
 
 class OmWebServerPrivates;
 
-class OmWebServer
+class OmWebServer : public OmIByteStream
 {
     OmWebServerPrivates *p = NULL;
-    void startWifiTry();
+    void initiateConnectionTry(String wifi, String password);
     void maybeStatusCallback(bool trying, bool failure, bool success);
 public:
     OmWebServer(int port = 80);
     ~OmWebServer();
 
     void setVerbose(int verbose); // turn off to print less stuff
+
+    /// must be set before begin(), and cannot be revoked.
+    /// Creates a wifi network access point with the name shown.
+    /// You'll have to communicate the IP address to the user by your
+    /// own means, on screen display or something.
+    /// set "" for no access point.
+    /// NOTE: 2019-12-14 works sometimes. I dont highly recommend. :(
+    void setAccessPoint(String ssid, String password);
     
     /// add to the list of known networks to try.
     void addWifi(String ssid, String password);
+    /// reset the list of known networks to try, to empty again.
+    void clearWifis();
     
     void setBonjourName(String bonjourName);
     String getBonjourName();
@@ -77,26 +88,35 @@ public:
     /// changes or disables the blinking status LED. Use -1 to disable.
     void setStatusLedPin(int statusLedPin);
     
-    void begin();
+    void end();
     
     /// call this in loop to give time to run.
     void tick();
-    
+
     const char *getSsid();
     int getPort();
     unsigned int getIp();
     int getClientPort();
     unsigned int getClientIp();
     unsigned int getTicks();
-    
+
+    bool isWifiConnected();
+    long long uptimeMillis();
+
+    bool put(uint8_t) override;
+    bool done() override;
+    bool put(const char *s); // helpers to send longer amounts & strings
+    bool put(uint8_t *d, int size); // helpers to send longer amounts & strings
+private:
     /// public for callback purposes, not user-useful
     void handleRequest(String request, WiFiClient &client);
 
-    // connection in progress...
-    WiFiClient client;
-    long clientStartMillis = 0;
-    String request;
-    
+    /// state machine business.
+    void owsBegin();
+
+    void pollForClient();
+
+
 };
 
 #endif // __OmWebServer__
