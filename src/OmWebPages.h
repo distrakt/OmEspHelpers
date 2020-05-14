@@ -139,6 +139,13 @@ public:
 
     OmWebPageItem *addColor(const char *itemName, OmWebActionProc proc = 0, int value = 0, int ref1 = 0, void *ref2 = 0);
 
+    OmWebPageItem *addSelect(const char *itemName, OmWebActionProc proc = 0, int value = 0, int ref1 = 0, void *ref2 = 0);
+    void addSelectOption(const char *optionName, int optionValue);
+
+    OmWebPageItem *addCheckbox(const char *itemName, const char *checkboxName, OmWebActionProc proc = 0, int value = 0, int ref1 = 0, void *ref2 = 0);
+    void addCheckboxX(const char *checkboxName, int value = 0); // additional checkboxes.
+
+
     /// Add a block of custom HTML to the page. Your proc is called each time the page is requested.
     void addHtml(HtmlProc proc, int ref1 = 0, void *ref2 = 0);
 
@@ -227,6 +234,9 @@ private:
     std::vector<Page *> pages;
     std::vector<UrlHandler *>urlHandlers;
     Page *currentPage = 0; // if a page is active.
+
+    PageItem *currentSelect = 0; // addSelectOption applies to the most recently begun select.
+    PageItem *currentCheckboxes = 0; // addCheckboxX adds another checkbox here
     
     HtmlProc headerProc = 0;
     HtmlProc footerProc = 0;

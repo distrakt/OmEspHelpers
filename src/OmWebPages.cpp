@@ -222,10 +222,10 @@ public:
         w.beginElement("div", "class", "box1");
         w.addContent(this->name);
         w.beginElement("form");
-        w.beginElement("span", "class", "sliderValue");
-        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
-//        w.addContentF("%s", minutesToTimeString(this->value));
-        w.endElement(); // span
+//        w.beginElement("span", "class", "sliderValue");
+//        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+////        w.addContentF("%s", minutesToTimeString(this->value));
+//        w.endElement(); // span
         w.beginElement("input", "type", "time");
         w.addAttributeF("value", "%s", minutesToTimeString(this->value));
         w.addAttributeF("id", "%s_%s", inPage->name, this->name);
@@ -238,6 +238,154 @@ public:
         w.addAttributeF("onchange", "timeChange(this,'%s', '%s')", inPage->name, this->name);
         w.endElement();
         w.endElement(); // form
+        w.endElement(); // div
+    }
+
+    bool doAction(Page *fromPage) override
+    {
+        if(this->proc)
+        {
+            this->proc(fromPage->name, this->name, this->value, this->ref1, this->ref2);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};
+
+class PageSelect : public PageItem
+{
+public:
+    OmWebActionProc proc = 0;
+    std::vector<String> optionNames;
+    std::vector<int> optionNumbers;
+
+    void addOption(String optionName, int optionNumber)
+    {
+        this->optionNames.push_back(optionName);
+        this->optionNumbers.push_back(optionNumber);
+    }
+
+    void render(OmXmlWriter &w, Page *inPage) override
+    {
+        /*
+         <select id="" onchange="">
+         <option value="23">dogs</option>
+         <option value="42">cats</option>
+         </select>
+
+         */
+        w.beginElement("div", "class", "box1");
+        w.addContent(this->name);
+        w.beginElement("select");
+        w.addAttributeF("id", "%s_%s", inPage->name, this->name);
+        w.addAttributeF("onchange", "selectChange(this,'%s', '%s')", inPage->name, this->name);
+
+        bool foundSelectedOption = false;
+        for(int ix = 0; ix < this->optionNumbers.size(); ix++)
+        {
+            w.beginElement("option");
+            int optionNumber = this->optionNumbers[ix]; // the integer assigned to this menu choice
+            w.addAttributeF("value", "%d", optionNumber);
+            if(this->value == optionNumber)
+            {
+                w.addAttribute("selected", "selected");
+                foundSelectedOption = true;
+            }
+            w.addContent(this->optionNames[ix].c_str());
+            w.endElement();
+        }
+
+        // if somehow the current value isn't one of the choices, add it here to show ya.
+        if(!foundSelectedOption)
+        {
+            w.beginElement("option");
+            w.addAttribute("selected", "selected");
+            w.addAttribute("disabled", "disabled");
+            w.addContentF("(%d)", this->value);
+            w.endElement();
+        }
+
+        w.endElement(); // select
+        w.beginElement("span", "class", "selectValue");
+        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+        w.addContentF(" %d", this->value);
+        w.endElement(); // span
+        w.endElement(); // div
+    }
+
+    bool doAction(Page *fromPage) override
+    {
+        if(this->proc)
+        {
+            this->proc(fromPage->name, this->name, this->value, this->ref1, this->ref2);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};
+
+class PageCheckboxes : public PageItem
+{
+public:
+    OmWebActionProc proc = 0;
+    std::vector<String> checkboxNames; // checkbox values start at bit 0 and work up.
+
+    void addCheckbox(String checkboxName)
+    {
+        this->checkboxNames.push_back(checkboxName);
+    }
+
+    void render(OmXmlWriter &w, Page *inPage) override
+    {
+        /*
+         <select id="" onchange="">
+         <option value="23">dogs</option>
+         <option value="42">cats</option>
+         </select>
+
+         */
+        w.beginElement("div", "class", "box1");
+        w.addContent(this->name);
+
+        // list of all the checkboxes in this group, like "controls_components_checkbox_1,controls_components_checkbox_2,controls_components_checkbox_3"
+        String checkboxesAll;
+        for(int ix = 0; ix < this->checkboxNames.size(); ix++)
+        {
+            if(ix)
+                checkboxesAll += ",";
+            checkboxesAll += inPage->name;
+            checkboxesAll += "_";
+            checkboxesAll += this->name;
+            checkboxesAll += "_checkbox_";
+            checkboxesAll += std::to_string(ix);
+        }
+        uint32_t bit = 1;
+        for(int ix = 0; ix < this->checkboxNames.size(); ix++)
+        {
+            w.addElement("br");
+            w.beginElement("input");
+            w.addAttributeF("id", "%s_%s_checkbox_%d", inPage->name, this->name, ix);
+            w.addAttribute("type", "checkbox");
+            w.addAttributeF("value", "%d", bit);
+            if(bit & this->value)
+                w.addAttribute("checked", "checked");
+            w.addAttributeF("onchange", "checkboxChange('%s', '%s', '%s')", inPage->name, this->name, checkboxesAll.c_str());
+            w.endElement("input");
+            w.beginElement("span", "class", "checkboxLabel");
+            w.addContent(this->checkboxNames[ix].c_str());
+            w.endElement();
+            bit = bit + bit;
+        }
+        w.beginElement("span", "class", "selectValue");
+        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+        w.addContentF(" %d", this->value);
+        w.endElement(); // span
         w.endElement(); // div
     }
 
@@ -440,15 +588,15 @@ OmWebPageItem *OmWebPages::addButton(const char *buttonName, OmWebActionProc pro
     return &b->item;
 }
 
-OmWebPageItem *OmWebPages::addSlider(const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+OmWebPageItem *OmWebPages::addSlider(const char *itemName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
-    return this->addSlider(0, 100, sliderName, proc, value, ref1, ref2);
+    return this->addSlider(0, 100, itemName, proc, value, ref1, ref2);
 }
 
-OmWebPageItem *OmWebPages::addSlider(int rangeLow, int rangeHigh, const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+OmWebPageItem *OmWebPages::addSlider(int rangeLow, int rangeHigh, const char *itemName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
     PageSlider *p = new PageSlider();
-    p->name = sliderName;
+    p->name = itemName;
     p->value = value;
     p->ref1 = ref1;
     p->ref2 = ref2;
@@ -459,10 +607,10 @@ OmWebPageItem *OmWebPages::addSlider(int rangeLow, int rangeHigh, const char *sl
     return &p->item;
 }
 
-OmWebPageItem *OmWebPages::addTime(const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+OmWebPageItem *OmWebPages::addTime(const char *itemName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
     PageTime *p = new PageTime();
-    p->name = sliderName;
+    p->name = itemName;
     p->value = value;
     p->ref1 = ref1;
     p->ref2 = ref2;
@@ -471,16 +619,62 @@ OmWebPageItem *OmWebPages::addTime(const char *sliderName, OmWebActionProc proc,
     return &p->item;
 }
 
-OmWebPageItem *OmWebPages::addColor(const char *sliderName, OmWebActionProc proc, int value, int ref1, void *ref2)
+OmWebPageItem *OmWebPages::addColor(const char *itemName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
     PageColor *p = new PageColor();
-    p->name = sliderName;
+    p->name = itemName;
     p->value = value;
     p->ref1 = ref1;
     p->ref2 = ref2;
     p->proc = proc;
     this->currentPage->items.push_back(p);
     return &p->item;
+}
+
+OmWebPageItem *OmWebPages::addSelect(const char *itemName, OmWebActionProc proc, int value, int ref1, void *ref2)
+{
+    PageSelect *p = new PageSelect();
+    p->name = itemName;
+    p->value = value;
+    p->ref1 = ref1;
+    p->ref2 = ref2;
+    p->proc = proc;
+    this->currentPage->items.push_back(p);
+    this->currentSelect = p;
+    return &p->item;
+}
+
+void OmWebPages::addSelectOption(const char *optionName, int optionValue)
+{
+    if(this->currentSelect)
+    {
+        PageSelect *select = (PageSelect *)this->currentSelect;
+        select->addOption(optionName, optionValue);
+    }
+}
+
+OmWebPageItem *OmWebPages::addCheckbox(const char *itemName, const char *checkboxName, OmWebActionProc proc, int value, int ref1, void *ref2)
+{
+    PageCheckboxes *p = new PageCheckboxes();
+    p->name = itemName;
+    p->value = value;
+    p->ref1 = ref1;
+    p->ref2 = ref2;
+    p->proc = proc;
+    this->currentPage->items.push_back(p);
+    this->currentCheckboxes = p;
+
+    if(checkboxName)
+        p->addCheckbox(checkboxName);
+    return &p->item;
+}
+void OmWebPages::addCheckboxX(const char *checkboxName, int value)
+{
+    if(this->currentCheckboxes && checkboxName)
+    {
+        PageCheckboxes *p = (PageCheckboxes *)this->currentCheckboxes;
+        p->addCheckbox(checkboxName);
+    }
 }
 
 void OmWebPages::addHtml(HtmlProc proc, int ref1, void *ref2)
@@ -591,6 +785,7 @@ void OmWebPages::renderStyle(OmXmlWriter &w, int bgColor)
     w.beginElement("style");
     w.addContent("*{font-family:arial}\n");
     // http://jkorpela.fi/forms/extraspace.html suggests margin:0 for forms to remove strange extra verticals.
+    // https://stackoverflow.com/questions/4137255/checkboxes-in-web-pages-how-to-make-them-bigger for the big checkboxes
     w.addContent(R"JS(
                  pre, pre a, .t {font-size:23px;font-family:Courier, monospace; word-wrap:break-word; overflow:auto; color:black}
                  form {margin-bottom:0px}
@@ -598,7 +793,22 @@ void OmWebPages::renderStyle(OmXmlWriter &w, int bgColor)
                  pre a:link {text-decoration: underline;}
                  .sliderValue { display:inline-block; font-size:16px; width:75px}
                  .colorValue { font-size:16px; margin-left:20px}
+                 .selectValue { font-size:16px; float:right}
+                 .checkboxLabel { font-size:16px; margin-left:9px}
                  h1,h2,h3{text-align:center}
+                 select{font-size:24px; margin-left:20px}
+                 input[type='checkbox'] {
+                     -webkit-appearance:none;
+                 width:20px;
+                 height:20px;
+                 background:white;
+                     border-radius:5px;
+                 border:2px solid #555;
+                     margin-bottom:-5px;
+                 }
+                 input[type='checkbox']:checked {
+                 background: #abd;
+                 }
                  )JS"
     );
 
@@ -718,7 +928,6 @@ R"JS(
 
         var oReq = new XMLHttpRequest();
         oReq.addEventListener('load', reqListener);
-
         oReq.open('GET', '/_control?page=' + page + '&item=' + sliderName + '&value=' + slider.value);
         oReq.send();
     }
@@ -738,6 +947,40 @@ R"JS(
 
         var value = timeInput.value + '/' + (timeCheckbox.checked ? '1' : '0');
         oReq.open('GET', '/_control?page=' + page + '&item=' + timeInputName + '&value=' + value);
+        oReq.send();
+    }
+
+    function selectChange(select, page, selectName)
+    {
+        var textId = select.id + '_value';
+        var text = document.getElementById(textId);
+        text.innerHTML = select.value; // show in the UI the int value.
+
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener('load', reqListener);
+        oReq.open('GET', '/_control?page=' + page + '&item=' + selectName + '&value=' + select.value);
+        oReq.send();
+    }
+
+    function checkboxChange(page, checkboxGroupName, allCheckBoxnames)
+    {
+        // add up the whole group.
+        var checkboxNameArray = allCheckBoxnames.split(',');
+        var value = 0;
+        for(ix in checkboxNameArray)
+        {
+            var aCheckboxName = checkboxNameArray[ix];
+            var aCheckbox = document.getElementById(aCheckboxName);
+            if(aCheckbox.checked)
+            value += parseInt(aCheckbox.value);
+        }
+        var textId = page + '_' + checkboxGroupName + '_value';
+        var text = document.getElementById(textId);
+        text.innerHTML = value; // show in the UI the int value.
+
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener('load', reqListener);
+        oReq.open('GET', '/_control?page=' + page + '&item=' + checkboxGroupName + '&value=' + value);
         oReq.send();
     }
 

@@ -7,7 +7,8 @@ This library presents a very simple API for bringing up a web interface on your
 * Beginner exercises
 * Simple projects and products
 
-It is perhaps too limited for serious production, but you can decide.
+If you need total flexibility and total control, this library may be too limited for you.
+But if you'd like to be freed from infinite choice, and get something running this afternoon, I think you'll be delighted!
 
 ## Features ##
 
@@ -23,11 +24,22 @@ It is perhaps too limited for serious production, but you can decide.
 | Mobile ready        | The generated HTML works well on your phone, and is fine on desktop. |
 | LED status          | By default, LED_BUILTIN blinks out the last part of the device's IP address. Also flashes for network activity |
 | Easy to use         | The example below shows how a dozen lines of code or less brings up your IoT user interface in a browser |
-| Conformant HTML      | The generated HTML passes https://validator.w3.org/
+| Conformant HTML     | The generated HTML passes https://validator.w3.org/
+
+## More Features 2020 ##
+
+| Name                | Description |
+| ------------------- | ----------- |
+| Time Service        | Use NTP for time service |
+| Unlimited HTML size | Page results can be generated at request time for any size (great for XML data dumps)|
+| Bitmaps             | You can generate uncompressed BMP images in you page request handler (1- or 24-bit) |
+| More UI Elements    | Time, Color, Menu Select, and Checkboxes are supported |
+| URL Handler         | If you really want, you can still intercept specific URLs and return whatever you like. |
+| ESP32 Support       | Finally! |
 
 ## Platforms ##
 
-I have only run this library on a Wemos D1 Mini. It is expected to work on other Arduino ESP8266 boards.
+Tested on Wemos D1 Mini, and several versions of ESP32 boards.
 
 ## Installation ##
 
@@ -84,7 +96,7 @@ void loop()
 }
 ```
 
-When run the sketch, I see the following on the serial monitor:
+When running the sketch, I see the following on the serial monitor:
 
 ```
 0x2d
