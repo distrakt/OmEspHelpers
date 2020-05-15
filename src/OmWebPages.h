@@ -227,8 +227,8 @@ private:
     /// Render a simple menu of all the known pages. It's the default page, too.
     void renderTopMenu(OmXmlWriter &w);
     
-    Page *findPage(const char *pageName);
-    PageItem *findPageItem(const char *pageName, const char *itemName);
+    Page *findPage(const char *pageName, bool byId = false);
+    PageItem *findPageItem(const char *pageName, const char *itemName, bool byId = false);
     
     Page *homePage = NULL;
     std::vector<Page *> pages;

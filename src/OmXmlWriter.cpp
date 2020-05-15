@@ -19,8 +19,6 @@ OmXmlWriter::OmXmlWriter(OmIByteStream *consumer)
     this->consumer = consumer;
 }
 
-
-
 void OmXmlWriter::indent()
 {
     if(this->indenting)

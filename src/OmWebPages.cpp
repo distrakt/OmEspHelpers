@@ -28,6 +28,7 @@ class PageItem
 {
 public:
     const char *name = "";
+    char id[6]; // name is the user-facing name. id is a unique label like i0 or i22.
     const char *pageLink = "";
     int ref1 = 0;
     void *ref2 = 0;
@@ -86,12 +87,18 @@ class Page
 {
 public:
     const char *name = "";
+    char id[6]; // simple mechanical id like p0 or p23.
     std::vector<PageItem *> items;
     
     // set to false to inhibit this pages's default header or footer.
     // replace with different via Html items if you like.
     bool allowHeader = true;
     bool allowFooter = true;
+    void addItem(PageItem *item)
+    {
+        sprintf(item->id, "i%d", (int)this->items.size());
+        this->items.push_back(item);
+    }
 };
 
 class UrlHandler
@@ -113,7 +120,7 @@ public:
     void render(OmXmlWriter &w, Page *inPage) override
     {
         w.beginElement("a");
-        w.addAttributeUrlF("href", "/%s?page=%s&item=%s", this->pageLink, inPage->name, this->name);
+        w.addAttributeUrlF("href", "/%s?page=%s&item=%s", this->pageLink, inPage->id, this->id);
         
         w.beginElement("div");
         w.addAttribute("class", "box1");
@@ -127,7 +134,7 @@ public:
     {
         if(this->proc)
         {
-            this->proc(fromPage->name, this->name, 0, this->ref1, this->ref2);
+            this->proc(fromPage->name, this->id, 0, this->ref1, this->ref2);
             return true;
         }
         else
@@ -161,15 +168,15 @@ public:
         w.beginElement("form");
         w.beginElement("span", "class", "sliderValue");
         w.addAttribute("style", "margin-bottom:15px");
-        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s_value", inPage->id, this->id);
         w.addContentF("%d", this->value);
         w.endElement(); // span
         w.beginElement("input", "type", "range");
         w.addAttributeF("value", "%d", this->value);
         w.addAttribute("style", "width: 330px");
-        w.addAttributeF("id", "%s_%s", inPage->name, this->name);
-        w.addAttributeF("onchange", "sliderInput(this,'%s', '%s')", inPage->name, this->name);
-        w.addAttributeF("oninput", "sliderInput(this,'%s','%s')", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s", inPage->id, this->id);
+        w.addAttributeF("onchange", "sliderInput(this,'%s', '%s')", inPage->id, this->id);
+        w.addAttributeF("oninput", "sliderInput(this,'%s','%s')", inPage->id, this->id);
         if(this->min != 0)
             w.addAttribute("min", this->min);
         if(this->max != 100)
@@ -228,14 +235,14 @@ public:
 //        w.endElement(); // span
         w.beginElement("input", "type", "time");
         w.addAttributeF("value", "%s", minutesToTimeString(this->value));
-        w.addAttributeF("id", "%s_%s", inPage->name, this->name);
-        w.addAttributeF("onchange", "timeChange(this,'%s', '%s')", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s", inPage->id, this->id);
+        w.addAttributeF("onchange", "timeChange(this,'%s', '%s')", inPage->id, this->id);
         w.endElement(); // input
         w.beginElement("input", "type", "checkbox");
-        w.addAttributeF("id", "%s_%s_checkbox", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s_checkbox", inPage->id, this->id);
         if(this->value & 0x8000)
             w.addAttribute("checked", "checked");
-        w.addAttributeF("onchange", "timeChange(this,'%s', '%s')", inPage->name, this->name);
+        w.addAttributeF("onchange", "timeChange(this,'%s', '%s')", inPage->id, this->id);
         w.endElement();
         w.endElement(); // form
         w.endElement(); // div
@@ -280,8 +287,8 @@ public:
         w.beginElement("div", "class", "box1");
         w.addContent(this->name);
         w.beginElement("select");
-        w.addAttributeF("id", "%s_%s", inPage->name, this->name);
-        w.addAttributeF("onchange", "selectChange(this,'%s', '%s')", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s", inPage->id, this->id);
+        w.addAttributeF("onchange", "selectChange(this,'%s', '%s')", inPage->id, this->id);
 
         bool foundSelectedOption = false;
         for(int ix = 0; ix < this->optionNumbers.size(); ix++)
@@ -310,7 +317,7 @@ public:
 
         w.endElement(); // select
         w.beginElement("span", "class", "selectValue");
-        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s_value", inPage->id, this->id);
         w.addContentF(" %d", this->value);
         w.endElement(); // span
         w.endElement(); // div
@@ -330,14 +337,26 @@ public:
     }
 };
 
+static const char *intToString(int x)
+{
+    static char s[20];
+    sprintf(s, "%d", x);
+    return s;
+}
+
 class PageCheckboxes : public PageItem
 {
 public:
     OmWebActionProc proc = 0;
     std::vector<String> checkboxNames; // checkbox values start at bit 0 and work up.
 
-    void addCheckbox(String checkboxName)
+    void addCheckbox(String checkboxName, int value)
     {
+        // add the boolean value for this checkbox. later ones are higher bits.
+        value = value ? 1 : 0;
+        value <<= this->checkboxNames.size();
+        this->value |= value;
+
         this->checkboxNames.push_back(checkboxName);
     }
 
@@ -359,23 +378,23 @@ public:
         {
             if(ix)
                 checkboxesAll += ",";
-            checkboxesAll += inPage->name;
+            checkboxesAll += inPage->id;
             checkboxesAll += "_";
-            checkboxesAll += this->name;
+            checkboxesAll += this->id;
             checkboxesAll += "_checkbox_";
-            checkboxesAll += std::to_string(ix);
+            checkboxesAll += intToString(ix);
         }
         uint32_t bit = 1;
         for(int ix = 0; ix < this->checkboxNames.size(); ix++)
         {
             w.addElement("br");
             w.beginElement("input");
-            w.addAttributeF("id", "%s_%s_checkbox_%d", inPage->name, this->name, ix);
+            w.addAttributeF("id", "%s_%s_checkbox_%d", inPage->id, this->id, ix);
             w.addAttribute("type", "checkbox");
             w.addAttributeF("value", "%d", bit);
             if(bit & this->value)
                 w.addAttribute("checked", "checked");
-            w.addAttributeF("onchange", "checkboxChange('%s', '%s', '%s')", inPage->name, this->name, checkboxesAll.c_str());
+            w.addAttributeF("onchange", "checkboxChange('%s', '%s', '%s')", inPage->id, this->id, checkboxesAll.c_str());
             w.endElement("input");
             w.beginElement("span", "class", "checkboxLabel");
             w.addContent(this->checkboxNames[ix].c_str());
@@ -383,7 +402,7 @@ public:
             bit = bit + bit;
         }
         w.beginElement("span", "class", "selectValue");
-        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s_value", inPage->id, this->id);
         w.addContentF(" %d", this->value);
         w.endElement(); // span
         w.endElement(); // div
@@ -424,14 +443,14 @@ public:
         w.beginElement("form");
         w.beginElement("input", "type", "color");
         w.addAttributeF("value", "#%06x", this->value);
-        w.addAttributeF("id", "%s_%s", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s", inPage->id, this->id);
         // change just like a slider -- it's a numeric value... ish.
-        w.addAttributeF("onchange", "colorInput(this,'%s', '%s')", inPage->name, this->name);
-        w.addAttributeF("oninput", "colorInput(this,'%s', '%s')", inPage->name, this->name);
+        w.addAttributeF("onchange", "colorInput(this,'%s', '%s')", inPage->id, this->id);
+        w.addAttributeF("oninput", "colorInput(this,'%s', '%s')", inPage->id, this->id);
         w.endElement(); // input
 
         w.beginElement("span", "class", "colorValue");
-        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
+        w.addAttributeF("id", "%s_%s_value", inPage->id, this->id);
         w.addContentF(" #%06x", this->value);
         w.endElement(); // span
 
@@ -464,10 +483,11 @@ public:
         w.beginElement("button");
         w.addAttribute("class", "button");
         // We send both mouse and touch events; the event handler may then suppress mouse events
-        w.addAttributeF("onmousedown", "button(this,'%s', '%s', 1)", inPage->name, this->name);
-        w.addAttributeF("onmouseup", "button(this,'%s', '%s', 0)", inPage->name, this->name);
-        w.addAttributeF("ontouchstart", "button(this,'%s', '%s', 3)", inPage->name, this->name);
-        w.addAttributeF("ontouchend", "button(this,'%s', '%s', 2)", inPage->name, this->name);
+        w.addAttributeF("onmousedown", "button(this,'%s', '%s', 1)", inPage->id, this->id);
+        w.addAttributeF("onmouseup", "button(this,'%s', '%s', 0)", inPage->id, this->id);
+        // w3c validator says having mousedown AND touchstart is an error. But it makes it all work. So. :-/
+        w.addAttributeF("ontouchstart", "button(this,'%s', '%s', 3)", inPage->id, this->id);
+        w.addAttributeF("ontouchend", "button(this,'%s', '%s', 2)", inPage->id, this->id);
         w.addContentF("%s", this->name);
         w.endElement();
     }
@@ -540,6 +560,7 @@ void OmWebPages::beginPage(const char *pageName)
 {
     Page *page = new Page();
     page->name = pageName;
+    sprintf(page->id, "p%d", (int)this->pages.size());
     this->pages.push_back(page);
     this->currentPage = page;
     if(!this->homePage)
@@ -574,7 +595,7 @@ void OmWebPages::addPageLink(const char *pageLink, OmWebActionProc proc, int ref
     b->proc = proc;
     b->ref1 = ref1;
     b->ref2 = ref2;
-    this->currentPage->items.push_back(b);
+    this->currentPage->addItem(b);
 }
 
 OmWebPageItem *OmWebPages::addButton(const char *buttonName, OmWebActionProc proc, int ref1, void *ref2)
@@ -584,7 +605,7 @@ OmWebPageItem *OmWebPages::addButton(const char *buttonName, OmWebActionProc pro
     b->proc = proc;
     b->ref1 = ref1;
     b->ref2 = ref2;
-    this->currentPage->items.push_back(b);
+    this->currentPage->addItem(b);
     return &b->item;
 }
 
@@ -603,7 +624,7 @@ OmWebPageItem *OmWebPages::addSlider(int rangeLow, int rangeHigh, const char *it
     p->proc = proc;
     p->min = rangeLow;
     p->max = rangeHigh;
-    this->currentPage->items.push_back(p);
+    this->currentPage->addItem(p);
     return &p->item;
 }
 
@@ -615,7 +636,7 @@ OmWebPageItem *OmWebPages::addTime(const char *itemName, OmWebActionProc proc, i
     p->ref1 = ref1;
     p->ref2 = ref2;
     p->proc = proc;
-    this->currentPage->items.push_back(p);
+    this->currentPage->addItem(p);
     return &p->item;
 }
 
@@ -627,7 +648,7 @@ OmWebPageItem *OmWebPages::addColor(const char *itemName, OmWebActionProc proc, 
     p->ref1 = ref1;
     p->ref2 = ref2;
     p->proc = proc;
-    this->currentPage->items.push_back(p);
+    this->currentPage->addItem(p);
     return &p->item;
 }
 
@@ -639,7 +660,7 @@ OmWebPageItem *OmWebPages::addSelect(const char *itemName, OmWebActionProc proc,
     p->ref1 = ref1;
     p->ref2 = ref2;
     p->proc = proc;
-    this->currentPage->items.push_back(p);
+    this->currentPage->addItem(p);
     this->currentSelect = p;
     return &p->item;
 }
@@ -657,15 +678,15 @@ OmWebPageItem *OmWebPages::addCheckbox(const char *itemName, const char *checkbo
 {
     PageCheckboxes *p = new PageCheckboxes();
     p->name = itemName;
-    p->value = value;
+    p->value = 0;
     p->ref1 = ref1;
     p->ref2 = ref2;
     p->proc = proc;
-    this->currentPage->items.push_back(p);
+    this->currentPage->addItem(p);
     this->currentCheckboxes = p;
 
     if(checkboxName)
-        p->addCheckbox(checkboxName);
+        p->addCheckbox(checkboxName, value);
     return &p->item;
 }
 void OmWebPages::addCheckboxX(const char *checkboxName, int value)
@@ -673,7 +694,7 @@ void OmWebPages::addCheckboxX(const char *checkboxName, int value)
     if(this->currentCheckboxes && checkboxName)
     {
         PageCheckboxes *p = (PageCheckboxes *)this->currentCheckboxes;
-        p->addCheckbox(checkboxName);
+        p->addCheckbox(checkboxName, value);
     }
 }
 
@@ -684,13 +705,13 @@ void OmWebPages::addHtml(HtmlProc proc, int ref1, void *ref2)
     h->ref1 = ref1;
     h->ref2 = ref2;
     h->proc = proc;
-    this->currentPage->items.push_back(h);
+    this->currentPage->addItem(h);
 }
 
-bool OmWebPages::doAction(const char *pageName, const char *itemName)
+bool OmWebPages::doAction(const char *pageName, const char *itemId)
 {
-    Page *page = this->findPage(pageName);
-    PageItem *item = this->findPageItem(pageName, itemName);
+    Page *page = this->findPage(pageName, true);
+    PageItem *item = this->findPageItem(pageName, itemId, true);
     if(item)
     {
         return item->doAction(page);
@@ -1092,12 +1113,13 @@ void OmWebPages::renderPageButton(OmXmlWriter &w, const char *pageName)
     w.endElement();
 }
 
-Page *OmWebPages::findPage(const char *pageName)
+Page *OmWebPages::findPage(const char *pageName, bool byId)
 {
     Page *p = 0;
     for(Page *page : this->pages)
     {
-        if(omStringEqual(pageName, page->name))
+        const char *lookingFor = byId ? page->id : page->name;
+        if(omStringEqual(pageName, lookingFor))
         {
             p = page;
             break;
@@ -1106,14 +1128,15 @@ Page *OmWebPages::findPage(const char *pageName)
     return p;
 }
 
-PageItem *OmWebPages::findPageItem(const char *pageName, const char *itemName)
+PageItem *OmWebPages::findPageItem(const char *pageName, const char *itemName, bool byId)
 {
-    Page *page = this->findPage(pageName);
+    Page *page = this->findPage(pageName, byId);
     if(page)
     {
         for(PageItem *b : page->items)
         {
-            if(omStringEqual(itemName, b->name))
+            const char *lookingFor = byId ? b->id : b->name;
+            if(omStringEqual(itemName, lookingFor))
                 return b;
         }
     }
@@ -1170,7 +1193,7 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
     {
         // Do the previous action, if any.
         const char *pageName = request.getValue("page");
-        const char *itemName = request.getValue("item");
+        const char *itemId = request.getValue("item");
         const char *valueS = request.getValue("value");
         
         bool setParam = false;
@@ -1178,7 +1201,7 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
         {
             // if it's a time string, do minutes of day.
             int value = stringToIntMaybeTimeString(valueS);
-            PageItem *item = this->findPageItem(pageName, itemName);
+            PageItem *item = this->findPageItem(pageName, itemId, true);
             if(item)
             {
                 item->setValue(value);
@@ -1186,7 +1209,7 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
             }
         }
         
-        this->doAction(pageName, itemName);
+        this->doAction(pageName, itemId);
         
         if(omStringEqual("/_control", requestPath))
         {
