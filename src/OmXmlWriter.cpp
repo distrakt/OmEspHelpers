@@ -13,6 +13,46 @@ static const int HAS_ANYTHING = 1;
 static const int HAS_SUBELEMENT = 2;
 static const int HAS_TEXT = 4;
 
+class XmlContentEscaper : public OmIByteStream
+{
+public:
+    OmIByteStream *consumer = NULL;
+    XmlContentEscaper()
+    {
+        return;
+    }
+
+    bool putX(const char *s)
+    {
+        bool ok = true;
+        while(char ch = *s++)
+        {
+            ok &= this->consumer->put(ch);
+        }
+        return ok;
+    }
+
+    virtual bool put(uint8_t ch)
+    {
+        if(this->isDone || !this->consumer)
+            return false;
+
+        bool ok = true;
+        switch(ch)
+        {
+            case '"': ok = this->putX("&quot;"); break;
+            case '<': ok = this->putX("&lt;"); break;
+            case '&': ok = this->putX("&amp;"); break;
+            default:
+                ok = this->consumer->put(ch);
+                break;
+        }
+        return ok; // yup, did.
+    }
+};
+
+XmlContentEscaper xmlContentEscaper;
+
 /// Instantiate an XML writer to write into the specified buffer
 OmXmlWriter::OmXmlWriter(OmIByteStream *consumer)
 {
@@ -160,8 +200,14 @@ static int doEscapes(const char *sIn, int outSize, char *sOut,
 void OmXmlWriter::addContent(const char *content)
 {
     this->addingToElement(true);
-    this->puts(content);
+    this->puts(content, true);
 }
+
+void OmXmlWriter::addContentRaw(const char *content)
+{
+    this->puts(content); // no escapes. Just add text.
+}
+
 
 void OmXmlWriter::addContentF(const char *fmt,...)
 {
@@ -333,7 +379,7 @@ void OmXmlWriter::putf(const char *fmt,...)
     this->puts(putfBuffer);
 }
 
-void OmXmlWriter::puts(const char *stuff)
+void OmXmlWriter::puts(const char *stuff, bool contentEscapes)
 {
     long len = strlen(stuff);
     bool error = false;
@@ -348,11 +394,17 @@ void OmXmlWriter::puts(const char *stuff)
     // Maybe we need addContent and addContentRaw.
     if(this->consumer)
     {
+        OmIByteStream *dest = this->consumer;
+        if(contentEscapes)
+        {
+            dest = &xmlContentEscaper;
+            xmlContentEscaper.consumer = this->consumer;
+        }
         bool result = true; // success
         for(int ix = 0; ix < len; ix++)
         {
             this->byteCount++;
-            result &= this->consumer->put(stuff[ix]);
+            result &= dest->put(stuff[ix]);
         }
         if(!result)
             error = true;

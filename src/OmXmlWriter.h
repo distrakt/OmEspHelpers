@@ -106,7 +106,11 @@ public:
     
     /// Adds text to an element, like <element>content</element>
     void addContent(const char *content);
-    
+
+    /// Adds text to the document, but don't escape things. You can wreck your document with this!
+    /// But also needed things like rendering DOCTYPE at the start. Caution.
+    void addContentRaw(const char *content);
+
     /// Adds text to an element, using printf semantics
     void addContentF(const char *fmt,...);
     
@@ -167,7 +171,7 @@ private:
     void cr();
     void addingToElement(bool addContent);
     void putf(const char *fmt,...);
-    void puts(const char *stuff);
+    void puts(const char *stuff, bool contentEscapes = false);
 };
 
 #endif /* defined(__OmXmlWriter__) */

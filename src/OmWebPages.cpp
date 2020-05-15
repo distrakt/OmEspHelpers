@@ -1037,7 +1037,7 @@ R"JS(
 /// Render the beginning of the page, leaving <body> element open and ready.
 void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle, int bgColor)
 {
-    w.addContent("<!DOCTYPE html>\n");
+    w.addContentRaw("<!DOCTYPE html>\n");
     w.beginElement("html");
     w.addAttribute("lang", "en");
     w.beginElement("head");
