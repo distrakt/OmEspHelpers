@@ -7,6 +7,7 @@
 //
 
 #include "OmXmlWriter.h"
+#include "OmUtil.h"
 #include <stdlib.h>
 
 static const int HAS_ANYTHING = 1;
@@ -200,7 +201,14 @@ static int doEscapes(const char *sIn, int outSize, char *sOut,
 void OmXmlWriter::addContent(const char *content)
 {
     this->addingToElement(true);
-    this->puts(content, true);
+    bool doEscapes = true;
+    if(this->depth)
+    {
+        const char *currentElement = this->elementName[this->depth];
+        if(omStringEqual("script", currentElement))
+            doEscapes = false;
+    }
+    this->puts(content, doEscapes);
 }
 
 void OmXmlWriter::addContentRaw(const char *content)
