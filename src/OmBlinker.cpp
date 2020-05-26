@@ -57,11 +57,11 @@ static bool advancePattern(std::vector<int> &pattern, int ledPin, bool inverted,
                 result = step == 0;
             startStep:
                 countdown = pattern[step] * tickDivider;
-                digitalWrite(ledPin, step & 1 ^ 1 ^ inverted);
+                digitalWrite(ledPin, (step & 1) ^ 1 ^ inverted);
             }
         }
-        return result;
     }
+    return result;
 }
 
 void OmBlinker::tick()

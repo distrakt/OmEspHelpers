@@ -188,7 +188,7 @@ void omHsvToRgb(unsigned char *hsvIn, unsigned char *rgbOut)
         rgbOut[1] = s;
         rgbOut[2] = v;
     }
-    else if(h <= 255)
+    else /*if(h <= 255) always is */
     {
         rgbOut[0] = v;
         rgbOut[1] = s;

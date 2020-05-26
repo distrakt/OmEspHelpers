@@ -85,9 +85,9 @@ public:
         static char s[320];
         vsnprintf (s, sizeof(s), format, args);
         s[sizeof(s) - 1] = 0;
-        auto t = millis();
-        auto tS = t / 1000;
-        auto tH = (t / 10) % 100;
+        int t = (int)millis();
+        int tS = t / 1000;
+        int tH = (t / 10) % 100;
         Serial.printf("%4d.%02d (*) OmWebServer.%d: ", tS, tH, this->port);
         Serial.print(s);
         int k = (int)strlen(s);
@@ -641,6 +641,7 @@ bool OmWebServer::done()
 {
     this->p->client.write(this->p->streamBlock, this->p->streamBlockIndex);
     this->p->streamBlockIndex = 0;
+    return true;
 }
 
 void OmWebServer::handleRequest(String request, WiFiClient &client)

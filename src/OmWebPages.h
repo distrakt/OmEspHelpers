@@ -63,6 +63,9 @@
 typedef unsigned char IPAddress[4];
 #endif
 
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
+#endif
 
 /// A callback you provide for parameter sliders on a web page.
 typedef void (* OmWebActionProc)(const char *pageName, const char *parameterName, int value, int ref1, void *ref2);

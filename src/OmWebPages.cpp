@@ -291,7 +291,7 @@ public:
         w.addAttributeF("onchange", "selectChange(this,'%s', '%s')", inPage->id, this->id);
 
         bool foundSelectedOption = false;
-        for(int ix = 0; ix < this->optionNumbers.size(); ix++)
+        for(unsigned int ix = 0; ix < this->optionNumbers.size(); ix++)
         {
             w.beginElement("option");
             int optionNumber = this->optionNumbers[ix]; // the integer assigned to this menu choice
@@ -374,7 +374,7 @@ public:
 
         // list of all the checkboxes in this group, like "controls_components_checkbox_1,controls_components_checkbox_2,controls_components_checkbox_3"
         String checkboxesAll;
-        for(int ix = 0; ix < this->checkboxNames.size(); ix++)
+        for(unsigned int ix = 0; ix < this->checkboxNames.size(); ix++)
         {
             if(ix)
                 checkboxesAll += ",";
@@ -385,7 +385,7 @@ public:
             checkboxesAll += intToString(ix);
         }
         uint32_t bit = 1;
-        for(int ix = 0; ix < this->checkboxNames.size(); ix++)
+        for(unsigned int ix = 0; ix < this->checkboxNames.size(); ix++)
         {
             w.addElement("br");
             w.beginElement("input");
@@ -514,6 +514,7 @@ public:
     
     void render(OmXmlWriter &w, Page *inPage) override
     {
+        UNUSED(inPage);
         if(this->proc)
             this->proc(w, this->ref1, this->ref2);
     }
@@ -525,6 +526,7 @@ public:
 
 void infoHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
 {
+    UNUSED(ref1);
     OmWebPages *owp = (OmWebPages *)ref2;
     owp->renderInfo(w);
 }
@@ -728,20 +730,6 @@ bool OmWebPages::doAction(const char *pageName, const char *itemId)
     return false;
 }
 
-static const char *fileName(const char *filePath)
-{
-    if(!filePath)
-        return "";
-
-    int len = (int)strlen(filePath);
-    for(int ix = len; ix >= 0; ix--)
-    {
-        if(filePath[ix] == '/')
-            return filePath + ix;
-    }
-    return filePath;
-}
-
 void OmWebPages::renderStatusXml(OmXmlWriter &w)
 {
     this->renderHttpResponseHeader("text/xml", 200);
@@ -804,15 +792,15 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
 
 #ifndef NOT_ARDUINO
     w.addContentF("uptime:      %s\n", omTime(now));
-    w.addContentF("freeBytes:   %d\n", system_get_free_heap_size());
 #endif
 #ifdef ARDUINO_ARCH_ESP8266
+    w.addContentF("freeBytes:   %d\n", system_get_free_heap_size());
     w.addContentF("chipId:      %08x '8266 @%d\n", system_get_chip_id(), F_CPU / 1000000);
     w.addContentF("systemSdk:   %s/%d\n", system_get_sdk_version(), system_get_boot_version());
 #endif
 #ifdef ARDUINO_ARCH_ESP32
-    w.addContentF("chipId:      '32\n");
-    w.addContentF("systemSdk:   %s\n", system_get_sdk_version());
+    w.addContentF("freeBytes:   %d\n", esp_get_free_heap_size());
+    w.addContentF("chipId:      '32 @%d\n", F_CPU / 1000000);
 #endif
 #ifdef NOT_ARDUINO
     w.addContentF("what:        Not Arduino\n");

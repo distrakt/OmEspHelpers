@@ -129,4 +129,4 @@ private:
     long lastMilliseconds = 0;
 };
 
-#endif __OmNtp__
+#endif // __OmNtp__

@@ -44,4 +44,4 @@ public:
     static void logS(const char *file, int line, char ch, const char *format, ...);
 };
 
-#endif __OmLog__
+#endif // __OmLog__

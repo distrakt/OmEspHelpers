@@ -9,12 +9,17 @@
 /// exactly as many as there are, row by row, left to right.
 /// adapted liberally from from http://paulbourke.net/dataformats/bmp/
 
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
+#endif
+
 class OmBitmap1BmpStream : public OmIByteStream
 {
 public:
     OmIByteStream *consumer;
     bool put(uint8_t ch) override
     {
+        UNUSED(ch);
         return false; // not supported by this streamer
     }
 
@@ -160,6 +165,7 @@ public:
 
     bool put(uint8_t ch) override
     {
+        UNUSED(ch);
         return false; // not supported by this streamer
     }
 

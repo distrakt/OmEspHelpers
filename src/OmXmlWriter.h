@@ -171,7 +171,7 @@ private:
     void cr();
     void addingToElement(bool addContent);
     void putf(const char *fmt,...);
-    void puts(const char *stuff, bool contentEscapes = false);
+    bool puts(const char *stuff, bool contentEscapes = false);
     bool inElementContentWithEscapes = false; // triggered by addContent, halted by beginElement and endElement. But not inside <script> for example.
 };
 

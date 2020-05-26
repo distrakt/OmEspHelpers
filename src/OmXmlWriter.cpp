@@ -396,10 +396,10 @@ void OmXmlWriter::putf(const char *fmt,...)
     this->puts(putfBuffer);
 }
 
-void OmXmlWriter::puts(const char *stuff, bool contentEscapes)
+bool OmXmlWriter::puts(const char *stuff, bool contentEscapes)
 {
     long len = strlen(stuff);
-    bool error = false;
+    bool result = true; // success
 
     // TODO here is where we could consider checking
     // running flags like addingToElement and addingToAttribute
@@ -417,15 +417,13 @@ void OmXmlWriter::puts(const char *stuff, bool contentEscapes)
             dest = &xmlContentEscaper;
             xmlContentEscaper.consumer = this->consumer;
         }
-        bool result = true; // success
         for(int ix = 0; ix < len; ix++)
         {
             this->byteCount++;
             result &= dest->put(stuff[ix]);
         }
-        if(!result)
-            error = true;
     }
+    return result;
 }
 
 void OmXmlWriter::setIndenting(int onOff)
