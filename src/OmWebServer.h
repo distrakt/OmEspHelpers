@@ -46,6 +46,11 @@
 typedef const char *(* OmRequestHandler)(const char *request);
 typedef void (* OmConnectionStatus)(const char *ssid, bool trying, bool failure, bool success);
 
+#ifdef LED_BUILTIN
+#define OM_DEFAULT_LED LED_BUILTIN
+#else
+#define OM_DEFAULT_LED -1
+#endif
 
 class OmWebServerPrivates;
 
@@ -89,6 +94,9 @@ public:
     void setStatusLedPin(int statusLedPin);
     
     void end();
+
+    /// simulate a network trouble. 1==disconnect the wifi
+    void glitch(int k);
     
     /// call this in loop to give time to run.
     void tick();

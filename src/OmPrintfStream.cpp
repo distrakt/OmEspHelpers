@@ -107,7 +107,7 @@ bool OmPrintfStream::putF(const char *fmt, ...)
     return result;
 }
 
-bool OmPrintfStream::putVF(const char *fmt, va_list v)
+bool OmPrintfStream::putVF(const char *fmt, VA_LIST_ARG)
 {
     bool result = true;
 
@@ -127,10 +127,11 @@ bool OmPrintfStream::putVF(const char *fmt, va_list v)
 
         if(inPercent)
         {
-            if(ch == '%' && w == (percentBegin + 1))
+            if(ch == '%' && w == (percentBegin + 2))
             {
                 // just an escaped % as %%. Ok.
                 result &= this->consumer->put(ch);
+                inPercent = false;
             }
             else if(endsPercent(ch))
             {
@@ -152,7 +153,12 @@ bool OmPrintfStream::putVF(const char *fmt, va_list v)
     return result;
 }
 
-
+bool OmPrintfStream::putVF(OmIByteStream *consumer, const char *fmt, VA_LIST_ARG)
+{
+    OmPrintfStream ops(consumer);
+    bool result = ops.putVF(fmt, v);
+    return result;
+}
 
 bool OmPrintfStream::putF(OmIByteStream *consumer, const char *fmt, ...)
 {

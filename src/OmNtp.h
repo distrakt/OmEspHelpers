@@ -61,16 +61,19 @@ public:
 
     int getTimeZone();
     
-    /// Issue a request to an http service, omino.com/time/time.php, which returns
-    /// current local time of your choosing.
-    /// The service should look like:
-    /// <?
-    /// print date("Y-m-d H:i:s");
-    /// print " + ";
-    /// print date("e");
-    /// ?>
+    /// Issue a request to an http service, the url you set with setTimeUrl().
     void setLocalTimeZone();
-    
+
+    /*
+    <?
+    print date("Y-m-d H:i:s");
+    print " + ";
+    print date("e");
+    ?>
+     */
+    /// URL to a server under your control that gives the current time.
+    /// OmNtp will deduce the timezone relative to NTP from it, also.
+    /// Https not supported, just http.
     void setTimeUrl(const char *timeUrl);
 
     /// Get the time of day in three handy integers.
@@ -118,6 +121,7 @@ private:
     int localHour = -1;
     int localMinute = -1;
     int localSecond = -1;
+    unsigned long int localTimeGotMillis = 0;
 
     int localTimeRefetchCountdown = 0; // now and then, reget local time.
 

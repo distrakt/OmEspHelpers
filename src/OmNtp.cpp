@@ -44,8 +44,6 @@ int OmNtp::getTimeZone()
     return this->timeZone;
 }
 
-
-
 void OmNtp::setLocalTimeZone()
 {
     if(this->timeUrl == 0)
@@ -65,6 +63,7 @@ void OmNtp::setLocalTimeZone()
         this->localSecond = omStringToInt(payload.substring(17,19).c_str());
         OMLOG("got hms: %d %d %d", this->localHour, this->localMinute, this->localSecond);
         this->localTimeGot = true;
+        this->localTimeGotMillis = millis();
         this->localTimeEverGot = true;
     }
     else
@@ -196,7 +195,9 @@ void OmNtp::checkForPacket()
     {
         return; // no incoming packet
     }
-    
+
+    unsigned long int now = millis();
+
     OMLOG("packet received, length=%d\n", cb);
     this->ntpRequestSent = 0;
     
@@ -227,16 +228,18 @@ void OmNtp::checkForPacket()
     this->minute = minute;
     this->second = second;
     this->uTime = epoch;
-    this->uTimeAcquiredMillis = millis();
+    this->uTimeAcquiredMillis = now;
     OMLOG("Time: %s\n", this->getTimeString());
-    
+
     // and, if we've recently got a CA time, derive the apparent time zone.
-    if(this->localTimeGot)
+#define TWELVEHOURSMILLIS (12*60*60*1000)
+    if(this->localTimeGot && ((now - this->localTimeGotMillis) < TWELVEHOURSMILLIS))
     {
-        this->localTimeGot = false;
         int uSeconds = this->hour * 3600 + this->minute * 60 + this->second;
         int localSeconds = this->localHour * 3600 + this->localMinute * 60 + this->localSecond;
         OMLOG("utc seconds: %d, ca seconds: %d", uSeconds, localSeconds);
+
+        localSeconds += (now - this->localTimeGotMillis) / 1000;
         
         int diffSeconds = localSeconds - uSeconds;
         if(diffSeconds < 0)
@@ -246,20 +249,24 @@ void OmNtp::checkForPacket()
         this->timeZone = diffHours;
         OMLOG("CA Time Zone appears to be: %d", this->timeZone);
     }
+    else
+    {
+        this->localTimeGot = false;
+    }
 }
 
 void OmNtp::tick(long milliseconds)
 {
     if(!this->wifiAvailable)
         return;
-    
+
     if(this->ntpRequestSent)
         this->checkForPacket();
 
     long millisecondsDelta = milliseconds - this->lastMilliseconds;
     this->lastMilliseconds = milliseconds;
     this->countdownMilliseconds -= millisecondsDelta;
-    
+
     if(this->countdownMilliseconds > 0)
         return;
     
@@ -269,11 +276,10 @@ void OmNtp::tick(long milliseconds)
 
     if(!this->begun)
         this->begin();
-    
+
     if(!this->begun)
         return;
-    
-    
+
     // Interval expired. Time to send out another time query.
     // We do this blindly, and poll for any incoming time packets.
     memset(packetBuffer, 0, kNtpPacketSize);

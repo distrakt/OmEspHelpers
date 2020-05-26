@@ -529,6 +529,12 @@ void infoHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
     owp->renderInfo(w);
 }
 
+void statusXmlProc(OmXmlWriter &w, OmWebRequest &request, int ref1, void *ref2)
+{
+    OmWebPages *owp = (OmWebPages *)ref2;
+    owp->renderStatusXml(w);
+}
+
 void defaultFooterHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
 {
     OmWebPages *owp = (OmWebPages *)ref2;
@@ -548,6 +554,9 @@ OmWebPages::OmWebPages()
     
     // Make sure none of the built-in pages become the user's home page.
     this->homePage = NULL;
+
+    // Add the poll-able xml status page, to allow local discover.
+    this->addUrlHandler("_status", statusXmlProc, 0, this);
 }
 
 void OmWebPages::setBuildDateAndTime(const char *date, const char *time)
@@ -733,6 +742,47 @@ static const char *fileName(const char *filePath)
     return filePath;
 }
 
+void OmWebPages::renderStatusXml(OmXmlWriter &w)
+{
+    this->renderHttpResponseHeader("text/xml", 200);
+
+    long long now;
+#ifndef NOT_ARDUINO
+    now= millis();
+#else
+    now = 101;
+#endif
+
+    w.beginElement("xml");
+    w.addAttribute("poweredBy", "OmEspHelpers");
+    w.beginElement("status");
+    w.addAttribute("uptime", omTime(now));
+    w.addAttribute("millis", now);
+
+    w.addAttributeF("requests","%d", this->requestsAll);
+    w.addAttributeF("maxHtml", "%d", this->greatestRenderLength);
+
+#ifndef NOT_ARDUINO
+    if(this->ri)
+    {
+        w.addAttributeF("clientIp", "%s:%d", omIpToString(ri->clientIp, true), ri->clientPort);
+        w.addAttributeF("serverIp", "%s:%d",
+                      omIpToString(ri->serverIp), ri->serverPort);
+        String bonjourName = ri->bonjourName;
+        if(ri->bonjourName && ri->bonjourName[0])
+            w.addAttributeF("bonjour", "%s", ri->bonjourName, ri->bonjourName);
+        if(ri->ap && ri->ap[0])
+            w.addAttributeF(    "accessPoint", "%s", ri->ap);
+        else
+            w.addAttributeF(    "wifiNetwork", "%s", ri->ssid);
+    }
+#endif
+    w.addAttributeF("built", "%s %s", this->__date__, this->__time__);
+
+    w.endElement();
+    w.endElement();
+}
+
 void OmWebPages::renderInfo(OmXmlWriter &w)
 {
     w.addElement("hr");
@@ -757,7 +807,7 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
     w.addContentF("freeBytes:   %d\n", system_get_free_heap_size());
 #endif
 #ifdef ARDUINO_ARCH_ESP8266
-    w.addContentF("chipId:      0x%08x '8266\n", system_get_chip_id());
+    w.addContentF("chipId:      %08x '8266 @%d\n", system_get_chip_id(), F_CPU / 1000000);
     w.addContentF("systemSdk:   %s/%d\n", system_get_sdk_version(), system_get_boot_version());
 #endif
 #ifdef ARDUINO_ARCH_ESP32
@@ -771,12 +821,24 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
     if(this->ri)
     {
         w.addContentF("clientIp:    %s:%d\n", omIpToString(ri->clientIp, true), ri->clientPort);
-        w.addContentF("serverIp:    <a href='http://%s:%d/'>%s:%d</a>\n",
-                      omIpToString(ri->serverIp), ri->serverPort,
-                      omIpToString(ri->serverIp), ri->serverPort);
-        String bonjourName = ri->bonjourName;
+
+        w.addContentF("serverIp:    ");
+        w.beginElement("a");
+        w.addAttributeF("href", "http://%s:%d/",omIpToString(ri->serverIp), ri->serverPort);
+        w.addContentF("%s:%d",omIpToString(ri->serverIp), ri->serverPort);
+        w.endElement("a");
+        w.addContent("\n");
+
         if(ri->bonjourName && ri->bonjourName[0])
-            w.addContentF("bonjour:     <a href='http://%s.local/'>%s.local</a>\n", ri->bonjourName, ri->bonjourName);
+        {
+            w.addContentF("bonjour:     ");
+            w.beginElement("a");
+            w.addAttributeF("href", "http://%s.local/",ri->bonjourName);
+            w.addContentF("%s:local",ri->bonjourName);
+            w.endElement("a");
+            w.addContent("\n");
+        }
+
         if(ri->ap && ri->ap[0])
             w.addContentF(    "accessPoint: %s\n", ri->ap);
         else
@@ -1037,6 +1099,11 @@ R"JS(
 /// Render the beginning of the page, leaving <body> element open and ready.
 void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle, int bgColor)
 {
+    this->renderPageBeginningWithRedirect(w, NULL, 0, pageTitle, bgColor);
+}
+
+void OmWebPages::renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle, int bgColor)
+{
     w.addContentRaw("<!DOCTYPE html>\n");
     w.beginElement("html");
     w.addAttribute("lang", "en");
@@ -1048,7 +1115,16 @@ void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle, int 
     w.addAttribute("rel", "icon");
     w.addAttribute("href", "data:,");
     w.endElement();
-    
+
+    // maybe a redirect
+    if(redirectUrl)
+    {
+        w.beginElement("meta");
+        w.addAttribute("http-equiv", "refresh");
+        w.addAttributeF("content", "%d;%s", redirectSeconds, redirectUrl);
+        w.endElement();
+    }
+
     w.beginElement("meta", "charset", "UTF-8");
     w.endElement();
     w.beginElement("meta");
@@ -1263,7 +1339,10 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
     
     {
         w.beginElement("h2");
+        w.beginElement("a");
+        w.addAttributeF("href", "/%s", page->name);
         w.addContent(page->name);
+        w.endElement();
         w.endElement();
         w.addContent("\n");
     }
@@ -1329,4 +1408,13 @@ void OmWebPages::setValue(const char *pageName, const char *itemName, int value)
     PageItem *pi = this->findPageItem(pageName, itemName);
     if(pi)
         pi->setValue(value);
+}
+
+int OmWebPages::getValue(const char *pageName, const char *itemName)
+{
+    int result = -1;
+    PageItem *pi = this->findPageItem(pageName, itemName);
+    if(pi)
+        result = pi->value;
+    return result;
 }

@@ -172,6 +172,7 @@ private:
     void addingToElement(bool addContent);
     void putf(const char *fmt,...);
     void puts(const char *stuff, bool contentEscapes = false);
+    bool inElementContentWithEscapes = false; // triggered by addContent, halted by beginElement and endElement. But not inside <script> for example.
 };
 
 #endif /* defined(__OmXmlWriter__) */

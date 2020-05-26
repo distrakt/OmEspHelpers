@@ -17,6 +17,7 @@ const char *omIpToString(unsigned long ip, bool flip = false); // flip=true for 
 const char *omIpToString(unsigned char ip[4]);
 int omHexToInt(const char *s, int digitCount);
 void omHsvToRgb(unsigned char *hsvIn, unsigned char *rgbOut);
+void omRgbToHsv(unsigned char *rgbIn, unsigned char *hsvOut);
 int omMigrate(int x, int dest, int delta);
 int omPinRange(int x, int low, int high);
 

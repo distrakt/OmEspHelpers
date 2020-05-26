@@ -8,6 +8,7 @@
 
 #include "OmXmlWriter.h"
 #include "OmUtil.h"
+#include "OmPrintfStream.h"
 #include <stdlib.h>
 
 static const int HAS_ANYTHING = 1;
@@ -90,6 +91,7 @@ void OmXmlWriter::addingToElement(bool addContent)
 
 void OmXmlWriter::beginElement(const char *elementName)
 {
+    this->inElementContentWithEscapes = false;
     this->endAttribute(); // close any such open element.
 
     this->addingToElement(false);
@@ -209,6 +211,7 @@ void OmXmlWriter::addContent(const char *content)
             doEscapes = false;
     }
     this->puts(content, doEscapes);
+    this->inElementContentWithEscapes = doEscapes;
 }
 
 void OmXmlWriter::addContentRaw(const char *content)
@@ -216,16 +219,21 @@ void OmXmlWriter::addContentRaw(const char *content)
     this->puts(content); // no escapes. Just add text.
 }
 
-
 void OmXmlWriter::addContentF(const char *fmt,...)
 {
-    char content[TINY_XML_ADD_MAX];
-    va_list ap;
-    va_start(ap, fmt);
-    int len = vsnprintf(content, sizeof(content), fmt, ap);
-    if(len >= sizeof(content))
-        this->errorCount++;
-    this->addContent(content);
+    va_list v;
+    va_start(v, fmt);
+
+    this->addContent(""); // trigger any setup...
+
+    OmIByteStream *dest = this;
+    if(this->inElementContentWithEscapes)
+    {
+        dest = &xmlContentEscaper;
+        xmlContentEscaper.consumer = this;
+    }
+    OmPrintfStream::putVF(dest, fmt, v);
+    return;
 }
 
 
@@ -348,6 +356,7 @@ void OmXmlWriter::endElement()
 
 void OmXmlWriter::endElement(const char *elementName)
 {
+    this->inElementContentWithEscapes = false;
     if(elementName)
     {
         if(strcmp(elementName, this->elementName[this->depth]))
@@ -436,13 +445,9 @@ int OmXmlWriter::getByteCount()
 
 bool OmXmlWriter::put(uint8_t ch)
 {
-    /// currently only supported for long attributes. Could easily support element content too.
-    bool result = true;
-    if(this->attributeName)
-    {
-        this->byteCount++;
-        result &= this->consumer->put(ch);
-    }
+    // direct output, with byte counting.
+    this->byteCount++;
+    bool result = this->consumer->put(ch);
     return result;
 }
 

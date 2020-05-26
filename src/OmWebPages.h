@@ -210,6 +210,7 @@ public:
     // | But you could use them in a urlHandler.
     // |
     void renderInfo(OmXmlWriter &w); // builtin "_info" page
+    void renderStatusXml(OmXmlWriter &w); // builtin "_status" url
 
     /// Render the http headers
     void renderHttpResponseHeader(const char *contentType, int response);
@@ -218,7 +219,10 @@ public:
     void renderPageBeginning(OmXmlWriter &w, const char *pageTitle = "", int bgColor = 0xffffff);
     void renderDefaultFooter(OmXmlWriter &w); // builtin footer nav buttons
 
+    void renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle = "", int bgColor = 0xffffff);
+
     void setValue(const char *pageName, const char *itemName, int value);
+    int getValue(const char *pageName, const char *itemName);
 private:
     bool doAction(const char *pageName, const char *itemName);
     void renderStyle(OmXmlWriter &w, int bgColor = 0xffffff);

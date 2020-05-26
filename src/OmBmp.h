@@ -211,19 +211,29 @@ public:
             result &= this->putBmpHeader();
             this->didPutHeader = true;
         }
-        this->put8(r);
-        this->put8(g);
-        this->put8(b);
+        result &= this->put8(b);
+        result &= this->put8(g);
+        result &= this->put8(r);
 
         this->x++;
+        if(this->x >= this->width)
+        {
+            // Each row must be padded to a multiple of four BYTES.
+            // since each pixel is 3 bytes, this can happen.
+            int extras = (4 - (this->width * 3) % 4) % 4;
+            while(extras-- > 0)
+                this->put8(0);
 
-        //        if(this->x == this->width)
-        //        {
-        //          int extras = (4 - this->width % 4) % 4;
-        //          while(extras-- > 0)
-        //            this->put8(0);
-        //            this->y++;
-        //        }
+            this->x = 0;
+            this->y++;
+            // And did we just hit the final row?
+            if(this->y >= this->height)
+            {
+                this->consumer->done();
+                this->done();
+            }
+        }
+
         return result;
     }
 

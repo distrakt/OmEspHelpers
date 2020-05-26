@@ -16,5 +16,6 @@
 #include "OmXmlWriter.h"
 #include "OmNtp.h"
 #include "OmBmp.h"
+#include "OmEeprom.h"
 
 #endif

@@ -196,6 +196,44 @@ void omHsvToRgb(unsigned char *hsvIn, unsigned char *rgbOut)
     }
 }
 
+void omRgbToHsv(unsigned char *rgbIn, unsigned char *hsvOut)
+{
+#define rgbR rgbIn[0]
+#define rgbG rgbIn[1]
+#define rgbB rgbIn[2]
+#define hsvH hsvOut[0]
+#define hsvS hsvOut[1]
+#define hsvV hsvOut[2]
+    unsigned char rgbMin, rgbMax;
+
+    rgbMin = rgbR < rgbG ? (rgbR < rgbB ? rgbR : rgbB) : (rgbG < rgbB ? rgbG : rgbB);
+    rgbMax = rgbR > rgbG ? (rgbR > rgbB ? rgbR : rgbB) : (rgbG > rgbB ? rgbG : rgbB);
+
+    hsvV = rgbMax;
+    if (hsvV == 0)
+    {
+        hsvH = 0;
+        hsvS = 0;
+        return;
+    }
+
+    hsvS = 255 * long(rgbMax - rgbMin) / hsvV;
+    if (hsvS == 0)
+    {
+        hsvH = 0;
+        return;
+    }
+
+    if (rgbMax == rgbR)
+        hsvH = 0 + 43 * (rgbG - rgbB) / (rgbMax - rgbMin);
+    else if (rgbMax == rgbG)
+        hsvH = 85 + 43 * (rgbB - rgbR) / (rgbMax - rgbMin);
+    else
+        hsvH = 171 + 43 * (rgbR - rgbG) / (rgbMax - rgbMin);
+
+    return;
+}
+
 int omMigrate(int x, int dest, int delta)
 {
     if(x < dest)

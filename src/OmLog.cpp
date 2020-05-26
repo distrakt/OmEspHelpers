@@ -26,16 +26,16 @@ const char *ipAddressToString(IPAddress ip)
 }
 
 /* static method */
-void OmLog::logS(const char *file, int line, const char *format, ...)
+void OmLog::logS(const char *file, int line, char ch, const char *format, ...)
 {
     va_list args;
     va_start (args, format);
     static char s[320];
     vsnprintf (s, sizeof(s), format, args);
     s[sizeof(s) - 1] = 0;
-    auto t = millis();
-    auto tS = t / 1000;
-    auto tH = (t / 10) % 100;
+    int t = (int)millis();
+    int tS = t / 1000;
+    int tH = (t / 10) % 100;
     
     // find the last slash
     int fileStringOffset = 0;
@@ -50,7 +50,7 @@ void OmLog::logS(const char *file, int line, const char *format, ...)
     }
     
     
-    printf("%4d.%02d (*) %s.%d: ", tS, tH, file + fileStringOffset, line);
+    printf("%4d.%02d (%c) %s.%d: ", tS, tH, ch, file + fileStringOffset, line);
     printf("%s", s);
     
     // add trailing CR if missing

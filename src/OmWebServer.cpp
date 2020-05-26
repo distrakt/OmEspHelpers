@@ -57,7 +57,7 @@ public:
 
     int lastWifiStatus = -99;
     
-    OmBlinker b = OmBlinker(LED_BUILTIN);
+    OmBlinker b = OmBlinker(OM_DEFAULT_LED);
     
     bool doSerial = true;
     int verbose = 2;
@@ -200,13 +200,13 @@ void OmWebServer::initiateConnectionTry(String wifi, String password)
         return;
     }
     
-    this->maybeStatusCallback(true, false, false);
     WiFi.persistent(false);
     WiFi.begin(wifi.c_str(), password.c_str());
     this->p->ssid = wifi;
 
     this->p->state = OWS_CONNECTING_TO_WIFI;
     this->p->wifiTryStartedMillis = this->p->uptimeMillis;
+    this->maybeStatusCallback(true, false, false);
 }
 
 void OmWebServer::owsBegin()
@@ -221,11 +221,9 @@ void OmWebServer::owsBegin()
     this->p->accessPoint = false; // if it was an access point, it is not any more.
     this->p->wifiIndex = 0; // start the wifi-search loop.
 
-    if(this->p->wifiServer)
-    {
-        delete this->p->wifiServer;
-        this->p->wifiServer = 0;
-    }
+    // Note -- we used to "delete this->p->wifiServer;" if there was one
+    // but I found it works better to just keep the old one if any, to
+    // persist across wifi/ssid reconnects. Deleting and Newing crashed.
 
     // Normal station mode, connect to a netowrk and keep working.
     if(this->p->ssids.size() == 0)
@@ -277,6 +275,18 @@ void OmWebServer::end()
         delete this->p->wifiServer;
         this->p->wifiServer = 0;
     }
+}
+
+void OmWebServer::glitch(int k)
+{
+    // simulate a network trouble.
+    switch(k)
+    {
+        case 1:
+            WiFi.disconnect();
+            break;
+    }
+
 }
 
 static bool endsWithCrlfCrlf(String &s)
@@ -463,10 +473,13 @@ void OmWebServer::tick()
                     MDNS.addService("http", "tcp", 80);
                     this->p->printf("Bonjour address: http://%s.local\n", this->p->bonjourName.c_str());
                 }
-                // start the server.
-                this->p->wifiServer = new WiFiServer(this->p->port);
-                this->p->wifiServer->begin();
-                
+                // start the server, if there isnt one.
+                if(!this->p->wifiServer)
+                {
+                    this->p->wifiServer = new WiFiServer(this->p->port);
+                    this->p->wifiServer->begin();
+                }
+
                 this->p->b.clear();
                 this->p->b.addNumber(this->getIp() & 0xff); // blink out the last Octet, like 192.168.0.234, blink the 234.
                 
@@ -565,7 +578,7 @@ void OmWebServer::tick()
             // this for an appliance that's connected, then the wifi fails a while, but comes back.
             // no need to lapse into permanant AP mode.
 
-#define AP_TIMEOUT_SECONDS 60
+#define AP_TIMEOUT_SECONDS 120
             // after AP_TIMEOUT_SECONDS, go ahead and retry the available wifis, if any.
             if(this->p->ssids.size())
             {
