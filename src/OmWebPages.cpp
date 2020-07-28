@@ -22,7 +22,8 @@
 //}
 #endif
 
-
+// with flexible procs and interfaces, parameters are often optionally used.
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 class PageItem
 {
@@ -477,17 +478,21 @@ class PageButton : public PageItem
 {
 public:
     OmWebActionProc proc = 0;
+    const char *url = "_";
 
     void render(OmXmlWriter &w, Page *inPage) override
     {
+        const char *url = this->url;
+        if(url == NULL)
+            url = "_";
         w.beginElement("button");
         w.addAttribute("class", "button");
         // We send both mouse and touch events; the event handler may then suppress mouse events
-        w.addAttributeF("onmousedown", "button(this,'%s', '%s', 1)", inPage->id, this->id);
-        w.addAttributeF("onmouseup", "button(this,'%s', '%s', 0)", inPage->id, this->id);
+        w.addAttributeF("onmousedown", "button(this,'%s', '%s', 1, '%s')", inPage->id, this->id, url);
+        w.addAttributeF("onmouseup", "button(this,'%s', '%s', 0, '%s')", inPage->id, this->id, url);
         // w3c validator says having mousedown AND touchstart is an error. But it makes it all work. So. :-/
-        w.addAttributeF("ontouchstart", "button(this,'%s', '%s', 3)", inPage->id, this->id);
-        w.addAttributeF("ontouchend", "button(this,'%s', '%s', 2)", inPage->id, this->id);
+        w.addAttributeF("ontouchstart", "button(this,'%s', '%s', 3, '%s')", inPage->id, this->id, url);
+        w.addAttributeF("ontouchend", "button(this,'%s', '%s', 2, '%s')", inPage->id, this->id, url);
         w.addContentF("%s", this->name);
         w.endElement();
     }
@@ -619,6 +624,15 @@ OmWebPageItem *OmWebPages::addButton(const char *buttonName, OmWebActionProc pro
     this->currentPage->addItem(b);
     return &b->item;
 }
+
+OmWebPageItem *OmWebPages::addButtonWithLink(const char *buttonName, const char *url, OmWebActionProc proc, int ref1, void *ref2)
+{
+    OmWebPageItem *item = this->addButton(buttonName, proc, ref1, ref2);
+    PageButton *b = (PageButton *)item->privateItem;
+    b->url = url;
+    return item;
+}
+
 
 OmWebPageItem *OmWebPages::addSlider(const char *itemName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
@@ -1066,20 +1080,28 @@ R"JS(
                   * So we use touchstart/end also, and disable mousedown/up
                   * if we see touch events. (So we dont get both pairs.)
                   */
-    w.addContentF(
-                 "var quellMouse = 0;\n"
-                 "function button(button, page, buttonName, v) \n"
-                 "{\n"
-                 "if(v>=2)quellMouse=1;\n" // ignore mouses after first touch event
-                 "if(quellMouse&&v<2)return;\n" // ignore the mouse.
-                 "v&=1;\n" // mousedown/up is 1,0 and touchstart/end is 3,2
-                 "button.style.backgroundColor=v?'%s':'%s';"
-                 "var oReq = new XMLHttpRequest(); \n"
-                 "oReq.addEventListener('load', reqListener); \n"
-                 "oReq.open('GET', '/_control?page=' + page + '&item=' + buttonName + '&value=' + v); \n"
-                 "oReq.send(); \n"
-                 "}\n"
-                 , colorButtonPress, colorItem
+    w.addContentF(R"(
+                  var quellMouse = 0;
+                  function button(button, page, buttonName, v, url)
+                  {
+                      if(v>=2)quellMouse=1;  // ignore mouses after first touch event
+                      if(quellMouse&&v<2)return; // ignore the mouse.
+                      v&=1; // mousedown/up is 1,0 and touchstart/end is 3,2
+                      button.style.backgroundColor=v?'%s':'%s';
+                      var oReq = new XMLHttpRequest();
+                      oReq.addEventListener('load', reqListener);
+                      oReq.open('GET', '/_control?page=' + page + '&item=' + buttonName + '&value=' + v);
+                      oReq.send();
+                      if(url == '')
+                          setTimeout(function(){ window.location.reload(); }, 500);
+                      else if(url != '_')
+                      {
+                          document.body.style.backgroundColor = "#C0C0C0";
+                          setTimeout(function() { window.location.assign(url); }, 700);
+                      }
+                  }
+                  )",
+                 colorButtonPress, colorItem
                  );
     w.endElement();
 }

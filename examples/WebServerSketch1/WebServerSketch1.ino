@@ -5,7 +5,7 @@
               It's a much better example and intro now. In the time of covid19.
 */
 #include <OmEspHelpers.h>
-
+#include "jpgImage.h"
 OmWebServer s;
 OmWebPages p;
 
@@ -97,6 +97,10 @@ Please enjoy! -- dvb)JS");
      and zero when released.
   */
   p.addButton("button 1", actionProc, 103);
+
+  /* looks like a button, but is an HMTL link also */
+  p.addButtonWithLink("ginger.jpg", "/ginger.jpg", actionProc, 109);
+
 
   /*
      A select control shown as a dropdown on desktop browsers,
@@ -198,6 +202,16 @@ Please enjoy! -- dvb)JS");
     }
     w.endElement(); // records
     w.endElement(); // randomxmldata
+  });
+
+  p.addUrlHandler("ginger.jpg",  [] (OmXmlWriter & w, OmWebRequest & r, int ref1, void *ref2)
+  {
+    p.renderHttpResponseHeader("image/jpg", 200);
+    for(unsigned int ix = 0; ix < jpgImageSize; ix++)
+    {
+      // the OmXmlWriter can also emit raw binary bytes, one at a time, like this:
+      w.put(jpgImage[ix]);
+    }
   });
 
   // And lastly, introduce the web pages to the wifi connection.

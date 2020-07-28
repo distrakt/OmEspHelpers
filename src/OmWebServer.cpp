@@ -502,7 +502,7 @@ void OmWebServer::tick()
                     // connection failed, try next known network
                     this->p->wifiIndex += 1;
                     // if we've tried them all, AND there's an access point, go do that.
-                    if(this->p->wifiIndex >= this->p->ssids.size() && this->p->accessPointSsid.length())
+                    if(this->p->wifiIndex >= (int)this->p->ssids.size() && this->p->accessPointSsid.length())
                     {
                         this->p->state = OWS_AP_START;
                     }

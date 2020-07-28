@@ -91,7 +91,7 @@ public:
     int position = 0; // index into output
     bool indenting = false;
     int errorCount = 0;
-    int byteCount = 0;
+    unsigned int byteCount = 0;
 
     const char *attributeName = 0; // current open attribute if any, streaming into it
     
@@ -154,7 +154,7 @@ public:
     int getErrorCount();
 
     /// Bytes written.
-    int getByteCount();
+    unsigned int getByteCount();
 
     /// Our own put.
     /// OmXmlWriter needs to know what context it's in, to manage escapes correctly.

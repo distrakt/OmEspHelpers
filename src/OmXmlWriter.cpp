@@ -384,7 +384,7 @@ void OmXmlWriter::endElements()
 void OmXmlWriter::putf(const char *fmt,...)
 {
     static char putfBuffer[TINY_XML_ADD_MAX];
-    long len;
+    unsigned long len;
     va_list ap;
     va_start(ap,fmt);
     
@@ -436,7 +436,7 @@ int OmXmlWriter::getErrorCount()
     return this->errorCount;
 }
 
-int OmXmlWriter::getByteCount()
+unsigned int OmXmlWriter::getByteCount()
 {
     return this->byteCount;
 }

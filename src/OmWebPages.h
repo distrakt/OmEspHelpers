@@ -130,6 +130,9 @@ public:
 
     /// Add a button on the current page. Calls the action proc with value 1 for press, 0 for release.
     OmWebPageItem *addButton(const char *buttonName, OmWebActionProc proc = 0, int ref1 = 0, void *ref2 = 0);
+
+    /// Add a button on the current page, which fires a page redirect after the button-up.
+    OmWebPageItem *addButtonWithLink(const char *buttonName, const char *url, OmWebActionProc proc = 0, int ref1 = 0, void *ref2 = 0);
     
     /// Add a slider control on the current page. The range is 0 to 100, and calls your param proc when changed.
     OmWebPageItem *addSlider(const char *sliderName, OmWebActionProc proc = 0, int value = 0, int ref1 = 0, void *ref2 = 0);

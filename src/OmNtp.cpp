@@ -51,6 +51,13 @@ void OmNtp::setLocalTimeZone()
     if(!this->wifiAvailable)
         return;
     HTTPClient http;
+    // NOTE. The SDK's header file marks http.begin(url) as deprecated. But the
+    // recommended one with a WiFiClient argument crashes. So I don't use it. dvb 2020-05-30.
+#if 0
+    Crashes!
+//    WiFiClient client; // esp32 for this?
+//    http.begin(client, this->timeUrl);
+#endif
     http.begin(this->timeUrl);
     int httpCode = http.GET();
     OMLOG("%s: %d", this->timeUrl, httpCode);
