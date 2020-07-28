@@ -179,6 +179,17 @@ Please enjoy! -- dvb)JS");
     w.endElement(); // div
   });
 
+  p.beginPage("ginger");
+  p.addHtml([] (OmXmlWriter & w, int ref1, void *ref2)
+  {
+    w.addElement("hr");
+    w.beginElement("img");
+    w.addAttribute("src", "/ginger.jpg");
+    w.addAttribute("alt", "");
+    w.endElement();
+    w.endElement(); // div
+  });
+
   /*
    * Here we have a straight-up URL handler, but still emits
    * XML-ish output.
