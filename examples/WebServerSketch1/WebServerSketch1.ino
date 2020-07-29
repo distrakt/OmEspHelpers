@@ -26,6 +26,33 @@ void actionProc(const char *pageName, const char *parameterName, int value, int 
   Serial.printf("%4d %s.%s value=0x%08x/%d ref1=%d\n", actionCount, pageName, parameterName, value, value, ref1);
 }
 
+void handyHandler(OmXmlWriter & w, OmWebRequest & r, int ref1, void *ref2)
+{
+  // you could use ref1, ref2 any way you like...
+  // OmWebRequest r.path is the url without query terms,
+  // OmWebRequest r.query is a vector of char *s, alternating key & value
+  // this handler ignores both
+  p.renderHttpResponseHeader("image/jpg", 200);
+  for (unsigned int ix = 0; ix < jpgImageSize; ix++)
+  {
+    // the OmXmlWriter can also emit raw binary bytes, one at a time, like this:
+    w.put(jpgImage[ix]);
+  }
+}
+
+void wildcardProc(OmXmlWriter &w, OmWebRequest &request, int ref1, void *ref2)
+{
+  p.renderHttpResponseHeader("text/plain", 200);
+  w.putf("---------------------------\n");
+  w.putf("no handler matched the request, so here ya go\n");
+  w.putf("request path: %s\n", request.path); // putf is limited to 1k intermediate buffer, sorry!
+  int k = (int)request.query.size();
+  for (int ix = 0; ix < k - 1; ix += 2)
+    w.putf("arg %d: %s = %s\n", ix / 2, request.query[ix], request.query[ix + 1]);
+  w.putf("---------------------------\n");
+  return;
+}
+
 OmWebPageItem *xmlRecordCountSlider = NULL; // this global is used by the xml data proc. Find it below.
 
 void setup()
@@ -191,9 +218,9 @@ Please enjoy! -- dvb)JS");
   });
 
   /*
-   * Here we have a straight-up URL handler, but still emits
-   * XML-ish output.
-   */
+     Here we have a straight-up URL handler, but still emits
+     XML-ish output.
+  */
   p.addUrlHandler("_sendXml", [] (OmXmlWriter & w, OmWebRequest & r, int ref1, void *ref2)
   {
     int recordCount = xmlRecordCountSlider->getValue();
@@ -208,7 +235,7 @@ Please enjoy! -- dvb)JS");
     {
       w.beginElement("record");
       w.addAttribute("ix", ix);
-      w.addAttribute("randomNumber", random(-1000000,1000000));
+      w.addAttribute("randomNumber", random(-1000000, 1000000));
       w.endElement(); // record
     }
     w.endElement(); // records
@@ -218,12 +245,16 @@ Please enjoy! -- dvb)JS");
   p.addUrlHandler("ginger.jpg",  [] (OmXmlWriter & w, OmWebRequest & r, int ref1, void *ref2)
   {
     p.renderHttpResponseHeader("image/jpg", 200);
-    for(unsigned int ix = 0; ix < jpgImageSize; ix++)
+    for (unsigned int ix = 0; ix < jpgImageSize; ix++)
     {
       // the OmXmlWriter can also emit raw binary bytes, one at a time, like this:
       w.put(jpgImage[ix]);
     }
   });
+
+  p.addUrlHandler("ginger2.jpg", handyHandler, 123, NULL); // last two args are int ref1 and void *ref2
+  p.addUrlHandler(wildcardProc);
+
 
   // And lastly, introduce the web pages to the wifi connection.
   s.setHandler(p);

@@ -102,14 +102,6 @@ public:
     }
 };
 
-class UrlHandler
-{
-public:
-    const char *url = "";
-    OmUrlHandlerProc handlerProc = NULL;
-    int ref1 = 0;
-    void *ref2 = 0;
-};
 
 
 
@@ -1331,6 +1323,12 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
         }
     }
 
+    if(!page && this->urlHandler.handlerProc)
+    {
+        this->urlHandler.handlerProc(w, request, urlHandler.ref1, urlHandler.ref2);
+        goto goHome;
+    }
+
     if(!page)
     {
         OMLOG("no page found, just do top menu");
@@ -1403,6 +1401,13 @@ void OmWebPages::addUrlHandler(const char *path, OmUrlHandlerProc proc, int ref1
     uh->ref1 = ref1;
     uh->ref2 = ref2;
     this->urlHandlers.push_back(uh);
+}
+
+void OmWebPages::addUrlHandler(OmUrlHandlerProc proc, int ref1, void *ref2)
+{
+    this->urlHandler.handlerProc = proc;
+    this->urlHandler.ref1 = ref1;
+    this->urlHandler.ref2 = ref2;
 }
 
 void OmWebPages::renderHttpResponseHeader(const char *contentType, int response)

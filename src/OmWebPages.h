@@ -169,6 +169,10 @@ public:
     /// Add an arbitrary URL handler.
     void addUrlHandler(const char *path, OmUrlHandlerProc proc, int ref1 = 0, void *ref2 = 0);
 
+    /// Add a wildcard url handler, if no page or specific handler gets it.
+    void addUrlHandler(OmUrlHandlerProc proc, int ref1 = 0, void *ref2 = 0);
+
+
     // +----------------------------------
     // | Handling Requests
     // |
@@ -230,6 +234,17 @@ public:
     void setValue(const char *pageName, const char *itemName, int value);
     int getValue(const char *pageName, const char *itemName);
 private:
+
+    /// inner private class
+    class UrlHandler
+    {
+    public:
+        const char *url = "";
+        OmUrlHandlerProc handlerProc = NULL;
+        int ref1 = 0;
+        void *ref2 = 0;
+    };
+
     bool doAction(const char *pageName, const char *itemName);
     void renderStyle(OmXmlWriter &w, int bgColor = 0xffffff);
     void renderScript(OmXmlWriter &w);
@@ -244,6 +259,8 @@ private:
     std::vector<Page *> pages;
     std::vector<UrlHandler *>urlHandlers;
     Page *currentPage = 0; // if a page is active.
+
+    UrlHandler urlHandler; // generic handler if no specific urls match. Over to you!
 
     PageItem *currentSelect = 0; // addSelectOption applies to the most recently begun select.
     PageItem *currentCheckboxes = 0; // addCheckboxX adds another checkbox here
