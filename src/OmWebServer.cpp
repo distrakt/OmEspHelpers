@@ -657,7 +657,7 @@ void OmWebServer::handleRequest(String request, WiFiClient &client)
     IPAddress remoteIp = client.remoteIP();
     if(this->p->verbose >= 2)
     {
-      this->p->printf("Request from %s:%d %s\n", omIpToString(remoteIp), remotePort, uriS.c_str());
+      this->p->printf("Request from %s:%d %s\n", omIpToString(remoteIp, true), remotePort, uriS.c_str());
     }
 
     this->p->streamToClient = true; // streaming available!

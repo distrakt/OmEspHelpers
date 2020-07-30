@@ -48,10 +48,13 @@
 #include <string.h>
 #include <stdint.h>
 
-// xmlwriter has option to pass bytes right to someone else.
+/*! Interface for streaming byte output. Can be chained together, and used as a destination by OmXmlWriter */
 class OmIByteStream
 {
 public:
+    /*!
+     @abstract emit a single byte, overridden by any implementation
+     */
     virtual bool put(uint8_t ch)
     {
         if(this->isDone)
@@ -66,7 +69,7 @@ public:
         return true;
     }
 
-    /// convenience routine, same as put byte-by-byte.
+    /*! @abstract convenience routine, same as put byte-by-byte. */
     virtual bool putS(const char *s)
     {
         bool result = true;
@@ -80,6 +83,10 @@ public:
     bool isDone = false;
 };
 
+/*!
+ @class OmXmlWriter
+ Writes formatted XML to an OmIByteStream, streaming as it goes (mostly)
+ */
 class OmXmlWriter : public OmIByteStream
 {
 public:
@@ -95,70 +102,71 @@ public:
 
     const char *attributeName = 0; // current open attribute if any, streaming into it
     
-    /// Instantiate an XML writer to write into the specified buffer
+    /*! @abstract Instantiate an XML writer to write into the specified buffer */
     OmXmlWriter(OmIByteStream *consumer);
     
-    /// Begins a new XML element, like <elementName>
+    /*! @abstract Begins a new XML element, like &lt;elementName> */
     void beginElement(const char *elementName);
     
-    /// Begins a new XML element with one attribute already in it, like <elementName attr="value">
+    /*! @abstract Begins a new XML element with one attribute already in it, like &lt;elementName attr="value"> */
     void beginElement(const char *elementName, const char *attribute1, const char *value1);
     
-    /// Adds text to an element, like <element>content</element>
+    /*! @abstract Adds text to an element, like &lt;element>content&lt;/element> */
     void addContent(const char *content);
 
-    /// Adds text to the document, but don't escape things. You can wreck your document with this!
-    /// But also needed things like rendering DOCTYPE at the start. Caution.
+    /*! @abstract Adds text to the document ignoring XML rules
+     But also needed things like rendering DOCTYPE at the start. Caution.
+     */
     void addContentRaw(const char *content);
 
-    /// Adds text to an element, using printf semantics
+    /*! @abstract Adds text to an element, using printf semantics */
     void addContentF(const char *fmt,...);
     
-    /// Adds an attribute to an element, like <element attr="value">
+    /*! @abstract Adds an attribute to an element, like &lt;element attr="value"> */
     void addAttribute(const char *attribute, const char *value);
     
-    /// Adds an attribute to an element, using printf semantics
+    /*! @abstract Adds an attribute to an element, using printf semantics */
     void addAttributeF(const char *attribute, const char *fmt,...);
 
-    /// Handle oversized attribute. :-/
+    /*! @abstract Handle oversized attribute. :-/ */
     void addAttributeFBig(int reserve, const char *attribute, const char *fmt,...);
 
-    /// Adds an attribute to an element, using printf semantics, and %20 escapes.
+    /*! @abstract Adds an attribute to an element, using printf semantics, and %20 escapes. */
     void addAttributeUrlF(const char *attribute, const char *fmt,...);
     
-    /// Adds an attribute to an element from an integer
+    /*! @abstract Adds an attribute to an element from an integer */
     void addAttribute(const char *attribute, long long int value);
     
-    /// Adds an element with no attributes or content (no need for endElement()) like <hr/>
+    /*! @abstract Adds an element with no attributes or content (no need for endElement()) like &lt;hr/> */
     void addElement(const char *elementName);
     
-    /// Adds an element with content (no need for endElement()) like <h1>Content</h1>
+    /*! @abstract Adds an element with content (no need for endElement()) like &lt;h1>Content&lt;/h1> */
     void addElement(const char *elementName, const char *content);
     
-    /// Adds an element with content (no need for endElement()) like <h1>Content</h1>
+    /*! @abstract Adds an element with content (no need for endElement()) like &lt;h1>Content&lt;/h1> */
     void addElementF(const char *elementName, const char *fmt,...);
     
-    /// Ends the most recent beginElement(). Caps them with either <element/> or </element>.
+    /*! @abstract Ends the most recent beginElement(). Caps them with either &lt;element/> or &lt;/element>. */
     void endElement();
 
-    /// Ends most recent beginElement, and prints error message if element name does not match.
+    /*! @abstract Ends most recent beginElement, and prints error message if element name does not match. */
     void endElement(const char *elementName);
     
-    /// Ends any remaining elements.
+    /*! @abstract Ends any remaining elements. */
     void endElements();
     
-    /// Enables primitive formatting. Uses more bytes of buffer.
+    /*! @abstract Enables primitive formatting. Uses more bytes of buffer. */
     void setIndenting(int onOff);
     
-    /// Returns nonzero of any errors occurred, usually buffer overruns leading to missing portions.
+    /*! @abstract Returns nonzero of any errors occurred, usually buffer overruns leading to missing portions. */
     int getErrorCount();
 
-    /// Bytes written.
+    /*! @abstract Bytes written. */
     unsigned int getByteCount();
 
-    /// Our own put.
-    /// OmXmlWriter needs to know what context it's in, to manage escapes correctly.
-    /// also relies upon some new concepts like beginAttribute, <stream a big attribute value>, endAttribute.
+    /*! Our own put.
+    OmXmlWriter needs to know what context it's in, to manage escapes correctly.
+    also relies upon some new concepts like beginAttribute, &lt;stream a big attribute value>, endAttribute. */
     bool put(uint8_t ch) override;
     bool done() override;
 

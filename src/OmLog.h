@@ -31,11 +31,11 @@
 typedef unsigned char IPAddress[4];
 #endif
 
-/// This macro is what you'll call. It adds the file and line number to the output.
+/*! This macro is what you'll call. It adds the file and line number to the output. */
 #define OMLOG(_args...) OmLog::logS(__FILE__, __LINE__, '*', _args)
 #define OMERR(_args...) OmLog::logS(__FILE__, __LINE__, 'E', _args)
 
-/// Utility to convert an ESP8266 ip address to a printable string.
+/*! Utility to convert an ESP8266 ip address to a printable string. */
 const char *ipAddressToString(IPAddress ip);
 
 class OmLog

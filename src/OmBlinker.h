@@ -21,10 +21,10 @@
 
 class OmBlinker
 {
-    /// This pattern just keeps repeating
+    /*! This pattern just keeps repeating */
     std::vector<int> repeatingPattern; // entries are intervals, On then Off. p[0] is an On-duration.
     
-    /// This pattern would fire once, and then the repeating pattern resumes.
+    /*! This pattern would fire once, and then the repeating pattern resumes. */
     std::vector<int> oncePattern;
     
     int ledPin = -1;
@@ -35,7 +35,7 @@ class OmBlinker
     bool inverted = true; // if inverted, digitalWrite(0) means ON.
     
 public:
-    /// By default, OmBlinker won't blink, set to pin -1 to disable.
+    /*! By default, OmBlinker won't blink, set to pin -1 to disable. */
     OmBlinker(int ledPin = -1);
     void setLedPin(int ledPin);
     void setTickDivider(int tickDivider);
@@ -45,21 +45,21 @@ public:
     
     void clear();
     
-    /// add an On blink and an Off blink
+    /*! add an On blink and an Off blink */
     void addBlink(int onTime, int offTime);
     
-    /// add an On blink (or extend the last one)
+    /*! add an On blink (or extend the last one) */
     void addOnTime(int onTime);
-    /// add an Off blink (or extend the last pause)
+    /*! add an Off blink (or extend the last pause) */
     void addOffTime(int offTime);
     
     
-    /// add several blinks to represent a digit 0 to 9, like 3 blinks for 3. NOTE: does zero blinks 10 times
+    /*! add several blinks to represent a digit 0 to 9, like 3 blinks for 3. NOTE: does zero blinks 10 times */
     void addDigit(unsigned int digit);
     
-    /// add blinks and pauses to play a number in decimal
+    /*! add blinks and pauses to play a number in decimal */
     void addNumber(unsigned int number);
     
-    /// Play a simple blink "on top of" the repeating pattern
+    /*! Play a simple blink "on top of" the repeating pattern */
     void addInterjection(int blinkCount, int blinkSize);
 };

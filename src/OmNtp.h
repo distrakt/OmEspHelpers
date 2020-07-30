@@ -1,4 +1,3 @@
-
 /*
  * OmNtp.h
  * 2016-12-13
@@ -49,19 +48,19 @@ class OmNtp
 public:
     OmNtp();
 
-    /// Call this after wifi properly established
+    /*! Call this after wifi properly established */
     void setWifiAvailable(bool wifiAvailable);
 
-    /// Call this in your loop(). Assumes about 20-50 ms interval.
+    /*! Call this in your loop(). Assumes about 20-50 ms interval. */
     void tick(long milliseconds); // pass in the current apparent "millis", we'll pace ourselves accordingly.
     
-    /// This number gets added to UTC for your time zone. It ranges
-    /// from -12 to +12. California in December needs -8.
+    /*! This number gets added to UTC for your time zone. It ranges */
+    /*! from -12 to +12. California in December needs -8. */
     void setTimeZone(int hourOffset);
 
     int getTimeZone();
     
-    /// Issue a request to an http service, the url you set with setTimeUrl().
+    /*! Issue a request to an http service, the url you set with setTimeUrl(). */
     void setLocalTimeZone();
 
     /*
@@ -71,25 +70,25 @@ public:
     print date("e");
     ?>
      */
-    /// URL to a server under your control that gives the current time.
-    /// OmNtp will deduce the timezone relative to NTP from it, also.
-    /// Https not supported, just http.
+    /*! URL to a server under your control that gives the current time. */
+    /*! OmNtp will deduce the timezone relative to NTP from it, also. */
+    /*! Https not supported, just http. */
     void setTimeUrl(const char *timeUrl);
 
-    /// Get the time of day in three handy integers.
+    /*! Get the time of day in three handy integers. */
     bool getTime(int &hourOut, int &minuteOut, int &secondOut);
-    /// Get the time of day in two handy integers and a float.
+    /*! Get the time of day in two handy integers and a float. */
     bool getTime(int &hourOut, int &minuteOut, float &secondOut);
 
-    /// Get the time of day in a handy string like HH:MM:SS.
-    /// (It's a static char[], by the way.)
+    /*! Get the time of day in a handy string like HH:MM:SS. */
+    /*! (It's a static char[], by the way.) */
     const char *getTimeString();
 
     bool getUTime(uint32_t &uTimeOut, int &uFracOut); // seconds of 1970-1-1, and milliseconds.
     uint32_t getUTime(); // lite version
     bool uTimeToTime(uint32_t uTime, int uFrac, int &hourOut, int &minuteOut, float &secondOut); // in local time zone
 
-    /// Get the last-created ntp instance, if any
+    /*! Get the last-created ntp instance, if any */
     static OmNtp *ntp();
 
 private:

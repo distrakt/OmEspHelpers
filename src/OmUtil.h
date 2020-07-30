@@ -13,6 +13,7 @@ bool omStringEqual(const char *s1, const char *s2, int maxLen = 100);
 /*! Represent a number of milliseconds as a duration string, good for "uptime" displays. 1d2h3m4s like. */
 const char *omTime(long long millis, int secondsDecimals = 0);
 int omStringToInt(const char *s);
+/*! ip to string */
 const char *omIpToString(unsigned long ip, bool flip = false); // flip=true for ESP library IPAddress object.);
 const char *omIpToString(unsigned char ip[4]);
 int omHexToInt(const char *s, int digitCount);

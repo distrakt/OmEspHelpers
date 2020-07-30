@@ -9,6 +9,12 @@
 #define VA_LIST_ARG va_list &v
 #endif
 
+/*!
+ A limited implementation of printf semantics that streams to a consumer.
+ It doesn't handle positional arguments... and may have other subtle omissions.
+ But works for basic typical printf. Doesn't depend on an in-memory char target
+ big enough for the result.
+ */
 class OmPrintfStream : public OmIByteStream
 {
 public:
@@ -19,7 +25,7 @@ public:
     bool putF(const char *fmt, ...);
     bool putVF(const char *fmt, VA_LIST_ARG);
 
-    /// one-shot printer.
+    /*! @abstract like sprintf, but to an OmIByteStream */
     static bool putF(OmIByteStream *consumer, const char *fmt, ...);
     static bool putVF(OmIByteStream *consumer, const char *fmt, VA_LIST_ARG);
 };

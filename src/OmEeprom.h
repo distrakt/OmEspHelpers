@@ -39,7 +39,7 @@ public:
     bool put(const char *fieldName, const void *value);
     bool commit();
 
-    /// To help debug.
+    /*! To help debug. */
     void dumpState();
 
     // And now, the friendlier API calls.

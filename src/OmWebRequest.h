@@ -48,8 +48,8 @@ static void inplaceRequestDecode(char *r)
     *w++ = 0;
 }
 
-/// This class is only about the part of a Uri past the host & port. Just the path & query.
-/// Doesn't handle hex coding or quotes and stuff.
+/*! This class is only about the part of a Uri past the host & port. Just the path & query. */
+/*! Doesn't handle hex coding or quotes and stuff. */
 class OmWebRequest
 {
     static const int kRequestLengthMax = 320;
