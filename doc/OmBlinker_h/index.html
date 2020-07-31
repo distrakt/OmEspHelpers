@@ -272,145 +272,18 @@ function disclosure_triangle(elt) {
 <p><!-- headerDoc=abstract;uid=//apple_ref/doc/header/OmBlinker.h;name=start --><!-- begin abstract -->Use the links in the table of contents to the left to access the documentation.<br>
 <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/doc/header/OmBlinker.h;name=end --></p>
 <hr class="afterClassOrHeaderInfo">
-<br><a name="HeaderDoc_functions"></a>
-<h2 class="h2tight">Functions</h2>
+<br><a name="HeaderDoc_classes"></a>
+<h2 class="h2tight">Classes</h2>
 <dl>
-<dt><tt><a href="index.html#//apple_ref/c/func/addBlink" target="_top">addBlink</a></tt></dt>
-<dd></dd>
-<dt><tt><a href="index.html#//apple_ref/c/func/addDigit" target="_top">addDigit</a></tt></dt>
-<dd></dd>
-<dt><tt><a href="index.html#//apple_ref/c/func/addInterjection" target="_top">addInterjection</a></tt></dt>
-<dd></dd>
-<dt><tt><a href="index.html#//apple_ref/c/func/addNumber" target="_top">addNumber</a></tt></dt>
-<dd></dd>
-<dt><tt><a href="index.html#//apple_ref/c/func/addOffTime" target="_top">addOffTime</a></tt></dt>
-<dd></dd>
-<dt><tt><a href="index.html#//apple_ref/c/func/addOnTime" target="_top">addOnTime</a></tt></dt>
-<dd></dd>
-<dt><tt><a href="index.html#//apple_ref/c/func/OmBlinker" target="_top">OmBlinker</a></tt></dt>
-<dd></dd>
+<dt><tt><a href="Classes/OmBlinker/index.html#//apple_ref/cpp/cl/OmBlinker" target="_top">OmBlinker</a></tt></dt>
+<dd><p>class to help send out timed repeating blinks, can be used to show IP address of the current connection.
+kind of silly, really, but I found it handy to blink out the last octet of 192.168.1.&lt;what ip was i assigned?&gt;.
+</p></dd>
 </dl>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/addBlink;   name=addBlink -->
-<a name="//apple_ref/c/func/addBlink"></a>
-<h3><a name="addBlink">addBlink</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/addBlink;name=start --><!-- a logicalPath="//apple_ref/c/cl/void //apple_ref/c/tdef/void //apple_ref/c/tag/void //apple_ref/c/struct/void //apple_ref/c/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/c/func/addBlink" logicalPath="//apple_ref/c/instm/addBlink //apple_ref/c/clm/addBlink //apple_ref/c/intfcm/addBlink //apple_ref/c/intfm/addBlink //apple_ref/c/func/addBlink" target="_top"><span class="function">addBlink</span></a>(
-    <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">onTime</span>,
-    <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">offTime</span>);  <!-- headerDoc=declaration;uid=//apple_ref/c/func/addBlink;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/addBlink;name=start --><p>add an On blink and an Off blink <!-- headerDoc=discussion;uid=//apple_ref/c/func/addBlink;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/addDigit;   name=addDigit -->
-<a name="//apple_ref/c/func/addDigit"></a>
-<h3><a name="addDigit">addDigit</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/addDigit;name=start --><!-- a logicalPath="//apple_ref/c/cl/void //apple_ref/c/tdef/void //apple_ref/c/tag/void //apple_ref/c/struct/void //apple_ref/c/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/c/func/addDigit" logicalPath="//apple_ref/c/instm/addDigit //apple_ref/c/clm/addDigit //apple_ref/c/intfcm/addDigit //apple_ref/c/intfm/addDigit //apple_ref/c/func/addDigit" target="_top"><span class="function">addDigit</span></a>(
-    <span class="keyword">unsigned</span> <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">digit</span>);  <!-- headerDoc=declaration;uid=//apple_ref/c/func/addDigit;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/addDigit;name=start --><p>add several blinks to represent a digit 0 to 9, like 3 blinks for 3. NOTE: does zero blinks 10 times <!-- headerDoc=discussion;uid=//apple_ref/c/func/addDigit;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/addInterjection;   name=addInterjection -->
-<a name="//apple_ref/c/func/addInterjection"></a>
-<h3><a name="addInterjection">addInterjection</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/addInterjection;name=start --><!-- a logicalPath="//apple_ref/c/cl/void //apple_ref/c/tdef/void //apple_ref/c/tag/void //apple_ref/c/struct/void //apple_ref/c/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/c/func/addInterjection" logicalPath="//apple_ref/c/instm/addInterjection //apple_ref/c/clm/addInterjection //apple_ref/c/intfcm/addInterjection //apple_ref/c/intfm/addInterjection //apple_ref/c/func/addInterjection" target="_top"><span class="function">addInterjection</span></a>(
-    <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">blinkCount</span>,
-    <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">blinkSize</span>);  <!-- headerDoc=declaration;uid=//apple_ref/c/func/addInterjection;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/addInterjection;name=start --><p>Play a simple blink "on top of" the repeating pattern <!-- headerDoc=discussion;uid=//apple_ref/c/func/addInterjection;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/addNumber;   name=addNumber -->
-<a name="//apple_ref/c/func/addNumber"></a>
-<h3><a name="addNumber">addNumber</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/addNumber;name=start --><!-- a logicalPath="//apple_ref/c/cl/void //apple_ref/c/tdef/void //apple_ref/c/tag/void //apple_ref/c/struct/void //apple_ref/c/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/c/func/addNumber" logicalPath="//apple_ref/c/instm/addNumber //apple_ref/c/clm/addNumber //apple_ref/c/intfcm/addNumber //apple_ref/c/intfm/addNumber //apple_ref/c/func/addNumber" target="_top"><span class="function">addNumber</span></a>(
-    <span class="keyword">unsigned</span> <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">number</span>);  <!-- headerDoc=declaration;uid=//apple_ref/c/func/addNumber;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/addNumber;name=start --><p>add blinks and pauses to play a number in decimal <!-- headerDoc=discussion;uid=//apple_ref/c/func/addNumber;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/addOffTime;   name=addOffTime -->
-<a name="//apple_ref/c/func/addOffTime"></a>
-<h3><a name="addOffTime">addOffTime</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/addOffTime;name=start --><!-- a logicalPath="//apple_ref/c/cl/void //apple_ref/c/tdef/void //apple_ref/c/tag/void //apple_ref/c/struct/void //apple_ref/c/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/c/func/addOffTime" logicalPath="//apple_ref/c/instm/addOffTime //apple_ref/c/clm/addOffTime //apple_ref/c/intfcm/addOffTime //apple_ref/c/intfm/addOffTime //apple_ref/c/func/addOffTime" target="_top"><span class="function">addOffTime</span></a>(
-    <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">offTime</span>);  <!-- headerDoc=declaration;uid=//apple_ref/c/func/addOffTime;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/addOffTime;name=start --><p>add an Off blink (or extend the last pause) <!-- headerDoc=discussion;uid=//apple_ref/c/func/addOffTime;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/addOnTime;   name=addOnTime -->
-<a name="//apple_ref/c/func/addOnTime"></a>
-<h3><a name="addOnTime">addOnTime</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/addOnTime;name=start --><!-- a logicalPath="//apple_ref/c/cl/void //apple_ref/c/tdef/void //apple_ref/c/tag/void //apple_ref/c/struct/void //apple_ref/c/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/c/func/addOnTime" logicalPath="//apple_ref/c/instm/addOnTime //apple_ref/c/clm/addOnTime //apple_ref/c/intfcm/addOnTime //apple_ref/c/intfm/addOnTime //apple_ref/c/func/addOnTime" target="_top"><span class="function">addOnTime</span></a>(
-    <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">onTime</span>);  <!-- headerDoc=declaration;uid=//apple_ref/c/func/addOnTime;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/addOnTime;name=start --><p>add an On blink (or extend the last one) <!-- headerDoc=discussion;uid=//apple_ref/c/func/addOnTime;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/OmBlinker;   name=OmBlinker -->
-<a name="//apple_ref/c/func/OmBlinker"></a>
-<h3><a name="OmBlinker">OmBlinker</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/OmBlinker;name=start --><a machinegenerated="true" href="index.html#//apple_ref/c/func/OmBlinker" logicalPath="//apple_ref/c/instm/OmBlinker //apple_ref/c/clm/OmBlinker //apple_ref/c/intfcm/OmBlinker //apple_ref/c/intfm/OmBlinker //apple_ref/c/func/OmBlinker" target="_top"><span class="function">OmBlinker</span></a>(
-    <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <!-- a logicalPath="//apple_ref/c/cl/ledPin //apple_ref/c/tdef/ledPin //apple_ref/c/tag/ledPin //apple_ref/c/struct/ledPin //apple_ref/c/intf/ledPin //apple_ref/doc/anysymbol/ledPin" machineGenerated="true" --><span class="type">ledPin</span><!-- /a --> = -<span class="number">1</span>);  <!-- headerDoc=declaration;uid=//apple_ref/c/func/OmBlinker;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/OmBlinker;name=start --><p>By default, OmBlinker won't blink, set to pin -1 to disable. <!-- headerDoc=discussion;uid=//apple_ref/c/func/OmBlinker;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenSections">
-<a name="HeaderDoc_vars"></a>
-<h2 class="h2tight">Globals</h2>
-<dl>
-<dt><tt><a href="index.html#//apple_ref/c/data/oncePattern" target="_top">oncePattern</a></tt></dt>
-<dd></dd>
-<dt><tt><a href="index.html#//apple_ref/c/data/repeatingPattern" target="_top">repeatingPattern</a></tt></dt>
-<dd></dd>
-</dl>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=data;  uid=//apple_ref/c/data/oncePattern;   name=oncePattern -->
-<a name="//apple_ref/c/data/oncePattern"></a>
-<h3><a name="oncePattern">oncePattern</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/data/oncePattern;name=start --><!-- a logicalPath="//apple_ref/c/cl/std //apple_ref/c/tdef/std //apple_ref/c/tag/std //apple_ref/c/struct/std //apple_ref/c/intf/std //apple_ref/doc/anysymbol/std" machineGenerated="true" --><span class="type">std</span><!-- /a -->::<!-- a logicalPath="//apple_ref/c/cl/vector //apple_ref/c/tdef/vector //apple_ref/c/tag/vector //apple_ref/c/struct/vector //apple_ref/c/intf/vector //apple_ref/doc/anysymbol/vector" machineGenerated="true" --><span class="type">vector</span><!-- /a -->&lt;<span class="template">int</span>&gt; <a machinegenerated="true" href="index.html#//apple_ref/c/data/oncePattern" logicalPath="//apple_ref/c/econst/oncePattern //apple_ref/c/data/oncePattern" target="_top"><span class="var">oncePattern</span></a>;  <!-- headerDoc=declaration;uid=//apple_ref/c/data/oncePattern;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/data/oncePattern;name=start --><p>This pattern would fire once, and then the repeating pattern resumes. <!-- headerDoc=discussion;uid=//apple_ref/c/data/oncePattern;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=data;  uid=//apple_ref/c/data/repeatingPattern;   name=repeatingPattern -->
-<a name="//apple_ref/c/data/repeatingPattern"></a>
-<h3><a name="repeatingPattern">repeatingPattern</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/data/repeatingPattern;name=start --><!-- a logicalPath="//apple_ref/c/cl/std //apple_ref/c/tdef/std //apple_ref/c/tag/std //apple_ref/c/struct/std //apple_ref/c/intf/std //apple_ref/doc/anysymbol/std" machineGenerated="true" --><span class="type">std</span><!-- /a -->::<!-- a logicalPath="//apple_ref/c/cl/vector //apple_ref/c/tdef/vector //apple_ref/c/tag/vector //apple_ref/c/struct/vector //apple_ref/c/intf/vector //apple_ref/doc/anysymbol/vector" machineGenerated="true" --><span class="type">vector</span><!-- /a -->&lt;<span class="template">int</span>&gt; <a machinegenerated="true" href="index.html#//apple_ref/c/data/repeatingPattern" logicalPath="//apple_ref/c/econst/repeatingPattern //apple_ref/c/data/repeatingPattern" target="_top"><span class="var">repeatingPattern</span></a>;  <span class="comment">// entries are intervals, On then Off. p[0] is an On-duration.</span> <!-- headerDoc=declaration;uid=//apple_ref/c/data/repeatingPattern;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/data/repeatingPattern;name=start --><p>This pattern just keeps repeating <!-- headerDoc=discussion;uid=//apple_ref/c/data/repeatingPattern;name=end --><!-- end discussion -->
-</p>
 <p class="gapBeforeFooter">&nbsp;</p>
 <hr class="afterFooter">
 <div class="hd_copyright_and_timestamp">
-<p class="hd_timestamp">Last Updated: Wednesday, July 29, 2020
+<p class="hd_timestamp">Last Updated: Thursday, July 30, 2020
 </p>
 </div>
 </td>

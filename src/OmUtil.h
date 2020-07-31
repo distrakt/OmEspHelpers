@@ -10,11 +10,20 @@
 #define __OmUtil__
 
 bool omStringEqual(const char *s1, const char *s2, int maxLen = 100);
-/*! Represent a number of milliseconds as a duration string, good for "uptime" displays. 1d2h3m4s like. */
+/*! @abstract Represent a number of milliseconds as a duration string, good for "uptime" displays. 1d2h3m4s like.
+ result is in a shared static char[], so use or copy soon.
+ */
 const char *omTime(long long millis, int secondsDecimals = 0);
+/*! @abstract string pointer to int, very forgiving
+    results undefined for nonnumeric characters
+    reads 0xAbCd hex also.
+ */
 int omStringToInt(const char *s);
-/*! ip to string */
-const char *omIpToString(unsigned long ip, bool flip = false); // flip=true for ESP library IPAddress object.);
+/*! @abstract ip to string
+ flip=true for ESP library IPAddress object.);
+ */
+const char *omIpToString(unsigned long ip, bool flip = false);
+/*! @abstract ip to string */
 const char *omIpToString(unsigned char ip[4]);
 int omHexToInt(const char *s, int digitCount);
 void omHsvToRgb(unsigned char *hsvIn, unsigned char *rgbOut);

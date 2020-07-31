@@ -43,6 +43,7 @@
 #include "OmLog.h"
 #include "WiFiUdp.h"
 
+/*! class to keep a local clock synchronized from a server */
 class OmNtp
 {
 public:

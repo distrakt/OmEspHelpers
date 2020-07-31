@@ -276,66 +276,16 @@ function disclosure_triangle(elt) {
 <h2 class="h2tight">Classes</h2>
 <dl>
 <dt><tt><a href="Classes/OmBase64Stream/index.html#//apple_ref/cpp/cl/OmBase64Stream" target="_top">OmBase64Stream</a></tt></dt>
-<dd></dd>
+<dd><p>Given a consumer, feed in bytes and put out base64 bytes.
+call done() to emit the last bit of padding.
+Adapted liberally from  *  http://web.mit.edu/freebsd/head/contrib/wpa/src/utils/base64.c </p></dd>
+<dt><tt><a href="Classes/OmBitmap1BmpStream/index.html#//apple_ref/cpp/cl/OmBitmap1BmpStream" target="_top">OmBitmap1BmpStream</a></tt></dt>
+<dd><p>class to stream a 1-bit .bmp bitmap file, as you feed it pixel by pixel </p></dd>
+<dt><tt><a href="Classes/OmBitmap24BmpStream/index.html#//apple_ref/cpp/cl/OmBitmap24BmpStream" target="_top">OmBitmap24BmpStream</a></tt></dt>
+<dd><p>class to stream a 24-bit .bmp pixel map file, as you feed it pixel by pixel </p></dd>
 </dl>
 <hr class="afterClassEmbeddedTOC">
-<br><a name="HeaderDoc_functions"></a>
-<h2 class="h2tight">Functions</h2>
-<dl>
-<dt><tt><a href="index.html#//apple_ref/c/func/put1Bit" target="_top">put1Bit</a></tt></dt>
-<dd></dd>
-<dt><tt><a href="index.html#//apple_ref/c/func/put1Pixel" target="_top">put1Pixel</a></tt></dt>
-<dd></dd>
-</dl>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/put1Bit;   name=put1Bit -->
-<a name="//apple_ref/c/func/put1Bit"></a>
-<h3><a name="put1Bit">put1Bit</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/put1Bit;name=start --><!-- a logicalPath="//apple_ref/c/cl/bool //apple_ref/c/tdef/bool //apple_ref/c/tag/bool //apple_ref/c/struct/bool //apple_ref/c/intf/bool //apple_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/c/func/put1Bit" logicalPath="//apple_ref/c/instm/put1Bit //apple_ref/c/clm/put1Bit //apple_ref/c/intfcm/put1Bit //apple_ref/c/intfm/put1Bit //apple_ref/c/func/put1Bit" target="_top"><span class="function">put1Bit</span></a>(
-    <!-- a logicalPath="//apple_ref/c/cl/int //apple_ref/c/tdef/int //apple_ref/c/tag/int //apple_ref/c/struct/int //apple_ref/c/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">bit</span>) <!-- headerDoc=declaration;uid=//apple_ref/c/func/put1Bit;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/put1Bit;name=start --><p>emit a single 1-bit pixel of our bitmap image. <!-- headerDoc=discussion;uid=//apple_ref/c/func/put1Bit;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=func;  uid=//apple_ref/c/func/put1Pixel;   name=put1Pixel -->
-<a name="//apple_ref/c/func/put1Pixel"></a>
-<h3><a name="put1Pixel">put1Pixel</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/func/put1Pixel;name=start --><!-- a logicalPath="//apple_ref/c/cl/bool //apple_ref/c/tdef/bool //apple_ref/c/tag/bool //apple_ref/c/struct/bool //apple_ref/c/intf/bool //apple_ref/doc/anysymbol/bool" machineGenerated="true" --><span class="type">bool</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/c/func/put1Pixel" logicalPath="//apple_ref/c/instm/put1Pixel //apple_ref/c/clm/put1Pixel //apple_ref/c/intfcm/put1Pixel //apple_ref/c/intfm/put1Pixel //apple_ref/c/func/put1Pixel" target="_top"><span class="function">put1Pixel</span></a>(
-    <!-- a logicalPath="//apple_ref/c/cl/uint8_t //apple_ref/c/tdef/uint8_t //apple_ref/c/tag/uint8_t //apple_ref/c/struct/uint8_t //apple_ref/c/intf/uint8_t //apple_ref/doc/anysymbol/uint8_t" machineGenerated="true" --><span class="type">uint8_t</span><!-- /a --> <span class="param">r</span>,
-    <!-- a logicalPath="//apple_ref/c/cl/uint8_t //apple_ref/c/tdef/uint8_t //apple_ref/c/tag/uint8_t //apple_ref/c/struct/uint8_t //apple_ref/c/intf/uint8_t //apple_ref/doc/anysymbol/uint8_t" machineGenerated="true" --><span class="type">uint8_t</span><!-- /a --> <span class="param">g</span>,
-    <!-- a logicalPath="//apple_ref/c/cl/uint8_t //apple_ref/c/tdef/uint8_t //apple_ref/c/tag/uint8_t //apple_ref/c/struct/uint8_t //apple_ref/c/intf/uint8_t //apple_ref/doc/anysymbol/uint8_t" machineGenerated="true" --><span class="type">uint8_t</span><!-- /a --> <span class="param">b</span>) <!-- headerDoc=declaration;uid=//apple_ref/c/func/put1Pixel;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/func/put1Pixel;name=start --><p>emit a single 24-bit pixel of our bitmap image. <!-- headerDoc=discussion;uid=//apple_ref/c/func/put1Pixel;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenSections">
-<a name="HeaderDoc_vars"></a>
-<h2 class="h2tight">Globals</h2>
-<dl>
-<dt><tt><a href="index.html#//apple_ref/c/data/rowPadBytes" target="_top">rowPadBytes</a></tt></dt>
-<dd></dd>
-</dl>
-<hr class="betweenAPIEntries">
-<!-- headerDoc=data;  uid=//apple_ref/c/data/rowPadBytes;   name=rowPadBytes -->
-<a name="//apple_ref/c/data/rowPadBytes"></a>
-<h3><a name="rowPadBytes">rowPadBytes</a></h3>
-<hr class="afterName">
-<div class="declaration_indent">
-<pre><!-- headerDoc=declaration;uid=//apple_ref/c/data/rowPadBytes;name=start --> <!-- a logicalPath="//apple_ref/c/cl/this //apple_ref/c/tdef/this //apple_ref/c/tag/this //apple_ref/c/struct/this //apple_ref/c/intf/this //apple_ref/doc/anysymbol/this" machineGenerated="true" --><span class="type">this</span><!-- /a -->-&gt;<a machinegenerated="true" href="index.html#//apple_ref/c/data/rowPadBytes" logicalPath="//apple_ref/c/cl/rowPadBytes //apple_ref/c/tdef/rowPadBytes //apple_ref/c/tag/rowPadBytes //apple_ref/c/struct/rowPadBytes //apple_ref/c/intf/rowPadBytes //apple_ref/doc/anysymbol/rowPadBytes" target="_top"><span class="type">rowPadBytes</span></a> = (
-    <span class="number">4</span> - (
-        (
-            <!-- a logicalPath="//apple_ref/c/cl/width //apple_ref/c/tdef/width //apple_ref/c/tag/width //apple_ref/c/struct/width //apple_ref/c/intf/width //apple_ref/doc/anysymbol/width" machineGenerated="true" --><span class="type">width</span><!-- /a --> % <span class="number">32</span>) + <span class="number">7</span>) / <span class="number">8</span>) &amp; <span class="number">3</span>;  <span class="comment">// bytes to emit BEFORE hitting 8 pixels, when x == width</span> <!-- headerDoc=declaration;uid=//apple_ref/c/data/rowPadBytes;name=end --></pre>
-</div>
-<h5 class="tight"><font face="Lucida Grande,Helvetica,Arial">Discussion</font></h5>
-<!-- begin discussion --><!-- headerDoc=discussion;uid=//apple_ref/c/data/rowPadBytes;name=start --><p>after last pixel of a row (which triggers a put, always) <!-- headerDoc=discussion;uid=//apple_ref/c/data/rowPadBytes;name=end --><!-- end discussion -->
-</p>
-<hr class="betweenSections">
-<a name="HeaderDoc_pdefines"></a>
+<br><a name="HeaderDoc_pdefines"></a>
 <h2 class="h2tight">Macro Definitions</h2>
 <dl>
 <dt><tt><a href="index.html#//apple_ref/c/macro/UNUSED" target="_top">UNUSED</a></tt></dt>
@@ -358,7 +308,7 @@ function disclosure_triangle(elt) {
 <p class="gapBeforeFooter">&nbsp;</p>
 <hr class="afterFooter">
 <div class="hd_copyright_and_timestamp">
-<p class="hd_timestamp">Last Updated: Wednesday, July 29, 2020
+<p class="hd_timestamp">Last Updated: Thursday, July 30, 2020
 </p>
 </div>
 </td>

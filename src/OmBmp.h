@@ -13,6 +13,7 @@
 #define UNUSED(x) (void)(x)
 #endif
 
+/*! @abstract class to stream a 1-bit .bmp bitmap file, as you feed it pixel by pixel */
 class OmBitmap1BmpStream : public OmIByteStream
 {
 public:
@@ -69,6 +70,7 @@ public:
         return result;
     }
 
+    /*! @abstract Instantiate the bitmap streamer, with width and height. */
     OmBitmap1BmpStream(OmIByteStream *consumer, int width, int height)
     {
         this->consumer = consumer;
@@ -84,7 +86,9 @@ public:
         this->rowPadBytes = (4 - ((width % 32) + 7) / 8) & 3; // bytes to emit BEFORE hitting 8 pixels, when x == width
     }
 
-    /*! emit a single 1-bit pixel of our bitmap image. */
+    /*! @abstract emit a single 1-bit pixel of our bitmap image.
+     Will return true for each bit you send, until width*height have been sent.
+     Then no futher bits will get streamed out, and return false. */
     bool put1Bit(int bit)
     {
         if(this->x >= this->width && this->y >= this->height)
@@ -143,6 +147,7 @@ private:
 };
 
 
+/*! @abstract class to stream a 24-bit .bmp pixel map file, as you feed it pixel by pixel */
 class OmBitmap24BmpStream : public OmIByteStream
 {
 public:
@@ -205,7 +210,9 @@ public:
         return result;
     }
 
-    /*! emit a single 24-bit pixel of our bitmap image. */
+    /*! @abstract emit a single 24-bit pixel of our pixel map image.
+     Will return true for each pixel you send, until width*height have been sent.
+     Then no futher bits will get streamed out, and return false. */
     bool put1Pixel(uint8_t r, uint8_t g, uint8_t b)
     {
         if(this->x >= this->width && this->y >= this->height)
@@ -273,10 +280,9 @@ extern const uint8_t base64_table[65];
 
 
 
-/*! Given a consumer, feed in bytes and put out base64 bytes. */
-/*! call done() to emit the last bit of padding. */
-/*! Adapted liberally from  *  http://web.mit.edu/freebsd/head/contrib/wpa/src/utils/base64.c */
-
+/*! @abstract Given a consumer, feed in bytes and put out base64 bytes.
+call done() to emit the last bit of padding.
+Adapted liberally from  *  http://web.mit.edu/freebsd/head/contrib/wpa/src/utils/base64.c */
 class OmBase64Stream : public OmIByteStream
 {
 public:
