@@ -255,6 +255,41 @@ public:
     }
 };
 
+/// Show a visual time input, which call back on changes
+class PageInputText : public PageItem
+{
+public:
+    OmWebActionProc proc = 0;
+    String strvalue = "";
+
+    void render(OmXmlWriter &w, Page *inPage) override
+    {
+        w.beginElement("div", "class", "box1");
+        w.addContent(this->name);
+        w.beginElement("form");
+        w.addAttributeF("action", "/_control?page=%s&item=%s&value=%s", inPage->id, this->name, this->strvalue);
+        w.beginElement("input", "name", "text");
+        w.addAttributeF("value", "%s", this->strvalue);
+        w.addAttributeF("id", "%s_%s", inPage->id, this->id);
+        w.endElement(); // input
+        w.endElement(); // form
+        w.endElement(); // div
+    }
+
+    bool doAction(Page *fromPage) override
+    {
+        if(this->proc)
+        {
+            this->proc(fromPage->name, this->name, this->value, this->ref1, this->ref2);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};
+
 class PageSelect : public PageItem
 {
 public:
@@ -604,6 +639,18 @@ void OmWebPages::addPageLink(const char *pageLink, OmWebActionProc proc, int ref
     b->ref1 = ref1;
     b->ref2 = ref2;
     this->currentPage->addItem(b);
+}
+
+OmWebPageItem *OmWebPages::addInputText(const char *itemName, OmWebActionProc proc, String strvalue, int ref1, void *ref2)
+{
+    PageInputText *p = new PageInputText();
+    p->name = itemName;
+    p->strvalue = strvalue;
+    p->ref1 = ref1;
+    p->ref2 = ref2;
+    p->proc = proc;
+    this->currentPage->addItem(p);
+    return &p->item;
 }
 
 OmWebPageItem *OmWebPages::addButton(const char *buttonName, OmWebActionProc proc, int ref1, void *ref2)

@@ -154,6 +154,8 @@ public:
     /*! @abstract Add a time-input */
     OmWebPageItem *addTime(const char *itemName, OmWebActionProc proc = 0, int value = 0, int ref1 = 0, void *ref2 = 0);
 
+    OmWebPageItem *addInputText(const char *itemName, OmWebActionProc proc = 0, String strvalue = "", int ref1 = 0, void *ref2 = 0);
+
     /*! @abstract Add a color-input, int value is 0xRRGGBB */
     OmWebPageItem *addColor(const char *itemName, OmWebActionProc proc = 0, int value = 0, int ref1 = 0, void *ref2 = 0);
 
