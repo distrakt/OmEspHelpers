@@ -267,10 +267,20 @@ public:
         w.beginElement("div", "class", "box1");
         w.addContent(this->name);
         w.beginElement("form");
-        w.addAttributeF("action", "/_control?page=%s&item=%s&value=%s", inPage->id, this->name, this->strvalue);
-        w.beginElement("input", "name", "text");
+        w.addAttributeF("action", "/_control");
+        w.beginElement("input", "name", "value");
         w.addAttributeF("value", "%s", this->strvalue);
         w.addAttributeF("id", "%s_%s", inPage->id, this->id);
+        w.endElement(); // input
+        w.beginElement("input", "type", "hidden");
+        w.addAttributeF("name", "page");
+        w.addAttributeF("value", "%s", inPage->id);
+        w.endElement(); // input
+        w.beginElement("input", "type", "hidden");
+        w.addAttributeF("name", "item");
+        w.addAttributeF("value", "%s", this->name);
+        w.endElement(); // input
+        w.beginElement("input", "type", "submit");
         w.endElement(); // input
         w.endElement(); // form
         w.endElement(); // div
