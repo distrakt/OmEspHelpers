@@ -17,5 +17,6 @@
 #include "OmNtp.h"
 #include "OmBmp.h"
 #include "OmEeprom.h"
+#include "OmOta.h"
 
 #endif

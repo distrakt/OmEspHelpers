@@ -40,6 +40,8 @@ public:
     virtual bool doAction(Page *fromPage) = 0;
     void setValue(int value) { this->value = value; }
 
+    virtual void renderStatusey(OmXmlWriter &w) {};
+
     OmWebPageItem item;
     PageItem() : item(this)
     {
@@ -191,6 +193,13 @@ public:
             return false;
         }
     }
+
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "slider");
+        w.addAttribute("min", this->min);
+        w.addAttribute("max", this->max);
+    }
 };
 
 /// Show a visual time input, which call back on changes
@@ -252,6 +261,11 @@ public:
         {
             return false;
         }
+    }
+
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "time");
     }
 };
 
@@ -413,6 +427,18 @@ public:
             return false;
         }
     }
+
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "checkboxes");
+        String s = "";
+        for(auto cn : this->checkboxNames)
+        {
+            if(s.length()) s += ",";
+            s += cn;
+        }
+        w.addAttribute("checkboxNames", s.c_str());
+    }
 };
 
 class PageColor : public PageItem
@@ -463,6 +489,11 @@ public:
             return false;
         }
     }
+
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "color");
+    }
 };
 
 
@@ -488,7 +519,14 @@ public:
         w.addContentF("%s", this->name);
         w.endElement();
     }
-    
+
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "button");
+        if(!omStringEqual(this->url, "_"))
+            w.addAttribute("url", this->url);
+    }
+
     bool doAction(Page *fromPage) override
     {
         if(this->proc)
@@ -519,6 +557,27 @@ public:
     {
         return true;
     }
+
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "html");
+    }
+};
+
+class StaticHtmlItem : public PageItem
+{
+public:
+    String staticHtml;
+
+    void render(OmXmlWriter &w, Page *inPage) override
+    {
+        UNUSED(inPage);
+        w.addRawContent(this->staticHtml.c_str());
+    }
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "htmlStatic");
+    }
 };
 
 void infoHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
@@ -544,6 +603,7 @@ OmWebPages::OmWebPages()
 {
     this->__date__ = __DATE__;
     this->__time__ = __TIME__;
+    this->__file__ = NULL;
     // create the built-in pages
     this->beginPage("_info");
     this->addHtml(infoHtmlProc, 0, this);
@@ -558,10 +618,23 @@ OmWebPages::OmWebPages()
     this->addUrlHandler("_status", statusXmlProc, 0, this);
 }
 
-void OmWebPages::setBuildDateAndTime(const char *date, const char *time)
+void OmWebPages::setBuildDateAndTime(const char *date, const char *time, const char *file)
 {
     this->__date__ = date;
     this->__time__ = time;
+    this->__file__ = file;
+
+    if(this->__file__)
+    {
+        // point past last slash
+        const char *w = this->__file__;
+        while(*w != 0)
+        {
+            if(*w == '/')
+                this->__file__ = w + 1;
+            w++;
+        }
+    }
 }
 
 void OmWebPages::beginPage(const char *pageName)
@@ -772,9 +845,50 @@ void OmWebPages::renderStatusXml(OmXmlWriter &w)
     }
 #endif
     w.addAttributeF("built", "%s %s", this->__date__, this->__time__);
+    if(this->__file__)
+        w.addAttributeF("file", "%s", this->__file__);
 
-    w.endElement();
-    w.endElement();
+    w.endElement("status");
+
+    for(auto page : this->pages)
+    {
+        w.beginElement("page");
+        w.addAttribute("name", page->name);
+        w.addAttribute("id", page->id);
+        w.addAttribute("k", page->items.size());
+        w.endElement("page");
+    }
+
+    for (auto urlHandler : this->urlHandlers)
+    {
+        w.beginElement("urlHandler");
+        w.addAttribute("url", urlHandler->url);
+        w.addAttribute("ref1", urlHandler->ref1);
+        w.addAttributeF("ref2", "0x%08x", urlHandler->ref2);
+        w.addAttributeF("proc", "0x%08x", urlHandler->handlerProc);
+        w.endElement("urlHandler");
+    }
+
+    for(auto page : this->pages)
+        for(auto pageItem : page->items)
+        {
+            w.beginElement("item");
+            w.addAttributeF("ctl", "http://%s:%d/_control?page=%s&item=%s&value=xxx",
+                            omIpToString(ri->serverIp),
+                            ri->serverPort,
+                            page->id,
+                            pageItem->id);
+            w.addAttribute("name", pageItem->name);
+            w.addAttribute("id", pageItem->id);
+            w.addAttribute("pageId", page->id);
+            w.addAttribute("value", pageItem->value);
+            w.addAttribute("ref1", pageItem->ref1);
+            w.addAttributeF("ref2", "0x%08x", pageItem->ref2);
+            pageItem->renderStatusey(w);
+            w.endElement("item");
+        }
+
+    w.endElement("xml");
 }
 
 void OmWebPages::renderInfo(OmXmlWriter &w)
@@ -839,7 +953,9 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
             w.addContentF(    "wifiNetwork: %s\n", ri->ssid);
     }
 #endif
-    w.addContentF("built:     %s %s\n", this->__date__, this->__time__);
+    w.addContentF("built:       %s %s\n", this->__date__, this->__time__);
+    if(this->__file__)
+        w.addContentF(" file:       %s\n", this->__file__);
 
     w.endElement();
 }

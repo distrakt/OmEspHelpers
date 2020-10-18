@@ -180,6 +180,9 @@ static int doEscapes(const char *sIn, int outSize, char *sOut,
             case '<':
                 position += putSome(position + sOut, "&lt;");
                 break;
+            case '&':
+                position += putSome(position + sOut, "&amp;");
+                break;
             case 10:
                 position += putSome(position + sOut, "&#10;");
                 break;
@@ -379,6 +382,11 @@ void OmXmlWriter::endElements()
 {
     while(this->depth)
         this->endElement();
+}
+
+void OmXmlWriter::addRawContent(const char *rawContent)
+{
+    this->putS(rawContent);
 }
 
 void OmXmlWriter::putf(const char *fmt,...)

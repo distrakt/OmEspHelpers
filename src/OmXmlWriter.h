@@ -154,6 +154,11 @@ public:
     
     /*! @abstract Ends any remaining elements. */
     void endElements();
+
+    /*! @abstract Add content directly to the output stream, no escaping or element balancing.
+        You can definitely break your XML output with this! Use wisely.
+     */
+    void addRawContent(const char *rawContent);
     
     /*! @abstract Enables primitive formatting. Uses more bytes of buffer. */
     void setIndenting(int onOff);

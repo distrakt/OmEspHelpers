@@ -127,7 +127,7 @@ public:
     /*!
      @abstract say p.setBuildDateAndTime(__DATE__, __TIME__) so the info web page can display it.
      */
-    void setBuildDateAndTime(const char *date, const char *time);
+    void setBuildDateAndTime(const char *date, const char *time, const char *file = NULL);
     
     // +----------------------------------
     // | Setting up your pages
@@ -173,9 +173,11 @@ public:
     void addCheckboxX(const char *checkboxName, int value = 0); // additional checkboxes.
 
 
-    /*! @abstract Add a block of custom HTML to the page. Your proc is called each time the page is requested. */
+    /*! @abstract Add a block of custom dynamic HTML to the page. Your proc is called each time the page is requested. */
     void addHtml(HtmlProc proc, int ref1 = 0, void *ref2 = 0);
 
+    /*! @abstract Add a string of static prebuilt HTML. Included in web page unchecked, you're on your own! */
+    void addStaticHtml(String staticHtml);
 
     /*! @abstract By default, any header proc is used on every page. Disable for current page here. */
     void allowHeader(bool allowHeader);
@@ -291,8 +293,8 @@ private:
     PageItem *currentSelect = 0; // addSelectOption applies to the most recently begun select.
     PageItem *currentCheckboxes = 0; // addCheckboxX adds another checkbox here
     
-    HtmlProc headerproc = NULL;
-    HtmlProc footerproc = NULL;
+    HtmlProc headerProc = NULL;
+    HtmlProc footerProc = NULL;
     
     OmXmlWriter *wp = 0; // writer pointer during callbacks.
 
@@ -300,6 +302,7 @@ private:
 
     const char *__date__;
     const char *__time__;
+    const char *__file__;
 public:
     OmRequestInfo *ri = 0; // request metadate during callbacks
 };
