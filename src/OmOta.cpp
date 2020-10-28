@@ -16,7 +16,7 @@
 /*
    Flash image upload page
 */
-const char* kServerIndexTemplate = R"(
+static const char* kServerIndexTemplate = R"(
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
   <h1>reflash %s %s</h1>
   <form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
@@ -63,11 +63,11 @@ const char* kServerIndexTemplate = R"(
   <a href='/reboot'>Reboot with or without Upload</a>
   )";
 
-const char *kServerRedirect = R"(
+static const char *kServerRedirect = R"(
   <html><head><meta http-equiv='refresh' content='0; url=/' /></head>
   <body>/</body></html>)";
 
-const char *kRebootMessage = R"(
+static const char *kRebootMessage = R"(
   <html><head><meta http-equiv='refresh' content='5; url=/' /></head>
   <body>rebooting...</body></html>)";
 
