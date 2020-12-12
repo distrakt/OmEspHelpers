@@ -290,10 +290,10 @@ class PageSelect : public PageItem
 {
 public:
     OmWebActionProc proc = 0;
-    std::vector<String> optionNames;
+    std::vector<const char*> optionNames;
     std::vector<int> optionNumbers;
 
-    void addOption(String optionName, int optionNumber)
+    void addOption(const char *optionName, int optionNumber)
     {
         this->optionNames.push_back(optionName);
         this->optionNumbers.push_back(optionNumber);
@@ -325,7 +325,7 @@ public:
                 w.addAttribute("selected", "selected");
                 foundSelectedOption = true;
             }
-            w.addContent(this->optionNames[ix].c_str());
+            w.addContent(this->optionNames[ix]);
             w.endElement();
         }
 
