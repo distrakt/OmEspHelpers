@@ -124,6 +124,8 @@ public:
     /*! No argument constructor */
     OmWebPages();
 
+    ~OmWebPages();
+
     /*!
      @abstract say p.setBuildDateAndTime(__DATE__, __TIME__) so the info web page can display it.
      */

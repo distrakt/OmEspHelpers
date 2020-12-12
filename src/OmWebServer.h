@@ -109,8 +109,9 @@ public:
     /*! @abstract You must call this in loop() to give time to run.
      This allows networks to be joined and rejoined, and is when requests are served.
      Call it often!
+     return the number of requests handled, if any.
      */
-    void tick();
+    int tick();
 
     const char *getSsid();
     int getPort();
@@ -135,7 +136,7 @@ private:
     /* state machine business. */
     void owsBegin();
 
-    void pollForClient();
+    int pollForClient();
 
 
 };

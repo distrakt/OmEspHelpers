@@ -47,6 +47,11 @@ public:
     {
         return;
     }
+
+    virtual ~PageItem()
+    {
+        return;
+    }
 };
 
 OmWebPageItem::OmWebPageItem(PageItem *privateItem)
@@ -89,6 +94,21 @@ void OmWebPageItem::setValue(int value)
 class Page
 {
 public:
+    ~Page()
+    {
+        this->clearPage();
+    }
+
+    void clearPage()
+    {
+        for(PageItem *item : this->items)
+        {
+            if(item)
+                delete item;
+        }
+        this->items.clear();
+    }
+
     const char *name = "";
     char id[6]; // simple mechanical id like p0 or p23.
     std::vector<PageItem *> items;
@@ -103,9 +123,6 @@ public:
         this->items.push_back(item);
     }
 };
-
-
-
 
 class PageLink : public PageItem
 {
@@ -618,6 +635,16 @@ OmWebPages::OmWebPages()
     this->addUrlHandler("_status", statusXmlProc, 0, this);
 }
 
+OmWebPages::~OmWebPages()
+{
+    for(Page *page : this->pages)
+    {
+        if(page)
+            delete page;
+    }
+    this->pages.clear();
+}
+
 void OmWebPages::setBuildDateAndTime(const char *date, const char *time, const char *file)
 {
     this->__date__ = date;
@@ -639,6 +666,19 @@ void OmWebPages::setBuildDateAndTime(const char *date, const char *time, const c
 
 void OmWebPages::beginPage(const char *pageName)
 {
+    // if a page with this name already exists, clear out its contents so
+    // you can replace them with new elements.
+    for(Page *aPage : this->pages)
+    {
+        if(omStringEqual(pageName, aPage->name))
+        {
+            aPage->clearPage();
+            this->currentPage = aPage;
+            return;
+        }
+    }
+
+    // It is indeed a brand new page. Let's create it.
     Page *page = new Page();
     page->name = pageName;
     sprintf(page->id, "p%d", (int)this->pages.size());
@@ -697,7 +737,6 @@ OmWebPageItem *OmWebPages::addButtonWithLink(const char *buttonName, const char 
     b->url = url;
     return item;
 }
-
 
 OmWebPageItem *OmWebPages::addSlider(const char *itemName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {

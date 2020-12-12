@@ -279,13 +279,15 @@ void OmOtaClass::addUpdateControl(OmWebPages &p)
     static int otaCode = 0;
     p.addHtml([](OmXmlWriter & w, int ref1, void *ref2)
               {
-                  otaCode = ir(1, 99);
+                  otaCode = (millis() + ir(0, 1000)) % 99 + 1;
+//                  otaCode = ir(1, 99);
                   w.addElement("hr");
                   w.beginElement("pre");
                   w.addContentF("update code: %d", otaCode);
                   w.endElement();
               });
-    static OmWebPageItem *otaCodeSlider = p.addSlider("update code");
+    static OmWebPageItem *otaCodeSlider = NULL;
+    otaCodeSlider = p.addSlider("update code");
     p.addButtonWithLink("update", "/", [] (const char *page, const char *item, int value, int ref1, void *ref2)
                         {
                             int v = otaCodeSlider->getValue();

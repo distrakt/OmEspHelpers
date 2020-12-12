@@ -351,7 +351,7 @@ const char *statusString(int wifiStatus)
 #undef SSCASE
 }
 
-void OmWebServer::pollForClient()
+int OmWebServer::pollForClient()
 {
     // (TODO this could be a method on OmWebServerPrivates, to keep it inside.)
 
@@ -364,6 +364,7 @@ void OmWebServer::pollForClient()
     // action snappier to the user. So here, we just shut that down. Chrome spots it,
     // and initiates a fresh connection _WHEN the TIME comes_.
 
+    int result = 0;
 #define CLIENT_DEADLINE 300
     if(this->p->client || this->p->client.connected())
     {
@@ -399,10 +400,12 @@ void OmWebServer::pollForClient()
                 // looks like the request finished. Ok, so:
                 String url = urlFromRequest(this->p->request);
 
+                result++;
                 this->handleRequest(url, this->p->client); // performs the SEND.
             }
         }
     }
+    return result;
 }
 
 #ifdef ARDUINO_ARCH_ESP32
@@ -420,8 +423,9 @@ void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 #endif
 
 /// call this in loop to give time to run.
-void OmWebServer::tick()
+int OmWebServer::tick()
 {
+    int result = 0;
     {
         long nowMillis = millis();
         long deltaMillis = nowMillis - this->p->lastMillis;;
@@ -528,7 +532,7 @@ void OmWebServer::tick()
             }
             else
             {
-                this->pollForClient();
+                result += this->pollForClient();
             }
             break;
         }
@@ -573,7 +577,7 @@ void OmWebServer::tick()
 
         case OWS_AP_RUNNING:
         {
-            this->pollForClient();
+            result += this->pollForClient();
             // TODO: if no connections for a while, go back to OWS_BEGIN to reestablish station mode.
             // this for an appliance that's connected, then the wifi fails a while, but comes back.
             // no need to lapse into permanant AP mode.
@@ -592,6 +596,7 @@ void OmWebServer::tick()
             break;
         }
     }
+    return result;
 }
 
 void OmWebServer::setStatusLedPin(int statusLedPin)
