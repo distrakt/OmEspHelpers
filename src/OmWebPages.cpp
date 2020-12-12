@@ -643,6 +643,12 @@ OmWebPages::~OmWebPages()
             delete page;
     }
     this->pages.clear();
+    
+    for(UrlHandler *handler : this->urlHandlers)
+    {
+        delete handler;
+    }
+    this->urlHandlers.clear();
 }
 
 void OmWebPages::setBuildDateAndTime(const char *date, const char *time, const char *file)
