@@ -179,12 +179,12 @@ public:
     void endAttribute();
 
     void putf(const char *fmt,...);
+    bool puts(const char *stuff, bool contentEscapes = false);
 
 private:
     void indent();
     void cr();
     void addingToElement(bool addContent);
-    bool puts(const char *stuff, bool contentEscapes = false);
     bool inElementContentWithEscapes = false; // triggered by addContent, halted by beginElement and endElement. But not inside <script> for example.
 };
 
