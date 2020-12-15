@@ -63,9 +63,7 @@ void setup()
   // Add networks to attempt connection with.
   // It will go down the list and repeat until on succeeds.
   // This only happens when tick() is called.
-  s.addWifi("connection will fail", "haha");
-  s.addWifi("omino warp", "0123456789");
-  s.addWifi("caffe pergolesi", "yummylatte");
+  //s.addWifi("connection will fail", "haha");
 
   // let us know when we are connected or disconnected
   s.setStatusCallback(connectionStatus);
@@ -173,6 +171,8 @@ Please enjoy! -- dvb)JS");
      Here, the initial value of 182 means 3:02am, alarm not set.
   */
   p.addTime("alarm time", actionProc, 182, 107);
+
+  p.addInputText("Inputtext", actionProc, "default", 108);
 
   /*
      Here we see how to embed an html-generating proc
