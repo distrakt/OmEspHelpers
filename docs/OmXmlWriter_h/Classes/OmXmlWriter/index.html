@@ -301,6 +301,10 @@ But also needed things like rendering DOCTYPE at the start. Caution.
 <dd><p>Adds an element with content (no need for endElement()) like &lt;h1&gt;Content&lt;/h1&gt; </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmXmlWriter/addElementF/void/(constchar*,constchar*,...)" target="_top">addElementF</a></tt></dt>
 <dd><p>Adds an element with content (no need for endElement()) like &lt;h1&gt;Content&lt;/h1&gt; </p></dd>
+<dt><tt><a href="index.html#//apple_ref/cpp/instm/OmXmlWriter/addRawContent/void/(constchar*)" target="_top">addRawContent</a></tt></dt>
+<dd><p>Add content directly to the output stream, no escaping or element balancing.
+You can definitely break your XML output with this! Use wisely.
+</p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*)" target="_top">beginElement(const char *)</a></tt></dt>
 <dd><p>Begins a new XML element, like &lt;elementName&gt; </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*,constchar*,constchar*)" target="_top">beginElement(const char *, const char *, const char *)</a></tt></dt>
@@ -470,6 +474,20 @@ But also needed things like rendering DOCTYPE at the start. Caution.
     ...); </pre>
 </div>
 <hr class="betweenAPIEntries">
+<!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmXmlWriter/addRawContent/void/(constchar*);   name=OmXmlWriter::addRawContent -->
+<a name="//apple_ref/cpp/instm/OmXmlWriter/addRawContent/void/(constchar*)"></a>
+<h3><a name="addRawContent">addRawContent</a></h3>
+<hr class="afterName">
+<p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmXmlWriter/addRawContent/void/(constchar*);name=start --><!-- begin abstract --></p>
+<p>Add content directly to the output stream, no escaping or element balancing.
+You can definitely break your XML output with this! Use wisely.
+<!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmXmlWriter/addRawContent/void/(constchar*);name=end --></p>
+<div class="declaration_indent">
+<pre><tt>public</tt>
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/addRawContent/void/(constchar*)" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/addRawContent" target="_top"><span class="function">addRawContent</span></a>(
+    <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">rawContent</span>); </pre>
+</div>
+<hr class="betweenAPIEntries">
 <!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*);   name=OmXmlWriter::beginElement -->
 <a name="//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*)"></a>
 <h3><a name="beginElement(constchar*)">beginElement(const char *)</a></h3>
@@ -478,7 +496,7 @@ But also needed things like rendering DOCTYPE at the start. Caution.
 <p>Begins a new XML element, like &lt;elementName&gt; <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*)" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/beginElement" target="_top"><span class="function">beginElement</span></a>(
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*,constchar*,constchar*)" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/beginElement" target="_top"><span class="function">beginElement</span></a>(
     <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">elementName</span>); </pre>
 </div>
 <hr class="betweenAPIEntries">
@@ -490,7 +508,7 @@ But also needed things like rendering DOCTYPE at the start. Caution.
 <p>Begins a new XML element with one attribute already in it, like &lt;elementName attr="value"&gt; <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*,constchar*,constchar*);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*)" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/beginElement" target="_top"><span class="function">beginElement</span></a>(
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/beginElement/void/(constchar*,constchar*,constchar*)" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/beginElement" target="_top"><span class="function">beginElement</span></a>(
     <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">elementName</span>,
     <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">attribute1</span>,
     <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">value1</span>); </pre>
@@ -504,7 +522,7 @@ But also needed things like rendering DOCTYPE at the start. Caution.
 <p>Ends the most recent beginElement(). Caps them with either &lt;element/&gt; or &lt;/element&gt;. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmXmlWriter/endElement/void/();name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/endElement/void/()" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/endElement" target="_top"><span class="function">endElement</span></a>(); </pre>
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/endElement/void/(constchar*)" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/endElement" target="_top"><span class="function">endElement</span></a>(); </pre>
 </div>
 <hr class="betweenAPIEntries">
 <!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmXmlWriter/endElement/void/(constchar*);   name=OmXmlWriter::endElement -->
@@ -515,7 +533,7 @@ But also needed things like rendering DOCTYPE at the start. Caution.
 <p>Ends most recent beginElement, and prints error message if element name does not match. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmXmlWriter/endElement/void/(constchar*);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/endElement/void/()" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/endElement" target="_top"><span class="function">endElement</span></a>(
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmXmlWriter/endElement/void/(constchar*)" logicalPath="//apple_ref/cpp/instm/OmXmlWriter/endElement" target="_top"><span class="function">endElement</span></a>(
     <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">elementName</span>); </pre>
 </div>
 <hr class="betweenAPIEntries">
@@ -593,7 +611,7 @@ also relies upon some new concepts like beginAttribute, &lt;stream a big attribu
 <p class="gapBeforeFooter">&nbsp;</p>
 <hr class="afterFooter">
 <div class="hd_copyright_and_timestamp">
-<p class="hd_timestamp">Last Updated: Thursday, July 30, 2020
+<p class="hd_timestamp">Last Updated: Wednesday, December 23, 2020
 </p>
 </div>
 </td>

@@ -295,7 +295,7 @@ The int value of the control is binary, where the nth checkbox adds 2^(n-1) to t
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/addColor/OmWebPageItem*/(constchar*,OmWebActionProc,int,int,void*)" target="_top">addColor</a></tt></dt>
 <dd><p>Add a color-input, int value is 0xRRGGBB </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/addHtml/void/(HtmlProc,int,void*)" target="_top">addHtml</a></tt></dt>
-<dd><p>Add a block of custom HTML to the page. Your proc is called each time the page is requested. </p></dd>
+<dd><p>Add a block of custom dynamic HTML to the page. Your proc is called each time the page is requested. </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/addPageLink/void/(constchar*,OmWebActionProc,int,void*)" target="_top">addPageLink</a></tt></dt>
 <dd><p>Add a link on the current page that goes to another page. Also can call an action proc. </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/addSelect/OmWebPageItem*/(constchar*,OmWebActionProc,int,int,void*)" target="_top">addSelect</a></tt></dt>
@@ -306,6 +306,8 @@ The int value of the control is binary, where the nth checkbox adds 2^(n-1) to t
 <dd><p>Add a slider control on the current page. The range is 0 to 100, and calls your param proc when changed. </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/addSlider/OmWebPageItem*/(int,int,constchar*,OmWebActionProc,int,int,void*)" target="_top">addSlider(int, int, const char *, OmWebActionProc, int, int, void *)</a></tt></dt>
 <dd><p>Add a slider control on the current page, with a specific range. </p></dd>
+<dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/addStaticHtml/void/(String)" target="_top">addStaticHtml</a></tt></dt>
+<dd><p>Add a string of static prebuilt HTML. Included in web page unchecked, you're on your own! </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/addTime/OmWebPageItem*/(constchar*,OmWebActionProc,int,int,void*)" target="_top">addTime</a></tt></dt>
 <dd><p>Add a time-input </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/addUrlHandler/void/(constchar*,OmUrlHandlerProc,int,void*)" target="_top">addUrlHandler(const char *, OmUrlHandlerProc, int, void *)</a></tt></dt>
@@ -329,7 +331,7 @@ now with streamed variation overloaded on top. </p></dd>
 <dd></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/renderHttpResponseHeader/void/(constchar*,int)" target="_top">renderHttpResponseHeader</a></tt></dt>
 <dd><p>in a OmUrlHandlerProc, set the mimetype (like "text/plain") and response code (200 is OK) </p></dd>
-<dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int)" target="_top">renderPageBeginning</a></tt></dt>
+<dt><tt><a href="index.html#//apple_ref/cpp/clm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int)" target="_top">renderPageBeginning</a></tt></dt>
 <dd><p>in a OmUrlHandlerProc Render the beginning of the page, leaving  element open and ready. </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/renderPageButton/void/(OmXmlWriter%26,constchar*)" target="_top">renderPageButton</a></tt></dt>
 <dd><p>Within an HtmlProc: Adds a floating link-button to another page. </p></dd>
@@ -337,7 +339,7 @@ now with streamed variation overloaded on top. </p></dd>
 <dd></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/setBgColor/void/(int)" target="_top">setBgColor</a></tt></dt>
 <dd><p>set the background color for next web request, 0xRRGGBB </p></dd>
-<dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*)" target="_top">setBuildDateAndTime</a></tt></dt>
+<dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*,constchar*)" target="_top">setBuildDateAndTime</a></tt></dt>
 <dd><p>say p.setBuildDateAndTime(__DATE__, __TIME__) so the info web page can display it.
 </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/setFooterProc/void/(HtmlProc)" target="_top">setFooterProc</a></tt></dt>
@@ -433,7 +435,7 @@ The int value of the control is binary, where the nth checkbox adds 2^(n-1) to t
 <h3><a name="addHtml">addHtml</a></h3>
 <hr class="afterName">
 <p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/addHtml/void/(HtmlProc,int,void*);name=start --><!-- begin abstract --></p>
-<p>Add a block of custom HTML to the page. Your proc is called each time the page is requested. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/addHtml/void/(HtmlProc,int,void*);name=end --></p>
+<p>Add a block of custom dynamic HTML to the page. Your proc is called each time the page is requested. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/addHtml/void/(HtmlProc,int,void*);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
 <br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/addHtml/void/(HtmlProc,int,void*)" logicalPath="//apple_ref/cpp/instm/OmWebPages/addHtml" target="_top"><span class="function">addHtml</span></a>(
@@ -520,6 +522,18 @@ The int value of the control is binary, where the nth checkbox adds 2^(n-1) to t
     <!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <span class="type">*</span><!-- a logicalPath="//apple_ref/cpp/cl/ref2 //apple_ref/cpp/tdef/ref2 //apple_ref/cpp/tag/ref2 //apple_ref/cpp/struct/ref2 //apple_ref/cpp/intf/ref2 //apple_ref/doc/anysymbol/ref2" machineGenerated="true" --><span class="type">ref2</span><!-- /a --> = <span class="number">0</span>); </pre>
 </div>
 <hr class="betweenAPIEntries">
+<!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebPages/addStaticHtml/void/(String);   name=OmWebPages::addStaticHtml -->
+<a name="//apple_ref/cpp/instm/OmWebPages/addStaticHtml/void/(String)"></a>
+<h3><a name="addStaticHtml">addStaticHtml</a></h3>
+<hr class="afterName">
+<p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/addStaticHtml/void/(String);name=start --><!-- begin abstract --></p>
+<p>Add a string of static prebuilt HTML. Included in web page unchecked, you're on your own! <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/addStaticHtml/void/(String);name=end --></p>
+<div class="declaration_indent">
+<pre><tt>public</tt>
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/addStaticHtml/void/(String)" logicalPath="//apple_ref/cpp/instm/OmWebPages/addStaticHtml" target="_top"><span class="function">addStaticHtml</span></a>(
+    <!-- a logicalPath="//apple_ref/cpp/cl/String //apple_ref/cpp/tdef/String //apple_ref/cpp/tag/String //apple_ref/cpp/struct/String //apple_ref/cpp/intf/String //apple_ref/doc/anysymbol/String" machineGenerated="true" --><span class="type">String</span><!-- /a --> <span class="param">staticHtml</span>); </pre>
+</div>
+<hr class="betweenAPIEntries">
 <!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebPages/addTime/OmWebPageItem*/(constchar*,OmWebActionProc,int,int,void*);   name=OmWebPages::addTime -->
 <a name="//apple_ref/cpp/instm/OmWebPages/addTime/OmWebPageItem*/(constchar*,OmWebActionProc,int,int,void*)"></a>
 <h3><a name="addTime">addTime</a></h3>
@@ -544,7 +558,7 @@ The int value of the control is binary, where the nth checkbox adds 2^(n-1) to t
 <p>Add an arbitrary URL handler. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/addUrlHandler/void/(constchar*,OmUrlHandlerProc,int,void*);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/addUrlHandler/void/(OmUrlHandlerProc,int,void*)" logicalPath="//apple_ref/cpp/instm/OmWebPages/addUrlHandler" target="_top"><span class="function">addUrlHandler</span></a>(
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/addUrlHandler/void/(constchar*,OmUrlHandlerProc,int,void*)" logicalPath="//apple_ref/cpp/instm/OmWebPages/addUrlHandler" target="_top"><span class="function">addUrlHandler</span></a>(
     <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">path</span>,
     <a machinegenerated="true" href="../../index.html#//apple_ref/c/tdef/OmUrlHandlerProc" logicalPath="//apple_ref/cpp/cl/OmUrlHandlerProc //apple_ref/cpp/tdef/OmUrlHandlerProc" target="_top"><span class="type">OmUrlHandlerProc</span></a> <span class="param">proc</span>,
     <!-- a logicalPath="//apple_ref/cpp/cl/int //apple_ref/cpp/tdef/int //apple_ref/cpp/tag/int //apple_ref/cpp/struct/int //apple_ref/cpp/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <!-- a logicalPath="//apple_ref/cpp/cl/ref1 //apple_ref/cpp/tdef/ref1 //apple_ref/cpp/tag/ref1 //apple_ref/cpp/struct/ref1 //apple_ref/cpp/intf/ref1 //apple_ref/doc/anysymbol/ref1" machineGenerated="true" --><span class="type">ref1</span><!-- /a --> = <span class="number">0</span>,
@@ -559,7 +573,7 @@ The int value of the control is binary, where the nth checkbox adds 2^(n-1) to t
 <p>Add a wildcard url handler, if no page or specific handler gets it. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/addUrlHandler/void/(OmUrlHandlerProc,int,void*);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/addUrlHandler/void/(OmUrlHandlerProc,int,void*)" logicalPath="//apple_ref/cpp/instm/OmWebPages/addUrlHandler" target="_top"><span class="function">addUrlHandler</span></a>(
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/addUrlHandler/void/(constchar*,OmUrlHandlerProc,int,void*)" logicalPath="//apple_ref/cpp/instm/OmWebPages/addUrlHandler" target="_top"><span class="function">addUrlHandler</span></a>(
     <a machinegenerated="true" href="../../index.html#//apple_ref/c/tdef/OmUrlHandlerProc" logicalPath="//apple_ref/cpp/cl/OmUrlHandlerProc //apple_ref/cpp/tdef/OmUrlHandlerProc" target="_top"><span class="type">OmUrlHandlerProc</span></a> <span class="param">proc</span>,
     <!-- a logicalPath="//apple_ref/cpp/cl/int //apple_ref/cpp/tdef/int //apple_ref/cpp/tag/int //apple_ref/cpp/struct/int //apple_ref/cpp/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <!-- a logicalPath="//apple_ref/cpp/cl/ref1 //apple_ref/cpp/tdef/ref1 //apple_ref/cpp/tag/ref1 //apple_ref/cpp/struct/ref1 //apple_ref/cpp/intf/ref1 //apple_ref/doc/anysymbol/ref1" machineGenerated="true" --><span class="type">ref1</span><!-- /a --> = <span class="number">0</span>,
     <!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <span class="type">*</span><!-- a logicalPath="//apple_ref/cpp/cl/ref2 //apple_ref/cpp/tdef/ref2 //apple_ref/cpp/tag/ref2 //apple_ref/cpp/struct/ref2 //apple_ref/cpp/intf/ref2 //apple_ref/doc/anysymbol/ref2" machineGenerated="true" --><span class="type">ref2</span><!-- /a --> = <span class="number">0</span>); </pre>
@@ -645,15 +659,15 @@ now with streamed variation overloaded on top. <!-- end abstract --><!-- headerD
     <!-- a logicalPath="//apple_ref/cpp/cl/int //apple_ref/cpp/tdef/int //apple_ref/cpp/tag/int //apple_ref/cpp/struct/int //apple_ref/cpp/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">response</span>); </pre>
 </div>
 <hr class="betweenAPIEntries">
-<!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int);   name=OmWebPages::renderPageBeginning -->
-<a name="//apple_ref/cpp/instm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int)"></a>
+<!-- headerDoc=clm;  uid=//apple_ref/cpp/clm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int);   name=OmWebPages::renderPageBeginning -->
+<a name="//apple_ref/cpp/clm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int)"></a>
 <h3><a name="renderPageBeginning">renderPageBeginning</a></h3>
 <hr class="afterName">
-<p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int);name=start --><!-- begin abstract --></p>
-<p>in a OmUrlHandlerProc Render the beginning of the page, leaving  element open and ready. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int);name=end --></p>
+<p><!-- headerDoc=abstract;uid=//apple_ref/cpp/clm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int);name=start --><!-- begin abstract --></p>
+<p>in a OmUrlHandlerProc Render the beginning of the page, leaving  element open and ready. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/clm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int)" logicalPath="//apple_ref/cpp/instm/OmWebPages/renderPageBeginning" target="_top"><span class="function">renderPageBeginning</span></a>(
+<br><span class="keyword">static</span> <!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/clm/OmWebPages/renderPageBeginning/void/(OmXmlWriter%26,constchar*,int)" logicalPath="//apple_ref/cpp/instm/OmWebPages/renderPageBeginning //apple_ref/cpp/clm/OmWebPages/renderPageBeginning" target="_top"><span class="function">renderPageBeginning</span></a>(
     <a machinegenerated="true" href="../../../OmXmlWriter_h/Classes/OmXmlWriter/index.html#//apple_ref/cpp/cl/OmXmlWriter" logicalPath="//apple_ref/cpp/cl/OmXmlWriter" target="_top"><span class="type">OmXmlWriter</span></a> &amp;<span class="param">w</span>,
     <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><!-- a logicalPath="//apple_ref/cpp/cl/pageTitle //apple_ref/cpp/tdef/pageTitle //apple_ref/cpp/tag/pageTitle //apple_ref/cpp/struct/pageTitle //apple_ref/cpp/intf/pageTitle //apple_ref/doc/anysymbol/pageTitle" machineGenerated="true" --><span class="type">pageTitle</span><!-- /a --> = "",
     <!-- a logicalPath="//apple_ref/cpp/cl/int //apple_ref/cpp/tdef/int //apple_ref/cpp/tag/int //apple_ref/cpp/struct/int //apple_ref/cpp/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <!-- a logicalPath="//apple_ref/cpp/cl/bgColor //apple_ref/cpp/tdef/bgColor //apple_ref/cpp/tag/bgColor //apple_ref/cpp/struct/bgColor //apple_ref/cpp/intf/bgColor //apple_ref/doc/anysymbol/bgColor" machineGenerated="true" --><span class="type">bgColor</span><!-- /a --> = <span class="number">0xffffff</span>); </pre>
@@ -697,18 +711,19 @@ now with streamed variation overloaded on top. <!-- end abstract --><!-- headerD
     <!-- a logicalPath="//apple_ref/cpp/cl/int //apple_ref/cpp/tdef/int //apple_ref/cpp/tag/int //apple_ref/cpp/struct/int //apple_ref/cpp/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">bgColor</span>); </pre>
 </div>
 <hr class="betweenAPIEntries">
-<!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*);   name=OmWebPages::setBuildDateAndTime -->
-<a name="//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*)"></a>
+<!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*,constchar*);   name=OmWebPages::setBuildDateAndTime -->
+<a name="//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*,constchar*)"></a>
 <h3><a name="setBuildDateAndTime">setBuildDateAndTime</a></h3>
 <hr class="afterName">
-<p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*);name=start --><!-- begin abstract --></p>
+<p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*,constchar*);name=start --><!-- begin abstract --></p>
 <p>say p.setBuildDateAndTime(__DATE__, __TIME__) so the info web page can display it.
-<!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*);name=end --></p>
+<!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*,constchar*);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*)" logicalPath="//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime" target="_top"><span class="function">setBuildDateAndTime</span></a>(
+<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime/void/(constchar*,constchar*,constchar*)" logicalPath="//apple_ref/cpp/instm/OmWebPages/setBuildDateAndTime" target="_top"><span class="function">setBuildDateAndTime</span></a>(
     <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">date</span>,
-    <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">time</span>); </pre>
+    <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><span class="param">time</span>,
+    <span class="keyword">const</span> <!-- a logicalPath="//apple_ref/cpp/cl/char //apple_ref/cpp/tdef/char //apple_ref/cpp/tag/char //apple_ref/cpp/struct/char //apple_ref/cpp/intf/char //apple_ref/doc/anysymbol/char" machineGenerated="true" --><span class="type">char</span><!-- /a --> <span class="type">*</span><!-- a logicalPath="//apple_ref/cpp/cl/file //apple_ref/cpp/tdef/file //apple_ref/cpp/tag/file //apple_ref/cpp/struct/file //apple_ref/cpp/intf/file //apple_ref/doc/anysymbol/file" machineGenerated="true" --><span class="type">file</span><!-- /a --> = <span class="keyword">NULL</span>); </pre>
 </div>
 <hr class="betweenAPIEntries">
 <!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebPages/setFooterProc/void/(HtmlProc);   name=OmWebPages::setFooterProc -->
@@ -784,7 +799,7 @@ now with streamed variation overloaded on top. <!-- end abstract --><!-- headerD
 <p class="gapBeforeFooter">&nbsp;</p>
 <hr class="afterFooter">
 <div class="hd_copyright_and_timestamp">
-<p class="hd_timestamp">Last Updated: Thursday, July 30, 2020
+<p class="hd_timestamp">Last Updated: Wednesday, December 23, 2020
 </p>
 </div>
 </td>

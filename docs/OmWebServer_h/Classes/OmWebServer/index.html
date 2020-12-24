@@ -303,10 +303,11 @@ function disclosure_triangle(elt) {
 <dd><p>changes or disables the blinking status LED. Use -1 to disable. </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebServer/setVerbose/void/(int)" target="_top">setVerbose</a></tt></dt>
 <dd><p>OmWebServer by default prints much status to serial; set to 0 to cut that out. </p></dd>
-<dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebServer/tick/void/()" target="_top">tick</a></tt></dt>
+<dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebServer/tick/int/()" target="_top">tick</a></tt></dt>
 <dd><p>You must call this in loop() to give time to run.
 This allows networks to be joined and rejoined, and is when requests are served.
 Call it often!
+return the number of requests handled, if any.
 </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebServer/uptimeMillis/longlong/()" target="_top">uptimeMillis</a></tt></dt>
 <dd><p>arduino's millis() will overflow after 50 days. Not this baby. </p></dd>
@@ -473,18 +474,19 @@ NOTE: 2019-12-14 works sometimes. I dont highly recommend. :( <!-- headerDoc=dis
     <!-- a logicalPath="//apple_ref/cpp/cl/int //apple_ref/cpp/tdef/int //apple_ref/cpp/tag/int //apple_ref/cpp/struct/int //apple_ref/cpp/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <span class="param">verbose</span>); </pre>
 </div>
 <hr class="betweenAPIEntries">
-<!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebServer/tick/void/();   name=OmWebServer::tick -->
-<a name="//apple_ref/cpp/instm/OmWebServer/tick/void/()"></a>
+<!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebServer/tick/int/();   name=OmWebServer::tick -->
+<a name="//apple_ref/cpp/instm/OmWebServer/tick/int/()"></a>
 <h3><a name="tick">tick</a></h3>
 <hr class="afterName">
-<p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebServer/tick/void/();name=start --><!-- begin abstract --></p>
+<p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebServer/tick/int/();name=start --><!-- begin abstract --></p>
 <p>You must call this in loop() to give time to run.
 This allows networks to be joined and rejoined, and is when requests are served.
 Call it often!
-<!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebServer/tick/void/();name=end --></p>
+return the number of requests handled, if any.
+<!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebServer/tick/int/();name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
-<br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebServer/tick/void/()" logicalPath="//apple_ref/cpp/instm/OmWebServer/tick" target="_top"><span class="function">tick</span></a>(); </pre>
+<br><!-- a logicalPath="//apple_ref/cpp/cl/int //apple_ref/cpp/tdef/int //apple_ref/cpp/tag/int //apple_ref/cpp/struct/int //apple_ref/cpp/intf/int //apple_ref/doc/anysymbol/int" machineGenerated="true" --><span class="type">int</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebServer/tick/int/()" logicalPath="//apple_ref/cpp/instm/OmWebServer/tick" target="_top"><span class="function">tick</span></a>(); </pre>
 </div>
 <hr class="betweenAPIEntries">
 <!-- headerDoc=instm;  uid=//apple_ref/cpp/instm/OmWebServer/uptimeMillis/longlong/();   name=OmWebServer::uptimeMillis -->
@@ -500,7 +502,7 @@ Call it often!
 <p class="gapBeforeFooter">&nbsp;</p>
 <hr class="afterFooter">
 <div class="hd_copyright_and_timestamp">
-<p class="hd_timestamp">Last Updated: Wednesday, July 29, 2020
+<p class="hd_timestamp">Last Updated: Wednesday, December 23, 2020
 </p>
 </div>
 </td>
