@@ -597,6 +597,10 @@ public:
     {
         w.addAttribute("kind", "htmlStatic");
     }
+    bool doAction(Page *fromPage) override
+    {
+        return true;
+    }
 };
 
 void infoHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
@@ -842,6 +846,13 @@ void OmWebPages::addHtml(HtmlProc proc, int ref1, void *ref2)
     h->ref1 = ref1;
     h->ref2 = ref2;
     h->proc = proc;
+    this->currentPage->addItem(h);
+}
+
+void OmWebPages::addStaticHtml(String staticHtml)
+{
+    StaticHtmlItem *h = new StaticHtmlItem();
+    h->staticHtml = staticHtml;
     this->currentPage->addItem(h);
 }
 

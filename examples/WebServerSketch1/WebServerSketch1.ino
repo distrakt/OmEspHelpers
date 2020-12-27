@@ -3,12 +3,18 @@
    2019-11-15 updated for Esp32
    2020-05-14 added examples of all the control types, and dynamic url handlers too!
               It's a much better example and intro now. In the time of covid19.
+   2020-12-27 added more comments.
 */
 #include <OmEspHelpers.h>
 #include "jpgImage.h"
+
+// These are the main pieces of OmEspHelpers.
+// OmWebServer manages the connection, and OmWebPages manages the controls.
 OmWebServer s;
 OmWebPages p;
 
+// With this callback, you can know when the wifi is up and running.
+// One of the three booleans will be set.
 void connectionStatus(const char *ssid, bool trying, bool failure, bool success)
 {
   const char *what = "?";
@@ -19,6 +25,11 @@ void connectionStatus(const char *ssid, bool trying, bool failure, bool success)
   Serial.printf("%s: connectionStatus for '%s' is now '%s'\n", __func__, ssid, what);
 }
 
+// This is the callback suitable for a change on any of the control types.
+// Each of your controls can use a different callback, or they can all be shared.
+// You should check the valid range of value and ref1, since they can be
+// specified in the client-side URL.
+// The callback is specified when you add the control to a page in setup() below.
 void actionProc(const char *pageName, const char *parameterName, int value, int ref1, void *ref2)
 {
   static int actionCount = 0;
@@ -26,6 +37,10 @@ void actionProc(const char *pageName, const char *parameterName, int value, int 
   Serial.printf("%4d %s.%s value=0x%08x/%d ref1=%d\n", actionCount, pageName, parameterName, value, value, ref1);
 }
 
+// This is a callback for a URL handler. You can set a handler for an arbitrary URL
+// or a wildcard for URLs that are not in a built page or assigned a handler.
+// The OmXmlWriter can write plain text or bytes, or can be used to reliably construct
+// compliant xml/xhtml output.
 void handyHandler(OmXmlWriter & w, OmWebRequest & r, int ref1, void *ref2)
 {
   // you could use ref1, ref2 any way you like...
@@ -40,6 +55,7 @@ void handyHandler(OmXmlWriter & w, OmWebRequest & r, int ref1, void *ref2)
   }
 }
 
+// This callback handles any URL not otherwise handled, see setup().
 void wildcardProc(OmXmlWriter &w, OmWebRequest &request, int ref1, void *ref2)
 {
   p.renderHttpResponseHeader("text/plain", 200);
@@ -70,6 +86,9 @@ void setup()
   // let us know when we are connected or disconnected
   s.setStatusCallback(connectionStatus);
 
+  // Introduce the web pages to the wifi connection.
+  s.setHandler(p);
+
   // Configure the web pages
   // This is just setting them up; they'll be delivered
   // by the web server when queried.
@@ -80,14 +99,18 @@ void setup()
 
   // This html code is executed on each request, so
   // current values and state can be shown.
+  // The first argument is the callback, but here
+  // using a C "lambda" which is like a callback proc
+  // right in the argument list.
+
   p.addHtml([] (OmXmlWriter & w, int ref1, void *ref2)
   {
     w.addElement("hr");
 
     w.beginElement("pre");
-    // note the multi-line string literal format, R"Xyz(stuff)Xyz".
+    // note the multi-line string literal format.
     // I only just learned about this! // dvb2020.
-    w.addContent(R"JS(
+    w.addContent(R"(
 This is a demonstration of
 OmEspHelpers. It's a library for
 easily adding a web front end to
@@ -97,7 +120,7 @@ different control types, and some
 dynamic generation of very long
 XML data.
 
-Please enjoy! -- dvb)JS");
+Please enjoy! -- dvb)");
     w.endElement();
   });
 
@@ -118,6 +141,15 @@ Please enjoy! -- dvb)JS");
   */
   p.addSlider("slider 1", actionProc, 23, 101);
   p.addSlider(-86, 99, "slider 2", actionProc, 42, 102);
+
+  /*
+     It is convenient to embed the callback inline, if it doesn't need
+     to be shared.
+   */
+  p.addSlider("slider 3", [] (const char *pageName, const char *parameterName, int value, int ref1, void *ref2)
+  {
+      Serial.printf("slider 3 new value: %d\n", value);
+  });
 
   /*
      A button sends a value "1" when pressed (in the web page),
@@ -202,7 +234,9 @@ Please enjoy! -- dvb)JS");
     w.beginElement("a", "href", "_sendXml");
     w.addContent("here");
     w.endElement(); // a
-    w.addContent(" to get\na bunch of random XML.");
+    w.addContent(" to get\na bunch of random XML.\n\n");
+    w.addContent("It is produced and streamed,\n.");
+    w.addContent("and doesn't fit in ESP memory.\n.");
     w.endElement(); // div
   });
 
@@ -211,7 +245,7 @@ Please enjoy! -- dvb)JS");
   {
     w.addElement("hr");
     w.beginElement("img");
-    w.addAttribute("src", "/ginger.jpg");
+    w.addAttribute("src", "/ginger.jpg"); // goes to the "ginger" handler.
     w.addAttribute("alt", "");
     w.endElement();
     w.endElement(); // div
@@ -219,7 +253,7 @@ Please enjoy! -- dvb)JS");
 
   /*
      Here we have a straight-up URL handler, but still emits
-     XML-ish output.
+     XML-ish output. In this case it's inline as a lambda.
   */
   p.addUrlHandler("_sendXml", [] (OmXmlWriter & w, OmWebRequest & r, int ref1, void *ref2)
   {
@@ -252,12 +286,9 @@ Please enjoy! -- dvb)JS");
     }
   });
 
+  /* example of url handler not lambda */
   p.addUrlHandler("ginger2.jpg", handyHandler, 123, NULL); // last two args are int ref1 and void *ref2
   p.addUrlHandler(wildcardProc);
-
-
-  // And lastly, introduce the web pages to the wifi connection.
-  s.setHandler(p);
 }
 
 int ticks = 0;
@@ -283,3 +314,4 @@ void loop()
      Now don't tell me I've nothing to do
   */
 }
+
