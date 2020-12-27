@@ -319,7 +319,10 @@ The int value of the control is binary, where the nth checkbox adds 2^(n-1) to t
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/allowHeader/void/(bool)" target="_top">allowHeader</a></tt></dt>
 <dd><p>By default, any header proc is used on every page. Disable for current page here. </p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/beginPage/void/(constchar*)" target="_top">beginPage</a></tt></dt>
-<dd><p>Start defining a new page. Subsequent calls like addButton() affect this page. </p></dd>
+<dd><p>Start defining a new page. Subsequent calls like addButton() affect this page.
+If a page of this name already exists, it is reset to empty. You can rebuild the page
+from scratch, if for example the set of controls needs to change.
+</p></dd>
 <dt><tt><a href="index.html#//apple_ref/cpp/instm/OmWebPages/handleRequest/bool/(OmIByteStream*,constchar*,OmRequestInfo*)" target="_top">handleRequest</a></tt></dt>
 <dd><p>Explicitly process a request. (Not typically used.)
 If you used omWebServer.setHandler(omWebPages), then
@@ -608,7 +611,10 @@ The int value of the control is binary, where the nth checkbox adds 2^(n-1) to t
 <h3><a name="beginPage">beginPage</a></h3>
 <hr class="afterName">
 <p><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/beginPage/void/(constchar*);name=start --><!-- begin abstract --></p>
-<p>Start defining a new page. Subsequent calls like addButton() affect this page. <!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/beginPage/void/(constchar*);name=end --></p>
+<p>Start defining a new page. Subsequent calls like addButton() affect this page.
+If a page of this name already exists, it is reset to empty. You can rebuild the page
+from scratch, if for example the set of controls needs to change.
+<!-- end abstract --><!-- headerDoc=abstract;uid=//apple_ref/cpp/instm/OmWebPages/beginPage/void/(constchar*);name=end --></p>
 <div class="declaration_indent">
 <pre><tt>public</tt>
 <br><!-- a logicalPath="//apple_ref/cpp/cl/void //apple_ref/cpp/tdef/void //apple_ref/cpp/tag/void //apple_ref/cpp/struct/void //apple_ref/cpp/intf/void //apple_ref/doc/anysymbol/void" machineGenerated="true" --><span class="type">void</span><!-- /a --> <a machinegenerated="true" href="index.html#//apple_ref/cpp/instm/OmWebPages/beginPage/void/(constchar*)" logicalPath="//apple_ref/cpp/instm/OmWebPages/beginPage" target="_top"><span class="function">beginPage</span></a>(
@@ -799,7 +805,7 @@ now with streamed variation overloaded on top. <!-- end abstract --><!-- headerD
 <p class="gapBeforeFooter">&nbsp;</p>
 <hr class="afterFooter">
 <div class="hd_copyright_and_timestamp">
-<p class="hd_timestamp">Last Updated: Wednesday, December 23, 2020
+<p class="hd_timestamp">Last Updated: Sunday, December 27, 2020
 </p>
 </div>
 </td>

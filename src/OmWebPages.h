@@ -134,7 +134,10 @@ public:
     // | Setting up your pages
     // |
     
-    /*! @abstract Start defining a new page. Subsequent calls like addButton() affect this page. */
+    /*! @abstract Start defining a new page. Subsequent calls like addButton() affect this page.
+        If a page of this name already exists, it is reset to empty. You can rebuild the page
+        from scratch, if for example the set of controls needs to change.
+     */
     void beginPage(const char *pageName);
 
     /*! @abstract Add a link on the current page that goes to another page. Also can call an action proc. */
