@@ -31,6 +31,7 @@ But if you'd like to be freed from infinite choice, and get something running th
 | Name                | Description |
 | ------------------- | ----------- |
 | Time Service        | Use NTP for time service |
+| OTA Update          | With three additional lines of code, add "Over The Air" update to your device. No need for USB cable after the first upload! |
 | Unlimited HTML size | Page results can be generated at request time for any size (great for XML data dumps)|
 | Bitmaps             | You can generate uncompressed BMP images in you page request handler (1- or 24-bit) |
 | More UI Elements    | Time, Color, Menu Select, and Checkboxes are supported |

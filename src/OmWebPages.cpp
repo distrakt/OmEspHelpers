@@ -25,6 +25,8 @@
 // with flexible procs and interfaces, parameters are often optionally used.
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+OmWebPages OmWebPagesSingleton;
+
 class PageItem
 {
 public:
@@ -1262,7 +1264,7 @@ R"JS(
 /// Render the beginning of the page, leaving <body> element open and ready.
 void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle, int bgColor)
 {
-    this->renderPageBeginningWithRedirect(w, NULL, 0, pageTitle, bgColor);
+    OmWebPages::renderPageBeginningWithRedirect(w, NULL, 0, pageTitle, bgColor);
 }
 
 void OmWebPages::renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle, int bgColor)
@@ -1297,8 +1299,8 @@ void OmWebPages::renderPageBeginningWithRedirect(OmXmlWriter &w, const char *red
     
     w.addElement("title", pageTitle);
 
-    this->renderStyle(w, bgColor);
-    this->renderScript(w);
+    OmWebPages::renderStyle(w, bgColor);
+    OmWebPages::renderScript(w);
     w.endElement();
     w.beginElement("body");
 }
@@ -1345,7 +1347,12 @@ void OmWebPages::renderTopMenu(OmXmlWriter &w)
 void OmWebPages::renderPageButton(OmXmlWriter &w, const char *pageName)
 {
     w.beginElement("a");
-    w.addAttributeUrlF("href", "/%s", pageName);
+    const char *defaultHttpBase = "/";
+    const char *httpBase = defaultHttpBase;
+#ifndef NOT_ARDUINO
+    httpBase = this->httpBase;
+#endif
+    w.addAttributeUrlF("href", "%s%s", httpBase, pageName);
     w.beginElement("span", "class", "box2");
     w.addContent(pageName);
     w.endElement();
@@ -1405,6 +1412,9 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
     bool result = false;
     OmXmlWriter w = OmXmlWriter(consumer);
     Page *page = 0;
+
+    // make our httpBase up to date
+    sprintf(httpBase, "http://%s:%d/",omIpToString(requestInfo->serverIp), requestInfo->serverPort);
 
     this->wp = &w;
     this->ri = requestInfo;

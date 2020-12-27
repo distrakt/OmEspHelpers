@@ -13,21 +13,27 @@
 #include "OmUtil.h"
 #include "OmEeprom.h"
 
+// with flexible procs and interfaces, parameters are often optionally used.
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /*
    Flash image upload page
 */
 static const char* kServerIndexTemplate = R"(
-  <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
   <h1>reflash %s %s</h1>
   <form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
   <input type='file' name='update'>
   <input type='submit' value='Update'>
   </form>
   <div id='prg'>progress: 0%%</div>
+
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
   <script>
+  var form = document.getElementById('upload_form');
+  var prg = document.getElementById('prg');
+
   $('form').submit(function(e) {
     e.preventDefault();
-    var form = $('#upload_form')[0];
     var data = new FormData(form);
     $.ajax( {
       url: '/update',
@@ -40,7 +46,7 @@ static const char* kServerIndexTemplate = R"(
         xhr.upload.addEventListener('progress', function(evt) {
           if (evt.lengthComputable) {
             var per = evt.loaded / evt.total;
-            $('#prg').html('progress: ' + Math.round(per*100) + '%%');
+              prg.innerHTML = 'progress: ' + Math.round(per*100) + '%%';
             if(evt.loaded == evt.total)
             {
               console.log('all sent');

@@ -123,7 +123,6 @@ class OmWebPages
 public:
     /*! No argument constructor */
     OmWebPages();
-
     ~OmWebPages();
 
     /*!
@@ -256,13 +255,15 @@ public:
     void renderHttpResponseHeader(const char *contentType, int response);
 
     /*! @abstract in a OmUrlHandlerProc Render the beginning of the page, leaving <body> element open and ready. */
-    void renderPageBeginning(OmXmlWriter &w, const char *pageTitle = "", int bgColor = 0xffffff);
+    static void renderPageBeginning(OmXmlWriter &w, const char *pageTitle = "", int bgColor = 0xffffff);
     void renderDefaultFooter(OmXmlWriter &w); // builtin footer nav buttons
 
-    void renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle = "", int bgColor = 0xffffff);
+    static void renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle = "", int bgColor = 0xffffff);
 
     void setValue(const char *pageName, const char *itemName, int value);
     int getValue(const char *pageName, const char *itemName);
+
+    char httpBase[32]; // string of form "http://10.0.1.1/" that can prefix all internal links, esp since OTA update doesnt play well with bonjour addresses
 private:
 
     /*! inner private class */
@@ -276,8 +277,8 @@ private:
     };
 
     bool doAction(const char *pageName, const char *itemName);
-    void renderStyle(OmXmlWriter &w, int bgColor = 0xffffff);
-    void renderScript(OmXmlWriter &w);
+    static void renderStyle(OmXmlWriter &w, int bgColor = 0xffffff);
+    static void renderScript(OmXmlWriter &w);
     
     /*! Render a simple menu of all the known pages. It's the default page, too. */
     void renderTopMenu(OmXmlWriter &w);
@@ -308,5 +309,7 @@ private:
 public:
     OmRequestInfo *ri = 0; // request metadate during callbacks
 };
+
+extern OmWebPages OmWebPagesSingleton;
 
 #endif /* defined(__OmWebPages__) */
