@@ -83,6 +83,8 @@ void setup()
   p.addButton("ledMomentary", buttonMomentaryProc);
   
   s.addWifi("omino warp", ""); // my home network, no password
+  // or setup an AP instead
+  // s.setAccessPoint(WIFI_AP_SSID, WIFI_AP_PASSWORD);
   s.setHandler(p);
   s.setStatusLedPin(-1); // tell the server not to blink the led; this app uses it.
 
