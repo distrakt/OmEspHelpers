@@ -123,3 +123,35 @@ Hello OmEspHelpers
 And when I point my browser at http://10.0.3.126:80 I see a simple UI:
 
 ![screen shot](img/screenshot1.jpg)
+
+## Wifi Client to Wifi AP Autoswitch Example ##
+This library supports both wifi client and AP modes. It is somewhat painful to work with AP mode when you are developing, because android clients will drop their connection to the internet if you force them to connect to the ESP32 AP, and your development computer is likely to have the same issue, unless you have 2 network interfaces (one for the internet and one to connect to the ESP32).
+
+As a result, it's easier to use the code below to get your code to connect to your home AP, and if you take the ESP32 in the field, it fail to connect and auto switch to AP mode. For extra points, you could add a portal that takes a new SSID and password, and adds it to the list of APs to try after you reboot.
+```
+void connectionStatus(const char *ssid, bool trying, bool failure, bool success)
+{
+  static uint8_t failure_cnt = 0;
+  static bool ap = false;
+  const char *what = "?";
+
+  if (trying)       { what = "trying"; }
+  else if (failure) { what = "failure"; failure_cnt++; }
+  else if (success) { what = "success"; failure_cnt = 0; }
+
+  Serial.printf("%s: connectionStatus for '%s' is now '%s' fail cnt: %d\n", __func__, ssid, what, failure_cnt, failure_cnt);
+
+  if (!ap and failure_cnt > 2) {
+    Serial.println("Too many failures setting up Wifi client, switching to Wifi AP mode");
+    ap = true;
+    s.clearWifis();
+    s.setAccessPoint(WIFI_AP_SSID, WIFI_AP_PASSWORD);
+    failure_cnt = 0;
+  }
+}
+
+setup() {
+  s.setStatusCallback(connectionStatus);
+  s.addWifi(WIFI_SSID, WIFI_PASSWORD);
+}
+```
