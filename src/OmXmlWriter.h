@@ -53,7 +53,7 @@ class OmIByteStream
 {
 public:
     /*!
-     @abstract emit a single byte, overridden by any implementation
+     @brief emit a single byte, overridden by any implementation
      */
     virtual bool put(uint8_t ch)
     {
@@ -69,7 +69,7 @@ public:
         return true;
     }
 
-    /*! @abstract convenience routine, same as put byte-by-byte. */
+    /*! @brief convenience routine, same as put byte-by-byte. */
     virtual bool putS(const char *s)
     {
         bool result = true;
@@ -102,71 +102,71 @@ public:
 
     const char *attributeName = 0; // current open attribute if any, streaming into it
     
-    /*! @abstract Instantiate an XML writer to write into the specified buffer */
+    /*! @brief Instantiate an XML writer to write into the specified buffer */
     OmXmlWriter(OmIByteStream *consumer);
     
-    /*! @abstract Begins a new XML element, like &lt;elementName> */
+    /*! @brief Begins a new XML element, like &lt;elementName> */
     void beginElement(const char *elementName);
     
-    /*! @abstract Begins a new XML element with one attribute already in it, like &lt;elementName attr="value"> */
+    /*! @brief Begins a new XML element with one attribute already in it, like &lt;elementName attr="value"> */
     void beginElement(const char *elementName, const char *attribute1, const char *value1);
     
-    /*! @abstract Adds text to an element, like &lt;element>content&lt;/element> */
+    /*! @brief Adds text to an element, like &lt;element>content&lt;/element> */
     void addContent(const char *content);
 
-    /*! @abstract Adds text to the document ignoring XML rules
+    /*! @brief Adds text to the document ignoring XML rules
      But also needed things like rendering DOCTYPE at the start. Caution.
      */
     void addContentRaw(const char *content);
 
-    /*! @abstract Adds text to an element, using printf semantics */
+    /*! @brief Adds text to an element, using printf semantics */
     void addContentF(const char *fmt,...);
     
-    /*! @abstract Adds an attribute to an element, like &lt;element attr="value"> */
+    /*! @brief Adds an attribute to an element, like &lt;element attr="value"> */
     void addAttribute(const char *attribute, const char *value);
     
-    /*! @abstract Adds an attribute to an element, using printf semantics */
+    /*! @brief Adds an attribute to an element, using printf semantics */
     void addAttributeF(const char *attribute, const char *fmt,...);
 
-    /*! @abstract Handle oversized attribute. :-/ */
+    /*! @brief Handle oversized attribute. :-/ */
     void addAttributeFBig(int reserve, const char *attribute, const char *fmt,...);
 
-    /*! @abstract Adds an attribute to an element, using printf semantics, and %20 escapes. */
+    /*! @brief Adds an attribute to an element, using printf semantics, and %20 escapes. */
     void addAttributeUrlF(const char *attribute, const char *fmt,...);
     
-    /*! @abstract Adds an attribute to an element from an integer */
+    /*! @brief Adds an attribute to an element from an integer */
     void addAttribute(const char *attribute, long long int value);
     
-    /*! @abstract Adds an element with no attributes or content (no need for endElement()) like &lt;hr/> */
+    /*! @brief Adds an element with no attributes or content (no need for endElement()) like &lt;hr/> */
     void addElement(const char *elementName);
     
-    /*! @abstract Adds an element with content (no need for endElement()) like &lt;h1>Content&lt;/h1> */
+    /*! @brief Adds an element with content (no need for endElement()) like &lt;h1>Content&lt;/h1> */
     void addElement(const char *elementName, const char *content);
     
-    /*! @abstract Adds an element with content (no need for endElement()) like &lt;h1>Content&lt;/h1> */
+    /*! @brief Adds an element with content (no need for endElement()) like &lt;h1>Content&lt;/h1> */
     void addElementF(const char *elementName, const char *fmt,...);
     
-    /*! @abstract Ends the most recent beginElement(). Caps them with either &lt;element/> or &lt;/element>. */
+    /*! @brief Ends the most recent beginElement(). Caps them with either &lt;element/> or &lt;/element>. */
     void endElement();
 
-    /*! @abstract Ends most recent beginElement, and prints error message if element name does not match. */
+    /*! @brief Ends most recent beginElement, and prints error message if element name does not match. */
     void endElement(const char *elementName);
     
-    /*! @abstract Ends any remaining elements. */
+    /*! @brief Ends any remaining elements. */
     void endElements();
 
-    /*! @abstract Add content directly to the output stream, no escaping or element balancing.
+    /*! @brief Add content directly to the output stream, no escaping or element balancing.
         You can definitely break your XML output with this! Use wisely.
      */
     void addRawContent(const char *rawContent);
     
-    /*! @abstract Enables primitive formatting. Uses more bytes of buffer. */
+    /*! @brief Enables primitive formatting. Uses more bytes of buffer. */
     void setIndenting(int onOff);
     
-    /*! @abstract Returns nonzero of any errors occurred, usually buffer overruns leading to missing portions. */
+    /*! @brief Returns nonzero of any errors occurred, usually buffer overruns leading to missing portions. */
     int getErrorCount();
 
-    /*! @abstract Bytes written. */
+    /*! @brief Bytes written. */
     unsigned int getByteCount();
 
     /*! Our own put.

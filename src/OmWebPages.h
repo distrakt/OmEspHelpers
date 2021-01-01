@@ -67,13 +67,13 @@ typedef unsigned char IPAddress[4];
 #define UNUSED(x) (void)(x)
 #endif
 
-/*! @abstract A callback you provide for value changes of most controls on the web page. */
+/*! @brief A callback you provide for value changes of most controls on the web page. */
 typedef void (* OmWebActionProc)(const char *pageName, const char *parameterName, int value, int ref1, void *ref2);
 
-/*! @abstract A callback you provide for rendering custom HTML onto a web page. */
+/*! @brief A callback you provide for rendering custom HTML onto a web page. */
 typedef void (* HtmlProc)(OmXmlWriter &writer, int ref1, void *ref2);
 
-/*! @abstract A callback you provide for an arbitrary Url Handler */
+/*! @brief A callback you provide for an arbitrary Url Handler */
 typedef void (* OmUrlHandlerProc)(OmXmlWriter &writer, OmWebRequest &request, int ref1, void *ref2);
 
 /*! Internal class of OmWebPages */
@@ -88,17 +88,17 @@ class OmWebPageItem
 {
 public:
     OmWebPageItem(PageItem *privateItem);
-    /*! @abstract current name */
+    /*! @brief current name */
     const char *getName();
-    /*! @abstract change name */
+    /*! @brief change name */
     void setName(const char *name);
-    /*! @abstract show or hide */
+    /*! @brief show or hide */
     void setVisible(bool visible);
-    /*! @abstract handy method to update several aspects at once */
+    /*! @brief handy method to update several aspects at once */
     void setVisible(bool visible, const char *name, int value);
-    /*! @abstract current value */
+    /*! @brief current value */
     int getValue();
-    /*! @abstract changes the value, but only visible on next browser load or refresh */
+    /*! @brief changes the value, but only visible on next browser load or refresh */
     void setValue(int value);
 
     PageItem *privateItem;
@@ -117,7 +117,7 @@ public:
     const char *ap = "";
 };
 
-/*! @abstract A class that routes and serves web pages, and manages control values, typically works with OmWebServer for the network interface */
+/*! @brief A class that routes and serves web pages, and manages control values, typically works with OmWebServer for the network interface */
 class OmWebPages
 {
 public:
@@ -126,7 +126,7 @@ public:
     ~OmWebPages();
 
     /*!
-     @abstract say p.setBuildDateAndTime(__DATE__, __TIME__) so the info web page can display it.
+     @brief say p.setBuildDateAndTime(__DATE__, __TIME__) so the info web page can display it.
      */
     void setBuildDateAndTime(const char *date, const char *time, const char *file = NULL);
     
@@ -134,69 +134,69 @@ public:
     // | Setting up your pages
     // |
     
-    /*! @abstract Start defining a new page. Subsequent calls like addButton() affect this page.
+    /*! @brief Start defining a new page. Subsequent calls like addButton() affect this page.
         If a page of this name already exists, it is reset to empty. You can rebuild the page
         from scratch, if for example the set of controls needs to change.
      */
     void beginPage(const char *pageName);
 
-    /*! @abstract Add a link on the current page that goes to another page. Also can call an action proc. */
+    /*! @brief Add a link on the current page that goes to another page. Also can call an action proc. */
     void addPageLink(const char *pageLink, OmWebActionProc proc = NULL, int ref1 = 0, void *ref2 = 0);
 
-    /*! @abstract Add a button on the current page. Calls the action proc with value 1 for press, 0 for release. */
+    /*! @brief Add a button on the current page. Calls the action proc with value 1 for press, 0 for release. */
     OmWebPageItem *addButton(const char *buttonName, OmWebActionProc proc = NULL, int ref1 = 0, void *ref2 = 0);
 
-    /*! @abstract Add a button on the current page, which fires a page redirect after the button-up.
+    /*! @brief Add a button on the current page, which fires a page redirect after the button-up.
      The OmWebActionProc would often be NULL here, if the button's main purpose is to go to another web page.
      */
     OmWebPageItem *addButtonWithLink(const char *buttonName, const char *url, OmWebActionProc proc = NULL, int ref1 = 0, void *ref2 = 0);
     
-    /*! @abstract Add a slider control on the current page. The range is 0 to 100, and calls your param proc when changed. */
+    /*! @brief Add a slider control on the current page. The range is 0 to 100, and calls your param proc when changed. */
     OmWebPageItem *addSlider(const char *sliderName, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
 
-    /*! @abstract Add a slider control on the current page, with a specific range. */
+    /*! @brief Add a slider control on the current page, with a specific range. */
     OmWebPageItem *addSlider(int rangeLow, int rangeHigh, const char *sliderName, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
 
-    /*! @abstract Add a time-input */
+    /*! @brief Add a time-input */
     OmWebPageItem *addTime(const char *itemName, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
 
-    /*! @abstract Add a color-input, int value is 0xRRGGBB */
+    /*! @brief Add a color-input, int value is 0xRRGGBB */
     OmWebPageItem *addColor(const char *itemName, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
 
-    /*! @abstract Begin a menu select control. Choices are added with addSelectOption() */
+    /*! @brief Begin a menu select control. Choices are added with addSelectOption() */
     OmWebPageItem *addSelect(const char *itemName, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
-    /*! @abstract Add one selectable item, and its integer value if selected */
+    /*! @brief Add one selectable item, and its integer value if selected */
     void addSelectOption(const char *optionName, int optionValue);
 
-    /*! @abstract Add a single checkbox.
+    /*! @brief Add a single checkbox.
      If checkboxName is NULL, then the first checkbox will be added by addCheckboxX
      The int value of the control is binary, where the nth checkbox adds 2^(n-1) to the value
      */
     OmWebPageItem *addCheckbox(const char *itemName, const char *checkboxName, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
-    /*! @abstract Add additional checkboxes */
+    /*! @brief Add additional checkboxes */
     void addCheckboxX(const char *checkboxName, int value = 0); // additional checkboxes.
 
 
-    /*! @abstract Add a block of custom dynamic HTML to the page. Your proc is called each time the page is requested. */
+    /*! @brief Add a block of custom dynamic HTML to the page. Your proc is called each time the page is requested. */
     void addHtml(HtmlProc proc, int ref1 = 0, void *ref2 = 0);
 
-    /*! @abstract Add a string of static prebuilt HTML. Included in web page unchecked, you're on your own! */
+    /*! @brief Add a string of static prebuilt HTML. Included in web page unchecked, you're on your own! */
     void addStaticHtml(String staticHtml);
 
-    /*! @abstract By default, any header proc is used on every page. Disable for current page here. */
+    /*! @brief By default, any header proc is used on every page. Disable for current page here. */
     void allowHeader(bool allowHeader);
 
-    /*! @abstract By default, any footer proc is used on every page. Disable for current page here. */
+    /*! @brief By default, any footer proc is used on every page. Disable for current page here. */
     void allowFooter(bool allowFooter);
 
     // +----------------------------------
     // | Setting up arbitrary handler procs
     // |
 
-    /*! @abstract Add an arbitrary URL handler. */
+    /*! @brief Add an arbitrary URL handler. */
     void addUrlHandler(const char *path, OmUrlHandlerProc proc, int ref1 = 0, void *ref2 = 0);
 
-    /*! @abstract Add a wildcard url handler, if no page or specific handler gets it. */
+    /*! @brief Add a wildcard url handler, if no page or specific handler gets it. */
     void addUrlHandler(OmUrlHandlerProc proc, int ref1 = 0, void *ref2 = 0);
 
 
@@ -204,7 +204,7 @@ public:
     // | Handling Requests
     // |
 
-    /*! @abstract Explicitly process a request. (Not typically used.)
+    /*! @brief Explicitly process a request. (Not typically used.)
      If you used omWebServer.setHandler(omWebPages), then
     this is called by the web server on your behalf. In other scenarios
     you can call it directly with the output buffer and request. The request
@@ -217,7 +217,7 @@ public:
     // | Call these from within your HtmlProc to use the builtin styling and formatting.
     // |
 
-    /*! @abstract Within an HtmlProc: Adds a floating link-button to another page. */
+    /*! @brief Within an HtmlProc: Adds a floating link-button to another page. */
     void renderPageButton(OmXmlWriter &w, const char *pageName);
 
     // +----------------------------------
@@ -225,12 +225,12 @@ public:
     // | Setup calls that affect all pages
     // |
 
-    /*! @abstract Override the default header html */
+    /*! @brief Override the default header html */
     void setHeaderProc(HtmlProc headerProc);
-    /*! @abstract Override the default footer html */
+    /*! @brief Override the default footer html */
     void setFooterProc(HtmlProc footerProc);
 
-    /*! @abstract set the background color for next web request, 0xRRGGBB */
+    /*! @brief set the background color for next web request, 0xRRGGBB */
     void setBgColor(int bgColor); // like 0xff0000 red, 0xffffff white.
 
     // +----------------------------------
@@ -254,10 +254,10 @@ public:
     void renderInfo(OmXmlWriter &w); // builtin "_info" page
     void renderStatusXml(OmXmlWriter &w); // builtin "_status" url
 
-    /*! @abstract in a OmUrlHandlerProc, set the mimetype (like "text/plain") and response code (200 is OK) */
+    /*! @brief in a OmUrlHandlerProc, set the mimetype (like "text/plain") and response code (200 is OK) */
     void renderHttpResponseHeader(const char *contentType, int response);
 
-    /*! @abstract in a OmUrlHandlerProc Render the beginning of the page, leaving <body> element open and ready. */
+    /*! @brief in a OmUrlHandlerProc Render the beginning of the page, leaving <body> element open and ready. */
     static void renderPageBeginning(OmXmlWriter &w, const char *pageTitle = "", int bgColor = 0xffffff);
     void renderDefaultFooter(OmXmlWriter &w); // builtin footer nav buttons
 

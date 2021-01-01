@@ -19,7 +19,7 @@
 
 #include <vector>
 
-/*! @abstract class to help send out timed repeating blinks, can be used to show IP address of the current connection.
+/*! @brief class to help send out timed repeating blinks, can be used to show IP address of the current connection.
  kind of silly, really, but I found it handy to blink out the last octet of 192.168.1.&lt;what ip was i assigned?>.
  */
 

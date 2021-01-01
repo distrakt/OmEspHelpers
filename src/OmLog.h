@@ -31,12 +31,12 @@
 typedef unsigned char IPAddress[4];
 #endif
 
-/*! @abstract A formatted printing helper. It adds the file and line number to the output. */
+/*! @brief A formatted printing helper. It adds the file and line number to the output. */
 #define OMLOG(_args...) OmLog::logS(__FILE__, __LINE__, '*', _args)
-/*! @abstract A formatted printing helper. Like OMLOG, but has E for error. */
+/*! @brief A formatted printing helper. Like OMLOG, but has E for error. */
 #define OMERR(_args...) OmLog::logS(__FILE__, __LINE__, 'E', _args)
 
-/*! @abstract Utility to convert an ESP8266 ip address to a printable string. */
+/*! @brief Utility to convert an ESP8266 ip address to a printable string. */
 const char *ipAddressToString(IPAddress ip);
 
 class OmLog

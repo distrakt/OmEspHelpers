@@ -1,0 +1,116 @@
+\hypertarget{class_om_ntp}{}\doxysection{Om\+Ntp Class Reference}
+\label{class_om_ntp}\index{OmNtp@{OmNtp}}
+
+
+{\ttfamily \#include $<$Om\+Ntp.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{class_om_ntp_acc4f8aab7ae9834f2f167e44a041c70c}{set\+Wifi\+Available}} (bool wifi\+Available)
+\item 
+void \mbox{\hyperlink{class_om_ntp_ab144cf681806189e2d2326db995d8ce8}{tick}} (long milliseconds)
+\item 
+void \mbox{\hyperlink{class_om_ntp_a3e2b7dd3a18ff3539cfeaf3256ab8656}{set\+Time\+Zone}} (int hour\+Offset)
+\item 
+\mbox{\Hypertarget{class_om_ntp_a8791963574f94ae73c900bfb6ca2dc9a}\label{class_om_ntp_a8791963574f94ae73c900bfb6ca2dc9a}} 
+int {\bfseries get\+Time\+Zone} ()
+\item 
+void \mbox{\hyperlink{class_om_ntp_a3445dec75624a0a6ea453437c6bd0111}{set\+Local\+Time\+Zone}} ()
+\item 
+void \mbox{\hyperlink{class_om_ntp_a22ebe81459fd202cf86c065aeda1b7df}{set\+Time\+Url}} (const char $\ast$time\+Url)
+\item 
+bool \mbox{\hyperlink{class_om_ntp_a8a02f03f5c93683f4e255c4f0fc80ad9}{get\+Time}} (int \&hour\+Out, int \&minute\+Out, int \&second\+Out)
+\item 
+bool \mbox{\hyperlink{class_om_ntp_a1c3138bd6b1f95e0f7a23c7353f97cc0}{get\+Time}} (int \&hour\+Out, int \&minute\+Out, float \&second\+Out)
+\item 
+const char $\ast$ \mbox{\hyperlink{class_om_ntp_a534d85237da805026b6dd55e0df9ef03}{get\+Time\+String}} ()
+\item 
+\mbox{\Hypertarget{class_om_ntp_a0e07b91b12d8ab0cff90b05fc38183a3}\label{class_om_ntp_a0e07b91b12d8ab0cff90b05fc38183a3}} 
+bool {\bfseries get\+U\+Time} (uint32\+\_\+t \&u\+Time\+Out, int \&u\+Frac\+Out)
+\item 
+\mbox{\Hypertarget{class_om_ntp_a7d09f02c90f6dd124b674d956f95a901}\label{class_om_ntp_a7d09f02c90f6dd124b674d956f95a901}} 
+uint32\+\_\+t {\bfseries get\+U\+Time} ()
+\item 
+\mbox{\Hypertarget{class_om_ntp_a9a2c42b75dae73a07a984c4340d6f9a3}\label{class_om_ntp_a9a2c42b75dae73a07a984c4340d6f9a3}} 
+bool {\bfseries u\+Time\+To\+Time} (uint32\+\_\+t u\+Time, int u\+Frac, int \&hour\+Out, int \&minute\+Out, float \&second\+Out)
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{class_om_ntp}{Om\+Ntp}} $\ast$ \mbox{\hyperlink{class_om_ntp_a5159cd05695667eceb952dde30cefb10}{ntp}} ()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+class to keep a local clock synchronized from a server 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_om_ntp_a1c3138bd6b1f95e0f7a23c7353f97cc0}\label{class_om_ntp_a1c3138bd6b1f95e0f7a23c7353f97cc0}} 
+\index{OmNtp@{OmNtp}!getTime@{getTime}}
+\index{getTime@{getTime}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{getTime()}{getTime()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily bool Om\+Ntp\+::get\+Time (\begin{DoxyParamCaption}\item[{int \&}]{hour\+Out,  }\item[{int \&}]{minute\+Out,  }\item[{float \&}]{second\+Out }\end{DoxyParamCaption})}
+
+Get the time of day in two handy integers and a float. \mbox{\Hypertarget{class_om_ntp_a8a02f03f5c93683f4e255c4f0fc80ad9}\label{class_om_ntp_a8a02f03f5c93683f4e255c4f0fc80ad9}} 
+\index{OmNtp@{OmNtp}!getTime@{getTime}}
+\index{getTime@{getTime}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{getTime()}{getTime()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily bool Om\+Ntp\+::get\+Time (\begin{DoxyParamCaption}\item[{int \&}]{hour\+Out,  }\item[{int \&}]{minute\+Out,  }\item[{int \&}]{second\+Out }\end{DoxyParamCaption})}
+
+Get the time of day in three handy integers. \mbox{\Hypertarget{class_om_ntp_a534d85237da805026b6dd55e0df9ef03}\label{class_om_ntp_a534d85237da805026b6dd55e0df9ef03}} 
+\index{OmNtp@{OmNtp}!getTimeString@{getTimeString}}
+\index{getTimeString@{getTimeString}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{getTimeString()}{getTimeString()}}
+{\footnotesize\ttfamily const char $\ast$ Om\+Ntp\+::get\+Time\+String (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Get the time of day in a handy string like H\+H\+:\+MM\+:SS.
+
+(It\textquotesingle{}s a static char\mbox{[}\mbox{]}, by the way.) \mbox{\Hypertarget{class_om_ntp_a5159cd05695667eceb952dde30cefb10}\label{class_om_ntp_a5159cd05695667eceb952dde30cefb10}} 
+\index{OmNtp@{OmNtp}!ntp@{ntp}}
+\index{ntp@{ntp}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{ntp()}{ntp()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{class_om_ntp}{Om\+Ntp}} $\ast$ Om\+Ntp\+::ntp (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Get the last-\/created ntp instance, if any \mbox{\Hypertarget{class_om_ntp_a3445dec75624a0a6ea453437c6bd0111}\label{class_om_ntp_a3445dec75624a0a6ea453437c6bd0111}} 
+\index{OmNtp@{OmNtp}!setLocalTimeZone@{setLocalTimeZone}}
+\index{setLocalTimeZone@{setLocalTimeZone}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{setLocalTimeZone()}{setLocalTimeZone()}}
+{\footnotesize\ttfamily void Om\+Ntp\+::set\+Local\+Time\+Zone (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Issue a request to an http service, the url you set with \mbox{\hyperlink{class_om_ntp_a22ebe81459fd202cf86c065aeda1b7df}{set\+Time\+Url()}}. \mbox{\Hypertarget{class_om_ntp_a22ebe81459fd202cf86c065aeda1b7df}\label{class_om_ntp_a22ebe81459fd202cf86c065aeda1b7df}} 
+\index{OmNtp@{OmNtp}!setTimeUrl@{setTimeUrl}}
+\index{setTimeUrl@{setTimeUrl}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{setTimeUrl()}{setTimeUrl()}}
+{\footnotesize\ttfamily void Om\+Ntp\+::set\+Time\+Url (\begin{DoxyParamCaption}\item[{const char $\ast$}]{time\+Url }\end{DoxyParamCaption})}
+
+U\+RL to a server under your control that gives the current time.
+
+\mbox{\hyperlink{class_om_ntp}{Om\+Ntp}} will deduce the timezone relative to N\+TP from it, also.
+
+Https not supported, just http. \mbox{\Hypertarget{class_om_ntp_a3e2b7dd3a18ff3539cfeaf3256ab8656}\label{class_om_ntp_a3e2b7dd3a18ff3539cfeaf3256ab8656}} 
+\index{OmNtp@{OmNtp}!setTimeZone@{setTimeZone}}
+\index{setTimeZone@{setTimeZone}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{setTimeZone()}{setTimeZone()}}
+{\footnotesize\ttfamily void Om\+Ntp\+::set\+Time\+Zone (\begin{DoxyParamCaption}\item[{int}]{hour\+Offset }\end{DoxyParamCaption})}
+
+This number gets added to U\+TC for your time zone. It ranges
+
+from -\/12 to +12. California in December needs -\/8. \mbox{\Hypertarget{class_om_ntp_acc4f8aab7ae9834f2f167e44a041c70c}\label{class_om_ntp_acc4f8aab7ae9834f2f167e44a041c70c}} 
+\index{OmNtp@{OmNtp}!setWifiAvailable@{setWifiAvailable}}
+\index{setWifiAvailable@{setWifiAvailable}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{setWifiAvailable()}{setWifiAvailable()}}
+{\footnotesize\ttfamily void Om\+Ntp\+::set\+Wifi\+Available (\begin{DoxyParamCaption}\item[{bool}]{wifi\+Available }\end{DoxyParamCaption})}
+
+Call this after wifi properly established \mbox{\Hypertarget{class_om_ntp_ab144cf681806189e2d2326db995d8ce8}\label{class_om_ntp_ab144cf681806189e2d2326db995d8ce8}} 
+\index{OmNtp@{OmNtp}!tick@{tick}}
+\index{tick@{tick}!OmNtp@{OmNtp}}
+\doxysubsubsection{\texorpdfstring{tick()}{tick()}}
+{\footnotesize\ttfamily void Om\+Ntp\+::tick (\begin{DoxyParamCaption}\item[{long}]{milliseconds }\end{DoxyParamCaption})}
+
+Call this in your loop(). Assumes about 20-\/50 ms interval. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/Om\+Ntp.\+h\item 
+src/Om\+Ntp.\+cpp\end{DoxyCompactItemize}

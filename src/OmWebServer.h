@@ -54,7 +54,7 @@ typedef void (* OmConnectionStatus)(const char *ssid, bool trying, bool failure,
 
 class OmWebServerPrivates;
 
-/*! @abstract Manages wifi connection, and forwarding http requests to a handler, typically OmWebPages */
+/*! @brief Manages wifi connection, and forwarding http requests to a handler, typically OmWebPages */
 class OmWebServer : public OmIByteStream
 {
     OmWebServerPrivates *p = NULL;
@@ -64,7 +64,7 @@ public:
     OmWebServer(int port = 80);
     ~OmWebServer();
 
-    /*! @abstract OmWebServer by default prints much status to serial; set to 0 to cut that out. */
+    /*! @brief OmWebServer by default prints much status to serial; set to 0 to cut that out. */
     void setVerbose(int verbose); // turn off to print less stuff
 
     /*! must be set before begin(), and cannot be revoked.
@@ -75,38 +75,38 @@ public:
     NOTE: 2019-12-14 works sometimes. I dont highly recommend. :( */
     void setAccessPoint(String ssid, String password);
     
-    /*! @abstract add to the list of known networks to try. */
+    /*! @brief add to the list of known networks to try. */
     void addWifi(String ssid, String password);
-    /*! @abstract reset the list of known networks to try, to empty again. */
+    /*! @brief reset the list of known networks to try, to empty again. */
     void clearWifis();
 
-    /*! @abstract advertises on local network as bonjourName.local */
+    /*! @brief advertises on local network as bonjourName.local */
     void setBonjourName(String bonjourName);
-    /*! @abstract get the current bonjour name */
+    /*! @brief get the current bonjour name */
     String getBonjourName();
     
     void setHandler(OmRequestHandler requestHandler);
 
-    /*! @abstract Introduce an OmWebPages to the server, done and done! */
+    /*! @brief Introduce an OmWebPages to the server, done and done! */
     void setHandler(OmWebPages &requestHandler);
-    /*! @abstract receive notifications of changes to wifi status */
+    /*! @brief receive notifications of changes to wifi status */
     void setStatusCallback(OmConnectionStatus statusCallback);
 
-    /*! @abstract Introduce an NTP object to the server */
+    /*! @brief Introduce an NTP object to the server */
     void setNtp(OmNtp *ntp);
     
-    /*! @abstract defaults to 80 */
+    /*! @brief defaults to 80 */
     void setPort(int port);
     
-    /*! @abstract changes or disables the blinking status LED. Use -1 to disable. */
+    /*! @brief changes or disables the blinking status LED. Use -1 to disable. */
     void setStatusLedPin(int statusLedPin);
     
     void end();
 
-    /*! @abstract simulate a network trouble. 1==disconnect the wifi */
+    /*! @brief simulate a network trouble. 1==disconnect the wifi */
     void glitch(int k);
     
-    /*! @abstract You must call this in loop() to give time to run.
+    /*! @brief You must call this in loop() to give time to run.
      This allows networks to be joined and rejoined, and is when requests are served.
      Call it often!
      return the number of requests handled, if any.
@@ -120,9 +120,9 @@ public:
     unsigned int getClientIp();
     unsigned int getTicks();
 
-    /*! @abstract is it? */
+    /*! @brief is it? */
     bool isWifiConnected();
-    /*! @abstract arduino's millis() will overflow after 50 days. Not this baby. */
+    /*! @brief arduino's millis() will overflow after 50 days. Not this baby. */
     long long uptimeMillis();
 
     bool put(uint8_t) override;

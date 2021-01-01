@@ -1,0 +1,109 @@
+\hypertarget{class_om_blinker}{}\doxysection{Om\+Blinker Class Reference}
+\label{class_om_blinker}\index{OmBlinker@{OmBlinker}}
+
+
+class to help send out timed repeating blinks, can be used to show IP address of the current connection. kind of silly, really, but I found it handy to blink out the last octet of 192.\+168.\+1.$<$what ip was i assigned?$>$.  
+
+
+
+
+{\ttfamily \#include $<$Om\+Blinker.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{class_om_blinker_aac6dda3e1f1463b489faa334c08b360c}{Om\+Blinker}} (int led\+Pin=-\/1)
+\item 
+\mbox{\Hypertarget{class_om_blinker_afadf013f45399b742bc834095c61b901}\label{class_om_blinker_afadf013f45399b742bc834095c61b901}} 
+void {\bfseries set\+Led\+Pin} (int led\+Pin)
+\item 
+\mbox{\Hypertarget{class_om_blinker_a01719db2517cb18c50982c77d543b592}\label{class_om_blinker_a01719db2517cb18c50982c77d543b592}} 
+void {\bfseries set\+Tick\+Divider} (int tick\+Divider)
+\item 
+\mbox{\Hypertarget{class_om_blinker_a5b0525611dee8ecee4b79f6abd871361}\label{class_om_blinker_a5b0525611dee8ecee4b79f6abd871361}} 
+void {\bfseries tick} ()
+\item 
+\mbox{\Hypertarget{class_om_blinker_a11c84778d598df44d154c1a033de449a}\label{class_om_blinker_a11c84778d598df44d154c1a033de449a}} 
+void {\bfseries clear} ()
+\item 
+void \mbox{\hyperlink{class_om_blinker_a7d83b8eaa76d729d28cc087ab33d019e}{add\+Blink}} (int on\+Time, int off\+Time)
+\item 
+void \mbox{\hyperlink{class_om_blinker_a8a71f21713243aa4c5def347e0744261}{add\+On\+Time}} (int on\+Time)
+\item 
+void \mbox{\hyperlink{class_om_blinker_a7ad749dd7c1f06c61d2ed9b5268c64d3}{add\+Off\+Time}} (int off\+Time)
+\item 
+void \mbox{\hyperlink{class_om_blinker_aa4bbd2bb709c37ce83909be3bf0c79c4}{add\+Digit}} (unsigned int digit)
+\begin{DoxyCompactList}\small\item\em add several blinks to represent a digit 0 to 9, like 3 blinks for 3. N\+O\+TE\+: does zero blinks 10 times \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{class_om_blinker_ab38da5fce8810e5202a9b5cc3e97679b}{add\+Number}} (unsigned int number)
+\begin{DoxyCompactList}\small\item\em add blinks and pauses to play a number in decimal \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{class_om_blinker_a9c1ced33811090792a960a346805f22d}{add\+Interjection}} (int blink\+Count, int blink\+Size)
+\begin{DoxyCompactList}\small\item\em Play a simple blink \char`\"{}on top of\char`\"{} the repeating pattern. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+class to help send out timed repeating blinks, can be used to show IP address of the current connection. kind of silly, really, but I found it handy to blink out the last octet of 192.\+168.\+1.$<$what ip was i assigned?$>$. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{class_om_blinker_aac6dda3e1f1463b489faa334c08b360c}\label{class_om_blinker_aac6dda3e1f1463b489faa334c08b360c}} 
+\index{OmBlinker@{OmBlinker}!OmBlinker@{OmBlinker}}
+\index{OmBlinker@{OmBlinker}!OmBlinker@{OmBlinker}}
+\doxysubsubsection{\texorpdfstring{OmBlinker()}{OmBlinker()}}
+{\footnotesize\ttfamily Om\+Blinker\+::\+Om\+Blinker (\begin{DoxyParamCaption}\item[{int}]{led\+Pin = {\ttfamily -\/1} }\end{DoxyParamCaption})}
+
+By default, \mbox{\hyperlink{class_om_blinker}{Om\+Blinker}} won\textquotesingle{}t blink, set to pin -\/1 to disable. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_om_blinker_a7d83b8eaa76d729d28cc087ab33d019e}\label{class_om_blinker_a7d83b8eaa76d729d28cc087ab33d019e}} 
+\index{OmBlinker@{OmBlinker}!addBlink@{addBlink}}
+\index{addBlink@{addBlink}!OmBlinker@{OmBlinker}}
+\doxysubsubsection{\texorpdfstring{addBlink()}{addBlink()}}
+{\footnotesize\ttfamily void Om\+Blinker\+::add\+Blink (\begin{DoxyParamCaption}\item[{int}]{on\+Time,  }\item[{int}]{off\+Time }\end{DoxyParamCaption})}
+
+add an On blink and an Off blink \mbox{\Hypertarget{class_om_blinker_aa4bbd2bb709c37ce83909be3bf0c79c4}\label{class_om_blinker_aa4bbd2bb709c37ce83909be3bf0c79c4}} 
+\index{OmBlinker@{OmBlinker}!addDigit@{addDigit}}
+\index{addDigit@{addDigit}!OmBlinker@{OmBlinker}}
+\doxysubsubsection{\texorpdfstring{addDigit()}{addDigit()}}
+{\footnotesize\ttfamily void Om\+Blinker\+::add\+Digit (\begin{DoxyParamCaption}\item[{unsigned int}]{digit }\end{DoxyParamCaption})}
+
+
+
+add several blinks to represent a digit 0 to 9, like 3 blinks for 3. N\+O\+TE\+: does zero blinks 10 times 
+
+add several blinks to represent a digit 0 to 9, like 3 blinks for 3. N\+O\+TE\+: does zero blinks 10 times \mbox{\Hypertarget{class_om_blinker_a9c1ced33811090792a960a346805f22d}\label{class_om_blinker_a9c1ced33811090792a960a346805f22d}} 
+\index{OmBlinker@{OmBlinker}!addInterjection@{addInterjection}}
+\index{addInterjection@{addInterjection}!OmBlinker@{OmBlinker}}
+\doxysubsubsection{\texorpdfstring{addInterjection()}{addInterjection()}}
+{\footnotesize\ttfamily void Om\+Blinker\+::add\+Interjection (\begin{DoxyParamCaption}\item[{int}]{blink\+Count,  }\item[{int}]{blink\+Size }\end{DoxyParamCaption})}
+
+
+
+Play a simple blink \char`\"{}on top of\char`\"{} the repeating pattern. 
+
+Play a simple blink \char`\"{}on top of\char`\"{} the repeating pattern \mbox{\Hypertarget{class_om_blinker_ab38da5fce8810e5202a9b5cc3e97679b}\label{class_om_blinker_ab38da5fce8810e5202a9b5cc3e97679b}} 
+\index{OmBlinker@{OmBlinker}!addNumber@{addNumber}}
+\index{addNumber@{addNumber}!OmBlinker@{OmBlinker}}
+\doxysubsubsection{\texorpdfstring{addNumber()}{addNumber()}}
+{\footnotesize\ttfamily void Om\+Blinker\+::add\+Number (\begin{DoxyParamCaption}\item[{unsigned int}]{number }\end{DoxyParamCaption})}
+
+
+
+add blinks and pauses to play a number in decimal 
+
+add blinks and pauses to play a number in decimal \mbox{\Hypertarget{class_om_blinker_a7ad749dd7c1f06c61d2ed9b5268c64d3}\label{class_om_blinker_a7ad749dd7c1f06c61d2ed9b5268c64d3}} 
+\index{OmBlinker@{OmBlinker}!addOffTime@{addOffTime}}
+\index{addOffTime@{addOffTime}!OmBlinker@{OmBlinker}}
+\doxysubsubsection{\texorpdfstring{addOffTime()}{addOffTime()}}
+{\footnotesize\ttfamily void Om\+Blinker\+::add\+Off\+Time (\begin{DoxyParamCaption}\item[{int}]{off\+Time }\end{DoxyParamCaption})}
+
+add an Off blink (or extend the last pause) \mbox{\Hypertarget{class_om_blinker_a8a71f21713243aa4c5def347e0744261}\label{class_om_blinker_a8a71f21713243aa4c5def347e0744261}} 
+\index{OmBlinker@{OmBlinker}!addOnTime@{addOnTime}}
+\index{addOnTime@{addOnTime}!OmBlinker@{OmBlinker}}
+\doxysubsubsection{\texorpdfstring{addOnTime()}{addOnTime()}}
+{\footnotesize\ttfamily void Om\+Blinker\+::add\+On\+Time (\begin{DoxyParamCaption}\item[{int}]{on\+Time }\end{DoxyParamCaption})}
+
+add an On blink (or extend the last one) 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/Om\+Blinker.\+h\item 
+src/Om\+Blinker.\+cpp\end{DoxyCompactItemize}

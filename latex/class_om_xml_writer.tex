@@ -1,0 +1,153 @@
+\hypertarget{class_om_xml_writer}{}\doxysection{Om\+Xml\+Writer Class Reference}
+\label{class_om_xml_writer}\index{OmXmlWriter@{OmXmlWriter}}
+
+
+{\ttfamily \#include $<$Om\+Xml\+Writer.\+h$>$}
+
+Inheritance diagram for Om\+Xml\+Writer\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_om_xml_writer}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a57f6ab6813607336be06dcc39130aa2a}\label{class_om_xml_writer_a57f6ab6813607336be06dcc39130aa2a}} 
+\mbox{\hyperlink{class_om_xml_writer_a57f6ab6813607336be06dcc39130aa2a}{Om\+Xml\+Writer}} (\mbox{\hyperlink{class_om_i_byte_stream}{Om\+I\+Byte\+Stream}} $\ast$consumer)
+\begin{DoxyCompactList}\small\item\em Instantiate an X\+ML writer to write into the specified buffer. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_ae4dbb9d316c53279d6cccd4128bd1f9f}\label{class_om_xml_writer_ae4dbb9d316c53279d6cccd4128bd1f9f}} 
+void \mbox{\hyperlink{class_om_xml_writer_ae4dbb9d316c53279d6cccd4128bd1f9f}{begin\+Element}} (const char $\ast$element\+Name)
+\begin{DoxyCompactList}\small\item\em Begins a new X\+ML element, like $<$element\+Name$>$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a8c5976d0d7c11ed13b3a320cbdef0748}\label{class_om_xml_writer_a8c5976d0d7c11ed13b3a320cbdef0748}} 
+void \mbox{\hyperlink{class_om_xml_writer_a8c5976d0d7c11ed13b3a320cbdef0748}{begin\+Element}} (const char $\ast$element\+Name, const char $\ast$attribute1, const char $\ast$value1)
+\begin{DoxyCompactList}\small\item\em Begins a new X\+ML element with one attribute already in it, like $<$element\+Name attr=\char`\"{}value\char`\"{}$>$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a2242fe4ddc25ed19cae794f2f3266d57}\label{class_om_xml_writer_a2242fe4ddc25ed19cae794f2f3266d57}} 
+void \mbox{\hyperlink{class_om_xml_writer_a2242fe4ddc25ed19cae794f2f3266d57}{add\+Content}} (const char $\ast$content)
+\begin{DoxyCompactList}\small\item\em Adds text to an element, like $<$element$>$content$<$/element$>$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_ab547a0581af921d66cd935507a7ce47a}\label{class_om_xml_writer_ab547a0581af921d66cd935507a7ce47a}} 
+void \mbox{\hyperlink{class_om_xml_writer_ab547a0581af921d66cd935507a7ce47a}{add\+Content\+Raw}} (const char $\ast$content)
+\begin{DoxyCompactList}\small\item\em Adds text to the document ignoring X\+ML rules But also needed things like rendering D\+O\+C\+T\+Y\+PE at the start. Caution. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_aaff21e8da2b4dcb8d3028efa98b28b3d}\label{class_om_xml_writer_aaff21e8da2b4dcb8d3028efa98b28b3d}} 
+void \mbox{\hyperlink{class_om_xml_writer_aaff21e8da2b4dcb8d3028efa98b28b3d}{add\+ContentF}} (const char $\ast$fmt,...)
+\begin{DoxyCompactList}\small\item\em Adds text to an element, using printf semantics. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a40e2c68c6fcfb170e5c25ab2689be67c}\label{class_om_xml_writer_a40e2c68c6fcfb170e5c25ab2689be67c}} 
+void \mbox{\hyperlink{class_om_xml_writer_a40e2c68c6fcfb170e5c25ab2689be67c}{add\+Attribute}} (const char $\ast$attribute, const char $\ast$value)
+\begin{DoxyCompactList}\small\item\em Adds an attribute to an element, like $<$element attr=\char`\"{}value\char`\"{}$>$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a9716aef9e8025236c23940eba8890112}\label{class_om_xml_writer_a9716aef9e8025236c23940eba8890112}} 
+void \mbox{\hyperlink{class_om_xml_writer_a9716aef9e8025236c23940eba8890112}{add\+AttributeF}} (const char $\ast$attribute, const char $\ast$fmt,...)
+\begin{DoxyCompactList}\small\item\em Adds an attribute to an element, using printf semantics. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a350af5bc2992bf4e257e0adbc5865e90}\label{class_om_xml_writer_a350af5bc2992bf4e257e0adbc5865e90}} 
+void \mbox{\hyperlink{class_om_xml_writer_a350af5bc2992bf4e257e0adbc5865e90}{add\+Attribute\+F\+Big}} (int reserve, const char $\ast$attribute, const char $\ast$fmt,...)
+\begin{DoxyCompactList}\small\item\em Handle oversized attribute. \+:-\//. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_ac6e84b6221ac64db233132eb8852b478}\label{class_om_xml_writer_ac6e84b6221ac64db233132eb8852b478}} 
+void \mbox{\hyperlink{class_om_xml_writer_ac6e84b6221ac64db233132eb8852b478}{add\+Attribute\+UrlF}} (const char $\ast$attribute, const char $\ast$fmt,...)
+\begin{DoxyCompactList}\small\item\em Adds an attribute to an element, using printf semantics, and \%20 escapes. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a480d568d2173339eb8f4b5b0c7936101}\label{class_om_xml_writer_a480d568d2173339eb8f4b5b0c7936101}} 
+void \mbox{\hyperlink{class_om_xml_writer_a480d568d2173339eb8f4b5b0c7936101}{add\+Attribute}} (const char $\ast$attribute, long long int value)
+\begin{DoxyCompactList}\small\item\em Adds an attribute to an element from an integer. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a12c5847c2fe1938dfccf6749ebec9150}\label{class_om_xml_writer_a12c5847c2fe1938dfccf6749ebec9150}} 
+void \mbox{\hyperlink{class_om_xml_writer_a12c5847c2fe1938dfccf6749ebec9150}{add\+Element}} (const char $\ast$element\+Name)
+\begin{DoxyCompactList}\small\item\em Adds an element with no attributes or content (no need for \mbox{\hyperlink{class_om_xml_writer_a62ac2a5104e61d9408d4ae1a305c0137}{end\+Element()}}) like $<$hr/$>$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a86307c02788e42feec8d06c900bf1d8f}\label{class_om_xml_writer_a86307c02788e42feec8d06c900bf1d8f}} 
+void \mbox{\hyperlink{class_om_xml_writer_a86307c02788e42feec8d06c900bf1d8f}{add\+Element}} (const char $\ast$element\+Name, const char $\ast$content)
+\begin{DoxyCompactList}\small\item\em Adds an element with content (no need for \mbox{\hyperlink{class_om_xml_writer_a62ac2a5104e61d9408d4ae1a305c0137}{end\+Element()}}) like $<$h1$>$Content$<$/h1$>$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a018fb818f6ce69e2954b663cf93e3961}\label{class_om_xml_writer_a018fb818f6ce69e2954b663cf93e3961}} 
+void \mbox{\hyperlink{class_om_xml_writer_a018fb818f6ce69e2954b663cf93e3961}{add\+ElementF}} (const char $\ast$element\+Name, const char $\ast$fmt,...)
+\begin{DoxyCompactList}\small\item\em Adds an element with content (no need for \mbox{\hyperlink{class_om_xml_writer_a62ac2a5104e61d9408d4ae1a305c0137}{end\+Element()}}) like $<$h1$>$Content$<$/h1$>$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a62ac2a5104e61d9408d4ae1a305c0137}\label{class_om_xml_writer_a62ac2a5104e61d9408d4ae1a305c0137}} 
+void \mbox{\hyperlink{class_om_xml_writer_a62ac2a5104e61d9408d4ae1a305c0137}{end\+Element}} ()
+\begin{DoxyCompactList}\small\item\em Ends the most recent \mbox{\hyperlink{class_om_xml_writer_ae4dbb9d316c53279d6cccd4128bd1f9f}{begin\+Element()}}. Caps them with either $<$element/$>$ or $<$/element$>$. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_ad9434fabd2adeeabdde52e3df6c2e731}\label{class_om_xml_writer_ad9434fabd2adeeabdde52e3df6c2e731}} 
+void \mbox{\hyperlink{class_om_xml_writer_ad9434fabd2adeeabdde52e3df6c2e731}{end\+Element}} (const char $\ast$element\+Name)
+\begin{DoxyCompactList}\small\item\em Ends most recent begin\+Element, and prints error message if element name does not match. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_acc7dc02f5c6b64af0bdcc82624f934bc}\label{class_om_xml_writer_acc7dc02f5c6b64af0bdcc82624f934bc}} 
+void \mbox{\hyperlink{class_om_xml_writer_acc7dc02f5c6b64af0bdcc82624f934bc}{end\+Elements}} ()
+\begin{DoxyCompactList}\small\item\em Ends any remaining elements. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_af506e20431b7261a1c9373c5a46318bf}\label{class_om_xml_writer_af506e20431b7261a1c9373c5a46318bf}} 
+void \mbox{\hyperlink{class_om_xml_writer_af506e20431b7261a1c9373c5a46318bf}{add\+Raw\+Content}} (const char $\ast$raw\+Content)
+\begin{DoxyCompactList}\small\item\em Add content directly to the output stream, no escaping or element balancing. You can definitely break your X\+ML output with this! Use wisely. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a11be1d44d8090f054f199152624d1c7e}\label{class_om_xml_writer_a11be1d44d8090f054f199152624d1c7e}} 
+void \mbox{\hyperlink{class_om_xml_writer_a11be1d44d8090f054f199152624d1c7e}{set\+Indenting}} (int on\+Off)
+\begin{DoxyCompactList}\small\item\em Enables primitive formatting. Uses more bytes of buffer. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_a66b5a0a598265223ba20c5c938850931}\label{class_om_xml_writer_a66b5a0a598265223ba20c5c938850931}} 
+int \mbox{\hyperlink{class_om_xml_writer_a66b5a0a598265223ba20c5c938850931}{get\+Error\+Count}} ()
+\begin{DoxyCompactList}\small\item\em Returns nonzero of any errors occurred, usually buffer overruns leading to missing portions. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_xml_writer_ab4ee407a181e02bbffc47bc88a0b64f1}\label{class_om_xml_writer_ab4ee407a181e02bbffc47bc88a0b64f1}} 
+unsigned int \mbox{\hyperlink{class_om_xml_writer_ab4ee407a181e02bbffc47bc88a0b64f1}{get\+Byte\+Count}} ()
+\begin{DoxyCompactList}\small\item\em Bytes written. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{class_om_xml_writer_a5bd3b78c666ec4465eb05f76643b7598}{put}} (uint8\+\_\+t ch) override
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a72b5749b730c4877e00fa7431d777ffa}\label{class_om_xml_writer_a72b5749b730c4877e00fa7431d777ffa}} 
+bool {\bfseries done} () override
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a179ac77b6a5b0a2a28d7e23992e504cd}\label{class_om_xml_writer_a179ac77b6a5b0a2a28d7e23992e504cd}} 
+void {\bfseries begin\+Attribute} (const char $\ast$attribute\+Name)
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a23d18b140d0d58a6256fd3b81b2134f3}\label{class_om_xml_writer_a23d18b140d0d58a6256fd3b81b2134f3}} 
+void {\bfseries end\+Attribute} ()
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a761a79228cea96e9786a75d55cff76ac}\label{class_om_xml_writer_a761a79228cea96e9786a75d55cff76ac}} 
+void {\bfseries putf} (const char $\ast$fmt,...)
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_aaf53c94552bf05c2a1f02757ed779950}\label{class_om_xml_writer_aaf53c94552bf05c2a1f02757ed779950}} 
+bool {\bfseries puts} (const char $\ast$stuff, bool content\+Escapes=false)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a52389413e83fb95004ca02e9722c00c7}\label{class_om_xml_writer_a52389413e83fb95004ca02e9722c00c7}} 
+\mbox{\hyperlink{class_om_i_byte_stream}{Om\+I\+Byte\+Stream}} $\ast$ {\bfseries consumer} = 0
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a49fb715f34a05ad74638a8678e56c811}\label{class_om_xml_writer_a49fb715f34a05ad74638a8678e56c811}} 
+int {\bfseries depth} = 0
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_abe03589f7966504b9edd14f9aeb40d72}\label{class_om_xml_writer_abe03589f7966504b9edd14f9aeb40d72}} 
+int {\bfseries has\+Anything} \mbox{[}k\+Om\+Xml\+Max\+Depth\mbox{]}
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a28545bc985d6e88d8dc9004794ff9f2c}\label{class_om_xml_writer_a28545bc985d6e88d8dc9004794ff9f2c}} 
+const char $\ast$ {\bfseries element\+Name} \mbox{[}k\+Om\+Xml\+Max\+Depth\mbox{]}
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_ad5cec8b6a2d11a3bce098f084a3b5337}\label{class_om_xml_writer_ad5cec8b6a2d11a3bce098f084a3b5337}} 
+int {\bfseries position} = 0
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_adea3bae4c53d9a5863dc2d45beca6e20}\label{class_om_xml_writer_adea3bae4c53d9a5863dc2d45beca6e20}} 
+bool {\bfseries indenting} = false
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_acb57bace08064252fa20a3e2bb56c1e4}\label{class_om_xml_writer_acb57bace08064252fa20a3e2bb56c1e4}} 
+int {\bfseries error\+Count} = 0
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a38dcc94edc71a576a791f251ad0b60dd}\label{class_om_xml_writer_a38dcc94edc71a576a791f251ad0b60dd}} 
+unsigned int {\bfseries byte\+Count} = 0
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_a4440f9f1b3b537efd2551bb2505d787a}\label{class_om_xml_writer_a4440f9f1b3b537efd2551bb2505d787a}} 
+const char $\ast$ {\bfseries attribute\+Name} = 0
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_om_xml_writer_afe4d820d63de7d2145694cd2708d4373}\label{class_om_xml_writer_afe4d820d63de7d2145694cd2708d4373}} 
+static const int {\bfseries k\+Om\+Xml\+Max\+Depth} = 20
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Writes formatted X\+ML to an \mbox{\hyperlink{class_om_i_byte_stream}{Om\+I\+Byte\+Stream}}, streaming as it goes (mostly) 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_om_xml_writer_a5bd3b78c666ec4465eb05f76643b7598}\label{class_om_xml_writer_a5bd3b78c666ec4465eb05f76643b7598}} 
+\index{OmXmlWriter@{OmXmlWriter}!put@{put}}
+\index{put@{put}!OmXmlWriter@{OmXmlWriter}}
+\doxysubsubsection{\texorpdfstring{put()}{put()}}
+{\footnotesize\ttfamily bool Om\+Xml\+Writer\+::put (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Our own put. \mbox{\hyperlink{class_om_xml_writer}{Om\+Xml\+Writer}} needs to know what context it\textquotesingle{}s in, to manage escapes correctly. also relies upon some new concepts like begin\+Attribute, $<$stream a big attribute value$>$, end\+Attribute. 
+
+Reimplemented from \mbox{\hyperlink{class_om_i_byte_stream_a828e81c2d825f1d9989711c483d75090}{Om\+I\+Byte\+Stream}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/Om\+Xml\+Writer.\+h\item 
+src/Om\+Xml\+Writer.\+cpp\end{DoxyCompactItemize}

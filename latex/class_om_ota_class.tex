@@ -1,0 +1,62 @@
+\hypertarget{class_om_ota_class}{}\doxysection{Om\+Ota\+Class Class Reference}
+\label{class_om_ota_class}\index{OmOtaClass@{OmOtaClass}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{class_om_ota_class_af3d61cfc238bc159889970c050bd33f9}{add\+Ee\+Fields}} (\mbox{\hyperlink{class_om_eeprom}{Om\+Eeprom}} \&ee)
+\item 
+bool \mbox{\hyperlink{class_om_ota_class_a922a706e988bb0f115f04d3eed939c63}{setup}} (const char $\ast$wifi\+Ssid, const char $\ast$wifi\+Password, const char $\ast$wifi\+Bonjour=N\+U\+LL, Ota\+Status\+Proc status\+Proc=N\+U\+LL)
+\item 
+bool \mbox{\hyperlink{class_om_ota_class_a4855ce5dfc16f4455a35343931843585}{loop}} ()
+\item 
+void \mbox{\hyperlink{class_om_ota_class_ad26f768b7adacb6834affd621a233382}{reboot\+To\+Ota}} ()
+\item 
+void \mbox{\hyperlink{class_om_ota_class_add2e08e7557ddfccd6046c540a398d9f}{add\+Update\+Control}} (\mbox{\hyperlink{class_om_web_pages}{Om\+Web\+Pages}} \&p)
+\item 
+const char $\ast$ \mbox{\hyperlink{class_om_ota_class_a921048d180504ee8ee2031825f37f172}{get\+Ip\+Address}} ()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_om_ota_class_af3d61cfc238bc159889970c050bd33f9}\label{class_om_ota_class_af3d61cfc238bc159889970c050bd33f9}} 
+\index{OmOtaClass@{OmOtaClass}!addEeFields@{addEeFields}}
+\index{addEeFields@{addEeFields}!OmOtaClass@{OmOtaClass}}
+\doxysubsubsection{\texorpdfstring{addEeFields()}{addEeFields()}}
+{\footnotesize\ttfamily void Om\+Ota\+Class\+::add\+Ee\+Fields (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_om_eeprom}{Om\+Eeprom}} \&}]{ee }\end{DoxyParamCaption})}
+
+Must be called before ee.\+begin, if you\textquotesingle{}re using Om\+Eeprome \mbox{\Hypertarget{class_om_ota_class_add2e08e7557ddfccd6046c540a398d9f}\label{class_om_ota_class_add2e08e7557ddfccd6046c540a398d9f}} 
+\index{OmOtaClass@{OmOtaClass}!addUpdateControl@{addUpdateControl}}
+\index{addUpdateControl@{addUpdateControl}!OmOtaClass@{OmOtaClass}}
+\doxysubsubsection{\texorpdfstring{addUpdateControl()}{addUpdateControl()}}
+{\footnotesize\ttfamily void Om\+Ota\+Class\+::add\+Update\+Control (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_om_web_pages}{Om\+Web\+Pages}} \&}]{p }\end{DoxyParamCaption})}
+
+Add an update control to the current page in progress \mbox{\Hypertarget{class_om_ota_class_a921048d180504ee8ee2031825f37f172}\label{class_om_ota_class_a921048d180504ee8ee2031825f37f172}} 
+\index{OmOtaClass@{OmOtaClass}!getIpAddress@{getIpAddress}}
+\index{getIpAddress@{getIpAddress}!OmOtaClass@{OmOtaClass}}
+\doxysubsubsection{\texorpdfstring{getIpAddress()}{getIpAddress()}}
+{\footnotesize\ttfamily const char $\ast$ Om\+Ota\+Class\+::get\+Ip\+Address (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+will return a printable IP Address String only after O\+S\+S\+\_\+\+W\+I\+F\+I\+\_\+\+C\+O\+N\+N\+E\+CT has happened \mbox{\Hypertarget{class_om_ota_class_a4855ce5dfc16f4455a35343931843585}\label{class_om_ota_class_a4855ce5dfc16f4455a35343931843585}} 
+\index{OmOtaClass@{OmOtaClass}!loop@{loop}}
+\index{loop@{loop}!OmOtaClass@{OmOtaClass}}
+\doxysubsubsection{\texorpdfstring{loop()}{loop()}}
+{\footnotesize\ttfamily bool Om\+Ota\+Class\+::loop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Call at the beginning of your \mbox{\hyperlink{class_om_ota_class_a4855ce5dfc16f4455a35343931843585}{loop()}} function. If it returns true, skip the rest of your loop (Any work needed to update displays during setup and upload and such must be handled in your status\+Proc) \mbox{\Hypertarget{class_om_ota_class_ad26f768b7adacb6834affd621a233382}\label{class_om_ota_class_ad26f768b7adacb6834affd621a233382}} 
+\index{OmOtaClass@{OmOtaClass}!rebootToOta@{rebootToOta}}
+\index{rebootToOta@{rebootToOta}!OmOtaClass@{OmOtaClass}}
+\doxysubsubsection{\texorpdfstring{rebootToOta()}{rebootToOta()}}
+{\footnotesize\ttfamily void Om\+Ota\+Class\+::reboot\+To\+Ota (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Call this to reboot, right now, into update mode. (The next boot after this won\textquotesingle{}t be in ota mode.) \mbox{\Hypertarget{class_om_ota_class_a922a706e988bb0f115f04d3eed939c63}\label{class_om_ota_class_a922a706e988bb0f115f04d3eed939c63}} 
+\index{OmOtaClass@{OmOtaClass}!setup@{setup}}
+\index{setup@{setup}!OmOtaClass@{OmOtaClass}}
+\doxysubsubsection{\texorpdfstring{setup()}{setup()}}
+{\footnotesize\ttfamily bool Om\+Ota\+Class\+::setup (\begin{DoxyParamCaption}\item[{const char $\ast$}]{wifi\+Ssid,  }\item[{const char $\ast$}]{wifi\+Password,  }\item[{const char $\ast$}]{wifi\+Bonjour = {\ttfamily NULL},  }\item[{Ota\+Status\+Proc}]{status\+Proc = {\ttfamily NULL} }\end{DoxyParamCaption})}
+
+If returns true, skip the rest of your own setup. Uses the ee you passed, or hijacks the whole Eeprom if you didnt. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/Om\+Ota.\+h\item 
+src/Om\+Ota.\+cpp\end{DoxyCompactItemize}

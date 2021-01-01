@@ -1,0 +1,49 @@
+\hypertarget{class_om_base64_stream}{}\doxysection{Om\+Base64\+Stream Class Reference}
+\label{class_om_base64_stream}\index{OmBase64Stream@{OmBase64Stream}}
+
+
+Given a consumer, feed in bytes and put out base64 bytes. call done() to emit the last bit of padding. Adapted liberally from $\ast$ \href{http://web.mit.edu/freebsd/head/contrib/wpa/src/utils/base64.c}{\texttt{ http\+://web.\+mit.\+edu/freebsd/head/contrib/wpa/src/utils/base64.\+c}}.  
+
+
+
+
+{\ttfamily \#include $<$Om\+Bmp.\+h$>$}
+
+Inheritance diagram for Om\+Base64\+Stream\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_om_base64_stream}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_om_base64_stream_a445a7ef5da628542676f90d61cd78d3a}\label{class_om_base64_stream_a445a7ef5da628542676f90d61cd78d3a}} 
+{\bfseries Om\+Base64\+Stream} (\mbox{\hyperlink{class_om_i_byte_stream}{Om\+I\+Byte\+Stream}} $\ast$consumer)
+\item 
+\mbox{\Hypertarget{class_om_base64_stream_a2162d548f09ba3829fc6d65e4f74f9df}\label{class_om_base64_stream_a2162d548f09ba3829fc6d65e4f74f9df}} 
+bool \mbox{\hyperlink{class_om_base64_stream_a2162d548f09ba3829fc6d65e4f74f9df}{put}} (uint8\+\_\+t ch) override
+\begin{DoxyCompactList}\small\item\em emit a single byte, overridden by any implementation \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_om_base64_stream_a56692fb84907495d9482281d4d79cfba}\label{class_om_base64_stream_a56692fb84907495d9482281d4d79cfba}} 
+bool {\bfseries done} () override
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_om_base64_stream_a76852a4cb094d29f5b120b4887218387}\label{class_om_base64_stream_a76852a4cb094d29f5b120b4887218387}} 
+\mbox{\hyperlink{class_om_i_byte_stream}{Om\+I\+Byte\+Stream}} $\ast$ {\bfseries consumer} = N\+U\+LL
+\item 
+\mbox{\Hypertarget{class_om_base64_stream_ae22ddaa5d0fa549689dce7db02475f83}\label{class_om_base64_stream_ae22ddaa5d0fa549689dce7db02475f83}} 
+uint8\+\_\+t {\bfseries buf} \mbox{[}3\mbox{]}
+\item 
+\mbox{\Hypertarget{class_om_base64_stream_a8b9494c0ff7c42cb1d03da1a0cbc0021}\label{class_om_base64_stream_a8b9494c0ff7c42cb1d03da1a0cbc0021}} 
+int {\bfseries buf\+Size} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Given a consumer, feed in bytes and put out base64 bytes. call done() to emit the last bit of padding. Adapted liberally from $\ast$ \href{http://web.mit.edu/freebsd/head/contrib/wpa/src/utils/base64.c}{\texttt{ http\+://web.\+mit.\+edu/freebsd/head/contrib/wpa/src/utils/base64.\+c}}. 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/Om\+Bmp.\+h\end{DoxyCompactItemize}

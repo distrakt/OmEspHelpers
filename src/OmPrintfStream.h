@@ -25,7 +25,7 @@ public:
     bool putF(const char *fmt, ...);
     bool putVF(const char *fmt, VA_LIST_ARG);
 
-    /*! @abstract like sprintf, but to an OmIByteStream */
+    /*! @brief like sprintf, but to an OmIByteStream */
     static bool putF(OmIByteStream *consumer, const char *fmt, ...);
     static bool putVF(OmIByteStream *consumer, const char *fmt, VA_LIST_ARG);
 };

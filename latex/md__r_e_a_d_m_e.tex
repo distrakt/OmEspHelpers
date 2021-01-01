@@ -1,0 +1,142 @@
+This library presents a very simple A\+PI for bringing up a web interface on your {\itshape Arduino E\+S\+P8266} project. In its present form it is appropriate for\+:
+
+
+\begin{DoxyItemize}
+\item Quick experiments
+\item Beginner exercises
+\item Simple projects and products
+\end{DoxyItemize}
+
+If you need total flexibility and total control, this library may be too limited for you. But if you\textquotesingle{}d like to be freed from infinite choice, and get something running this afternoon, I think you\textquotesingle{}ll be delighted!\hypertarget{md__r_e_a_d_m_e_autotoc_md1}{}\doxysection{Features}\label{md__r_e_a_d_m_e_autotoc_md1}
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{2}{|X[-1]}|}
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Name }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Description  }\\\cline{1-2}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Name }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Description  }\\\cline{1-2}
+\endhead
+Non blocking &A single tick() function does everything, never blocking  \\\cline{1-2}
+Fast start &Your main loop can be running other things, even while the initial wifi connection is established  \\\cline{1-2}
+Connection management &Connection will be retried if lost  \\\cline{1-2}
+Multiple Wi\+Fi credentials &You can specify a list of different Wi\+Fi credentials to try  \\\cline{1-2}
+Basic UI elements &With one line of code each, you can add buttons, sliders, or page links  \\\cline{1-2}
+Custom H\+T\+ML &You can write a callback to provide custom content, such as a status page  \\\cline{1-2}
+No stored pages &To simplify development, you write only your sketch, no handwritten H\+T\+ML pages  \\\cline{1-2}
+Mobile ready &The generated H\+T\+ML works well on your phone, and is fine on desktop.  \\\cline{1-2}
+L\+ED status &By default, L\+E\+D\+\_\+\+B\+U\+I\+L\+T\+IN blinks out the last part of the device\textquotesingle{}s IP address. Also flashes for network activity  \\\cline{1-2}
+Easy to use &The example below shows how a dozen lines of code or less brings up your IoT user interface in a browser  \\\cline{1-2}
+Conformant H\+T\+ML &The generated H\+T\+ML passes \href{https://validator.w3.org/}{\texttt{ https\+://validator.\+w3.\+org/}}  \\\cline{1-2}
+\end{longtabu}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md2}{}\doxysection{More Features 2020}\label{md__r_e_a_d_m_e_autotoc_md2}
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{2}{|X[-1]}|}
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Name }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Description  }\\\cline{1-2}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Name }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Description  }\\\cline{1-2}
+\endhead
+Time Service &Use N\+TP for time service  \\\cline{1-2}
+O\+TA Update &With three additional lines of code, add \char`\"{}\+Over The Air\char`\"{} update to your device. No need for U\+SB cable after the first upload!  \\\cline{1-2}
+Unlimited H\+T\+ML size &Page results can be generated at request time for any size (great for X\+ML data dumps)  \\\cline{1-2}
+Bitmaps &You can generate uncompressed B\+MP images in you page request handler (1-\/ or 24-\/bit)  \\\cline{1-2}
+More UI Elements &Time, Color, Menu Select, and Checkboxes are supported  \\\cline{1-2}
+U\+RL Handler &If you really want, you can still intercept specific U\+R\+Ls and return whatever you like.  \\\cline{1-2}
+E\+S\+P32 Support &Finally!  \\\cline{1-2}
+\end{longtabu}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md3}{}\doxysection{Platforms}\label{md__r_e_a_d_m_e_autotoc_md3}
+Tested on Wemos D1 Mini, and several versions of E\+S\+P32 boards.\hypertarget{md__r_e_a_d_m_e_autotoc_md4}{}\doxysection{Installation}\label{md__r_e_a_d_m_e_autotoc_md4}
+
+\begin{DoxyEnumerate}
+\item Download and expand the zip file of this project.
+\end{DoxyEnumerate}
+\begin{DoxyEnumerate}
+\item Rename the folder from Om\+Esp\+Helpers-\/master to just Om\+Esp\+Helpers.
+\end{DoxyEnumerate}
+\begin{DoxyEnumerate}
+\item Put Om\+Esp\+Helpers/ into the Arduino libraries folder, like {\ttfamily .../\+Documents/\+Arduino/libraries/\+Om\+Esp\+Helpers/} on Mac.
+\end{DoxyEnumerate}
+\begin{DoxyEnumerate}
+\item You can read the headers and source in {\ttfamily .../\+Om\+Esp\+Helpers/src}.
+\end{DoxyEnumerate}\hypertarget{md__r_e_a_d_m_e_autotoc_md5}{}\doxysection{Example}\label{md__r_e_a_d_m_e_autotoc_md5}
+Here is an example sketch which brings up a Web Controlled L\+ED.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\#include "OmEspHelpers.h"}
+\DoxyCodeLine{\#include "OmWebServer.h"}
+\DoxyCodeLine{\#include <ESP8266WebServer.h>}
+\DoxyCodeLine{\#include <ESP8266WiFi.h>}
+\DoxyCodeLine{}
+\DoxyCodeLine{void buttonProc(const char *page, const char *item, int value, int ref1, void *ref2)}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{    digitalWrite(LED\_BUILTIN, ref1);}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{void buttonMomentaryProc(const char *page, const char *item, int value, int ref1, void *ref2)}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{    digitalWrite(LED\_BUILTIN, !value);}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{OmWebPages p;}
+\DoxyCodeLine{OmWebServer s;}
+\DoxyCodeLine{}
+\DoxyCodeLine{void setup() }
+\DoxyCodeLine{\{}
+\DoxyCodeLine{  Serial.begin(115200);}
+\DoxyCodeLine{  Serial.print("\(\backslash\)n\(\backslash\)nHello OmEspHelpers\(\backslash\)n");}
+\DoxyCodeLine{}
+\DoxyCodeLine{  p.beginPage("Home");}
+\DoxyCodeLine{  p.addButton("ledOn", buttonProc, 0); // ref=0}
+\DoxyCodeLine{  p.addButton("ledOff", buttonProc, 1); // ref=1}
+\DoxyCodeLine{  p.addButton("ledMomentary", buttonMomentaryProc);}
+\DoxyCodeLine{  }
+\DoxyCodeLine{  s.addWifi("omino warp", ""); // my home network, no password}
+\DoxyCodeLine{  // or setup an AP instead}
+\DoxyCodeLine{  // s.setAccessPoint(WIFI\_AP\_SSID, WIFI\_AP\_PASSWORD);}
+\DoxyCodeLine{  s.setHandler(p);}
+\DoxyCodeLine{  s.setStatusLedPin(-\/1); // tell the server not to blink the led; this app uses it.}
+\DoxyCodeLine{}
+\DoxyCodeLine{  pinMode(LED\_BUILTIN, OUTPUT);}
+\DoxyCodeLine{  digitalWrite(LED\_BUILTIN, 1); // off}
+\DoxyCodeLine{\}}
+\DoxyCodeLine{}
+\DoxyCodeLine{void loop() }
+\DoxyCodeLine{\{}
+\DoxyCodeLine{  s.tick(); // in turn calls OmWebPages}
+\DoxyCodeLine{  delay(20);}
+\DoxyCodeLine{\}}
+\end{DoxyCode}
+
+
+When running the sketch, I see the following on the serial monitor\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{0x2d}
+\DoxyCodeLine{csum 0x2d}
+\DoxyCodeLine{v7b32e6ad}
+\DoxyCodeLine{\string~ld}
+\DoxyCodeLine{}
+\DoxyCodeLine{}
+\DoxyCodeLine{Hello OmEspHelpers}
+\DoxyCodeLine{  15.53 (*) OmWebServer.80: On port 80}
+\DoxyCodeLine{  15.62 (*) OmWebServer.80: Attempting to join wifi network "omino warp"}
+\DoxyCodeLine{  22.34 (*) OmWebServer.80: Joined wifi network "omino warp"}
+\DoxyCodeLine{  22.34 (*) OmWebServer.80: Accessible at http://10.0.3.126:80}
+\DoxyCodeLine{  28.40 (*) OmWebServer.80: Request from 114.3.0.10:60383 /}
+\DoxyCodeLine{  28.40 (*) OmWebServer.80: Replying 2277 bytes}
+\DoxyCodeLine{  30.55 (*) OmWebServer.80: Request from 114.3.0.10:60386 /Home}
+\DoxyCodeLine{  30.57 (*) OmWebServer.80: Replying 2977 bytes}
+\DoxyCodeLine{  ...and so on ...}
+\end{DoxyCode}
+
+
+And when I point my browser at \href{http://10.0.3.126:80}{\texttt{ http\+://10.\+0.\+3.\+126\+:80}} I see a simple UI\+:
+
+ 

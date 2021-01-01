@@ -27,7 +27,7 @@ public:
     int offset = 0;
 };
 
-/*! @abstract Wrapper for eeprom, lets you structure fields and check signature */
+/*! @brief Wrapper for eeprom, lets you structure fields and check signature */
 class OmEeprom
 {
 public:

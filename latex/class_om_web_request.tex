@@ -1,0 +1,46 @@
+\hypertarget{class_om_web_request}{}\doxysection{Om\+Web\+Request Class Reference}
+\label{class_om_web_request}\index{OmWebRequest@{OmWebRequest}}
+
+
+{\ttfamily \#include $<$Om\+Web\+Request.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_om_web_request_ad4c35c9dc5f104971fb95e7d5a9719ed}\label{class_om_web_request_ad4c35c9dc5f104971fb95e7d5a9719ed}} 
+void {\bfseries init} (const char $\ast$request)
+\item 
+\mbox{\Hypertarget{class_om_web_request_a41a47c4b4145d730123c4daccb0a32f2}\label{class_om_web_request_a41a47c4b4145d730123c4daccb0a32f2}} 
+const char $\ast$ {\bfseries get\+Value} (const char $\ast$key)
+\item 
+\mbox{\Hypertarget{class_om_web_request_a23cca743f70812aa2b2059ee20d1294a}\label{class_om_web_request_a23cca743f70812aa2b2059ee20d1294a}} 
+int {\bfseries get\+Query\+Count} ()
+\item 
+\mbox{\Hypertarget{class_om_web_request_a26753cb0459da0054eedcc8529dad131}\label{class_om_web_request_a26753cb0459da0054eedcc8529dad131}} 
+const char $\ast$ {\bfseries get\+Query\+Key} (int ix)
+\item 
+\mbox{\Hypertarget{class_om_web_request_a673c0f2149c434cce46933861ad7c375}\label{class_om_web_request_a673c0f2149c434cce46933861ad7c375}} 
+const char $\ast$ {\bfseries get\+Query\+Value} (int ix)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_om_web_request_acd169913e5f344e2533c993ea5df9179}\label{class_om_web_request_acd169913e5f344e2533c993ea5df9179}} 
+const char $\ast$ {\bfseries path}
+\item 
+\mbox{\Hypertarget{class_om_web_request_abef9167a941776662f590ffec98e59ab}\label{class_om_web_request_abef9167a941776662f590ffec98e59ab}} 
+std\+::vector$<$ char $\ast$ $>$ {\bfseries query}
+\item 
+\mbox{\Hypertarget{class_om_web_request_a95de72acadcb14c1421fd8de1e616c7c}\label{class_om_web_request_a95de72acadcb14c1421fd8de1e616c7c}} 
+char {\bfseries request} \mbox{[}k\+Request\+Length\+Max+1\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+This class is only about the part of a Uri past the host \& port. Just the path \& query.
+
+Doesn\textquotesingle{}t handle hex coding or quotes and stuff. 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/Om\+Web\+Request.\+h\end{DoxyCompactItemize}

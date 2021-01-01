@@ -12,10 +12,12 @@
 #ifdef ARDUINO_ARCH_ESP8266
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <DNSServer.h>
 #endif
 #ifdef ARDUINO_ARCH_ESP32
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <DNSServer.h>
 #endif
 
 typedef enum
@@ -75,6 +77,7 @@ public:
     String accessPointPassword;
     long long accessPointStartMillis = 0; // set when we fire up the ap, and any client access to prolong it.
 
+    DNSServer *dns = NULL;
     void printf(const char *format, ...)
     {
         if(!this->doSerial)  // serial disabled?
@@ -364,6 +367,8 @@ int OmWebServer::pollForClient()
     // action snappier to the user. So here, we just shut that down. Chrome spots it,
     // and initiates a fresh connection _WHEN the TIME comes_.
 
+    if(this->p->dns)
+        this->p->dns->processNextRequest();
     int result = 0;
 #define CLIENT_DEADLINE 300
     if(this->p->client || this->p->client.connected())
@@ -555,6 +560,11 @@ int OmWebServer::tick()
                 WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_AP_STADISCONNECTED);
 #endif
                 IPAddress apIp = WiFi.softAPIP();
+                if(!this->p->dns)
+                    this->p->dns = new DNSServer();
+                if(this->p->dns)
+                    this->p->dns->start(53, "*", apIp); // port 53
+
                 this->p->printf("Access Point IP Address: %s\n", omIpToString(apIp, true));
                 // instantiate right here, now.
                 this->p->wifiServer = new WiFiServer(this->p->port);
