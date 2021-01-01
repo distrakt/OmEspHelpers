@@ -1,3 +1,0 @@
-# OmEspHelpers #
-
-[Documentation](masterTOC.html)
