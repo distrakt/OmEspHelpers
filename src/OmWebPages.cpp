@@ -977,8 +977,18 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
     w.addContentF("systemSdk:   %s/%d\n", system_get_sdk_version(), system_get_boot_version());
 #endif
 #ifdef ARDUINO_ARCH_ESP32
-    w.addContentF("freeBytes:   %d\n", esp_get_free_heap_size());
-    w.addContentF("chipId:      '32 @%d\n", F_CPU / 1000000);
+    // ESP32 has 3 kinds of memory: 32bit (used for heap), 8bit (also used for DMA), and PSRAM
+    // For the first 2, we show the total amount available, and the largest block available
+    w.addContentF("32-bit Mem:  %d\n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    w.addContentF("32-bit Block:%d\n", heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+    w.addContentF("8b/DMA Mem:  %d\n", heap_caps_get_free_size(MALLOC_CAP_DMA));
+    w.addContentF("8b/DMA Block:%d\n", heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
+#ifdef BOARD_HAS_PSRAM
+    // https://thingpulse.com/esp32-how-to-use-psram/
+    w.addContentF("PSRAM used:  %d\n", ESP.getPsramSize() - ESP.getFreePsram());
+    w.addContentF("PSRAM free:  %d\n", ESP.getFreePsram());
+#endif
+    w.addContentF("chipId:      ESP32 @%d\n", F_CPU / 1000000);
 #endif
 #ifdef NOT_ARDUINO
     w.addContentF("what:        Not Arduino\n");
