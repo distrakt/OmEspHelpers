@@ -7,19 +7,27 @@
 
 #include "OmWebPages.h"
 #include "OmLog.h"
+#include "OmEeprom.h"
+
+#ifdef NOT_ARDUINO
+#include "EepromTesting.h"
+#endif
+
 #ifndef NOT_ARDUINO
 #include "Arduino.h"
-//extern "C" {
+#include "OmNtp.h"
+
 #ifdef ARDUINO_ARCH_ESP8266
 #include "user_interface.h" // system_free_space and others.
 #include "ESP8266WiFi.h"
 #endif
+
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal.h"
 #include "esp_system.h"
 #include "WiFi.h"
 #endif
-//}
+
 #endif
 
 // with flexible procs and interfaces, parameters are often optionally used.
@@ -31,6 +39,7 @@ class PageItem
 {
 public:
     const char *name = "";
+    const char *url = "_";
     char id[6]; // name is the user-facing name. id is a unique label like i0 or i22.
     const char *pageLink = "";
     int ref1 = 0;
@@ -38,11 +47,11 @@ public:
     int value = 0;
     bool visible = true;
     
-    virtual void render(OmXmlWriter &w, Page *inPage) = 0;
+    virtual void render(OmXmlWriter &w, Page *inPage, bool inBox = true) = 0;
     virtual bool doAction(Page *fromPage) = 0;
     void setValue(int value) { this->value = value; }
 
-    virtual void renderStatusey(OmXmlWriter &w) {};
+    virtual void renderStatusey(OmXmlWriter &w)=0;// {};
 
     OmWebPageItem item;
     PageItem() : item(this)
@@ -54,6 +63,43 @@ public:
     {
         return;
     }
+
+protected:
+    void maybeBox1Start(OmXmlWriter &w, bool inBox)
+    {
+        if(inBox)
+        {
+            w.beginElement("div", "class", "box1");
+            w.addContent(this->name);
+        }
+        else
+            w.beginElement("div");
+    }
+    void maybeBox1End(OmXmlWriter &w, bool inBox)
+    {
+//        if(inBox)
+        {
+            w.endElement("div");
+        }
+    }
+
+    void rejiggerUrl(const char * &urlInOut, const char * &maybeUrlBaseOut)
+    {
+        // Some page items support going to a new URL on action.
+        // this shared code helps set it up, in two parts, base & url
+        if(urlInOut == NULL) // we allow '' to mean reload same page
+            urlInOut = "_";
+        else
+        {
+            // handle % to mean ip address up front
+            if(urlInOut[0] == '%')
+            {
+                urlInOut += 1;
+                maybeUrlBaseOut = OmWebPages::httpBase;
+            }
+        }
+    }
+
 };
 
 OmWebPageItem::OmWebPageItem(PageItem *privateItem)
@@ -112,7 +158,13 @@ public:
     }
 
     const char *name = "";
+    bool listed;
     char id[6]; // simple mechanical id like p0 or p23.
+    /// this proc gets called before renderind. It could rebuild the whole page "just in case" for example.
+    OmWebActionProc arrivalAction = NULL;
+    int arrivalActionRef1 = 0;
+    void *arrivalActionRef2 = 0;
+
     std::vector<PageItem *> items;
     
     // set to false to inhibit this pages's default header or footer.
@@ -130,14 +182,15 @@ class PageLink : public PageItem
 {
 public:
     OmWebActionProc proc = 0;
+    bool mini = false;
     
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
         w.beginElement("a");
         w.addAttributeUrlF("href", "/%s?page=%s&item=%s", this->pageLink, inPage->id, this->id);
         
         w.beginElement("div");
-        w.addAttribute("class", "box1");
+        w.addAttribute("class", this->mini ? "box2" : "box1");
         w.addContentF("%s", this->name);
         w.endElement();
         
@@ -156,6 +209,11 @@ public:
             return false;
         }
     }
+
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "pageLink");
+    }
 };
 
 /// Show a visual slider, which call back on changes
@@ -166,7 +224,7 @@ public:
     int min = 0;
     int max = 100;
     
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
         /*
          <form>
@@ -177,8 +235,7 @@ public:
          <input id="id3" type="range" onchange="aChange(this, this.value)" />
          </form>
          */
-        w.beginElement("div", "class", "box1");
-        w.addContent(this->name);
+        this->maybeBox1Start(w, inBox);
         w.beginElement("form");
         w.beginElement("span", "class", "sliderValue");
         w.addAttribute("style", "margin-bottom:15px");
@@ -197,7 +254,7 @@ public:
             w.addAttribute("max", this->max);
         w.endElement(); // input
         w.endElement(); // form
-        w.endElement(); // div
+        this->maybeBox1End(w, inBox);
     }
     
     bool doAction(Page *fromPage) override
@@ -236,7 +293,7 @@ public:
         return t;
     }
 
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
         /*
          <form>
@@ -247,8 +304,7 @@ public:
          <input id="id3" type="range" onchange="aChange(this, this.value)" />
          </form>
          */
-        w.beginElement("div", "class", "box1");
-        w.addContent(this->name);
+        this->maybeBox1Start(w, inBox);
         w.beginElement("form");
 //        w.beginElement("span", "class", "sliderValue");
 //        w.addAttributeF("id", "%s_%s_value", inPage->name, this->name);
@@ -266,7 +322,7 @@ public:
         w.addAttributeF("onchange", "timeChange(this,'%s', '%s')", inPage->id, this->id);
         w.endElement();
         w.endElement(); // form
-        w.endElement(); // div
+        this->maybeBox1End(w, inBox);
     }
 
     bool doAction(Page *fromPage) override
@@ -294,6 +350,7 @@ public:
     OmWebActionProc proc = 0;
     std::vector<const char*> optionNames;
     std::vector<int> optionNumbers;
+    const char *url = "_";
 
     void addOption(const char *optionName, int optionNumber)
     {
@@ -301,7 +358,7 @@ public:
         this->optionNumbers.push_back(optionNumber);
     }
 
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
         /*
          <select id="" onchange="">
@@ -310,11 +367,14 @@ public:
          </select>
 
          */
-        w.beginElement("div", "class", "box1");
-        w.addContent(this->name);
+        const char *maybeUrlBase = "";
+        const char *url = this->url;
+        this->rejiggerUrl(url, maybeUrlBase);
+
+        this->maybeBox1Start(w, inBox);
         w.beginElement("select");
         w.addAttributeF("id", "%s_%s", inPage->id, this->id);
-        w.addAttributeF("onchange", "selectChange(this,'%s', '%s')", inPage->id, this->id);
+        w.addAttributeF("onchange", "selectChange(this,'%s', '%s', '%s%s')", inPage->id, this->id, maybeUrlBase, url);
 
         bool foundSelectedOption = false;
         for(unsigned int ix = 0; ix < this->optionNumbers.size(); ix++)
@@ -346,7 +406,7 @@ public:
         w.addAttributeF("id", "%s_%s_value", inPage->id, this->id);
         w.addContentF(" %d", this->value);
         w.endElement(); // span
-        w.endElement(); // div
+        this->maybeBox1End(w, inBox);
     }
 
     bool doAction(Page *fromPage) override
@@ -360,6 +420,11 @@ public:
         {
             return false;
         }
+    }
+
+    void renderStatusey(OmXmlWriter &w) override
+    {
+        w.addAttribute("kind", "pageSelect");
     }
 };
 
@@ -386,7 +451,7 @@ public:
         this->checkboxNames.push_back(checkboxName);
     }
 
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
         /*
          <select id="" onchange="">
@@ -395,8 +460,7 @@ public:
          </select>
 
          */
-        w.beginElement("div", "class", "box1");
-        w.addContent(this->name);
+        this->maybeBox1Start(w, inBox);
 
         // list of all the checkboxes in this group, like "controls_components_checkbox_1,controls_components_checkbox_2,controls_components_checkbox_3"
         String checkboxesAll;
@@ -431,7 +495,7 @@ public:
         w.addAttributeF("id", "%s_%s_value", inPage->id, this->id);
         w.addContentF(" %d", this->value);
         w.endElement(); // span
-        w.endElement(); // div
+        this->maybeBox1End(w, inBox);
     }
 
     bool doAction(Page *fromPage) override
@@ -465,7 +529,7 @@ class PageColor : public PageItem
 public:
     OmWebActionProc proc = 0;
 
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
         /*
          <form>
@@ -476,8 +540,7 @@ public:
          <input id="id3" type="range" onchange="aChange(this, this.value)" />
          </form>
          */
-        w.beginElement("div", "class", "box1");
-        w.addContent(this->name);
+        this->maybeBox1Start(w, inBox);
         w.beginElement("form");
         w.beginElement("input", "type", "color");
         w.addAttributeF("value", "#%06x", this->value);
@@ -493,7 +556,7 @@ public:
         w.endElement(); // span
 
         w.endElement(); // form
-        w.endElement(); // div
+        this->maybeBox1End(w, inBox);
     }
 
     bool doAction(Page *fromPage) override
@@ -522,19 +585,20 @@ public:
     OmWebActionProc proc = 0;
     const char *url = "_";
 
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
+        const char *maybeUrlBase = "";
         const char *url = this->url;
-        if(url == NULL)
-            url = "_";
+        this->rejiggerUrl(url, maybeUrlBase);
+
         w.beginElement("button");
         w.addAttribute("class", "button");
         // We send both mouse and touch events; the event handler may then suppress mouse events
-        w.addAttributeF("onmousedown", "button(this,'%s', '%s', 1, '%s')", inPage->id, this->id, url);
-        w.addAttributeF("onmouseup", "button(this,'%s', '%s', 0, '%s')", inPage->id, this->id, url);
+        w.addAttributeF("onmousedown", "button(this,'%s', '%s', 1, '%s%s')", inPage->id, this->id, maybeUrlBase, url);
+        w.addAttributeF("onmouseup", "button(this,'%s', '%s', 0, '%s%s')", inPage->id, this->id, maybeUrlBase, url);
         // w3c validator says having mousedown AND touchstart is an error. But it makes it all work. So. :-/
-        w.addAttributeF("ontouchstart", "button(this,'%s', '%s', 3, '%s')", inPage->id, this->id, url);
-        w.addAttributeF("ontouchend", "button(this,'%s', '%s', 2, '%s')", inPage->id, this->id, url);
+        w.addAttributeF("ontouchstart", "button(this,'%s', '%s', 3, '%s%s')", inPage->id, this->id, maybeUrlBase, url);
+        w.addAttributeF("ontouchend", "button(this,'%s', '%s', 2, '%s%s')", inPage->id, this->id, maybeUrlBase, url);
         w.addContentF("%s", this->name);
         w.endElement();
     }
@@ -564,9 +628,9 @@ public:
 class HtmlItem : public PageItem
 {
 public:
-    HtmlProc proc;
+    OmHtmlProc proc;
     
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
         UNUSED(inPage);
         if(this->proc)
@@ -588,7 +652,7 @@ class StaticHtmlItem : public PageItem
 public:
     String staticHtml;
 
-    void render(OmXmlWriter &w, Page *inPage) override
+    void render(OmXmlWriter &w, Page *inPage, bool inBox) override
     {
         UNUSED(inPage);
         w.addRawContent(this->staticHtml.c_str());
@@ -624,6 +688,7 @@ void defaultFooterHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
 
 OmWebPages::OmWebPages()
 {
+    OmWebPages::p = this; // reference to last one made. really, the only one.
     this->__date__ = __DATE__;
     this->__time__ = __TIME__;
     this->__file__ = NULL;
@@ -676,29 +741,53 @@ void OmWebPages::setBuildDateAndTime(const char *date, const char *time, const c
     }
 }
 
-void OmWebPages::beginPage(const char *pageName)
+void *OmWebPages::beginPage(const char *pageName, bool listed)
 {
     // if a page with this name already exists, clear out its contents so
     // you can replace them with new elements.
+    void *oldPage = this->currentPage;
     for(Page *aPage : this->pages)
     {
         if(omStringEqual(pageName, aPage->name))
         {
             aPage->clearPage();
             this->currentPage = aPage;
-            return;
+            aPage->listed = listed;
+            goto goHome;
         }
     }
 
     // It is indeed a brand new page. Let's create it.
-    Page *page = new Page();
-    page->name = pageName;
-    sprintf(page->id, "p%d", (int)this->pages.size());
-    this->pages.push_back(page);
-    this->currentPage = page;
-    if(!this->homePage)
-        this->homePage = page;
+    {
+        Page *page = new Page();
+        page->name = pageName;
+        page->listed = listed;
+        sprintf(page->id, "p%d", (int)this->pages.size());
+        this->pages.push_back(page);
+        this->currentPage = page;
+        if(!this->homePage)
+            this->homePage = page;
+    }
+
+goHome:
+    return oldPage;
 }
+
+void OmWebPages::setPageArrivalAction(OmWebActionProc arrivalAction, int ref1, void *ref2)
+{
+    if(this->currentPage)
+    {
+        this->currentPage->arrivalAction = arrivalAction;
+        this->currentPage->arrivalActionRef1 = ref1;
+        this->currentPage->arrivalActionRef2 = ref2;
+    }
+}
+
+void OmWebPages::resumePage(void *previousPage)
+{
+    this->currentPage = (Page *)previousPage;
+}
+
 
 void OmWebPages::allowHeader(bool allowHeader)
 {
@@ -710,12 +799,12 @@ void OmWebPages::allowFooter(bool allowFooter)
     this->currentPage->allowFooter = allowFooter;
 }
 
-void OmWebPages::setHeaderProc(HtmlProc headerProc)
+void OmWebPages::setHeaderProc(OmHtmlProc headerProc)
 {
     this->headerProc = headerProc;
 }
 
-void OmWebPages::setFooterProc(HtmlProc footerProc)
+void OmWebPages::setFooterProc(OmHtmlProc footerProc)
 {
     this->footerProc = footerProc;
 }
@@ -728,6 +817,15 @@ void OmWebPages::addPageLink(const char *pageLink, OmWebActionProc proc, int ref
     b->proc = proc;
     b->ref1 = ref1;
     b->ref2 = ref2;
+    this->currentPage->addItem(b);
+}
+
+void OmWebPages::addPageLinkMini(const char *pageLink, const char *label)
+{
+    PageLink *b = new PageLink();
+    b->name = label;
+    b->pageLink = pageLink;
+    b->mini = true;
     this->currentPage->addItem(b);
 }
 
@@ -795,8 +893,14 @@ OmWebPageItem *OmWebPages::addColor(const char *itemName, OmWebActionProc proc, 
 
 OmWebPageItem *OmWebPages::addSelect(const char *itemName, OmWebActionProc proc, int value, int ref1, void *ref2)
 {
+    return this->addSelectWithLink(itemName, NULL, proc, value, ref1, ref2);
+}
+
+OmWebPageItem *OmWebPages::addSelectWithLink(const char *itemName, const char *url, OmWebActionProc proc, int value, int ref1, void *ref2)
+{
     PageSelect *p = new PageSelect();
     p->name = itemName;
+    p->url = url;
     p->value = value;
     p->ref1 = ref1;
     p->ref2 = ref2;
@@ -839,7 +943,7 @@ void OmWebPages::addCheckboxX(const char *checkboxName, int value)
     }
 }
 
-void OmWebPages::addHtml(HtmlProc proc, int ref1, void *ref2)
+void OmWebPages::addHtml(OmHtmlProc proc, int ref1, void *ref2)
 {
     HtmlItem *h = new HtmlItem();
     h->name = "_";
@@ -908,6 +1012,32 @@ void OmWebPages::renderStatusXml(OmXmlWriter &w)
 
     w.endElement("status");
 
+    if(OmEepromClass::active)
+    {
+        w.beginElement("eeprom");
+        w.addAttribute("signature", OmEeprom.getSignature());
+        w.addAttribute("dataSize", OmEeprom.getDataSize());
+        int k = OmEeprom.getFieldCount();
+        w.addAttribute("fieldCount", k);
+        for(int ix = 0; ix < k; ix++)
+        {
+            w.beginElement("field");
+            w.addAttribute("ix", ix);
+            const char *fieldName = OmEeprom.getFieldName(ix);
+            w.addAttribute("name", fieldName);
+            w.addAttribute("length", OmEeprom.getFieldLength(ix));
+            int fieldType = OmEeprom.getFieldType(ix);
+            w.addAttribute("type", fieldType);
+            // TODO could have flags for dont show, like wifi password i guess 2020
+            if(fieldType == OME_TYPE_STRING)
+                w.addAttribute("value", OmEeprom.getString(fieldName).c_str());
+            else if(fieldType == OME_TYPE_INT)
+                w.addAttribute("value", OmEeprom.getInt(fieldName));
+            w.endElement();
+        }
+        w.endElement();
+    }
+
     for(auto page : this->pages)
     {
         w.beginElement("page");
@@ -973,15 +1103,17 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
 #endif
 #ifdef ARDUINO_ARCH_ESP8266
     w.addContentF("freeBytes:   %d\n", system_get_free_heap_size());
-    w.addContentF("chipId:      %08x '8266 @%d\n", system_get_chip_id(), F_CPU / 1000000);
+    w.addContentF("chipId:      %08x '8266 @%d\n", omGetChipId(), F_CPU / 1000000);
     w.addContentF("systemSdk:   %s/%d\n", system_get_sdk_version(), system_get_boot_version());
 #endif
 #ifdef ARDUINO_ARCH_ESP32
+    // todo: try uint64_t chipid = ESP.getEfuseMac(); as per https://arduino.stackexchange.com/questions/58677/get-esp32-chip-id-into-a-string-variable-arduino-c-newbie-here
     w.addContentF("freeBytes:   %d\n", esp_get_free_heap_size());
-    w.addContentF("chipId:      '32 @%d\n", F_CPU / 1000000);
+    w.addContentF("chipId:      %08x '32 @%d\n", omGetChipId(), F_CPU / 1000000);
 #endif
 #ifdef NOT_ARDUINO
     w.addContentF("what:        Not Arduino\n");
+    w.addContentF("chipId:      %08x 'test\n", omGetChipId());
 #endif
 #ifndef NOT_ARDUINO
     if(this->ri)
@@ -1010,10 +1142,35 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
         else
             w.addContentF(    "wifiNetwork: %s\n", ri->ssid);
     }
+    if(OmNtp::ntp())
+    {
+//        unsigned int ntpRequestsSent = 0;
+//        unsigned int ntpRequestsAnswered = 0;
+//        long ntpRequestMostRecentMilli = -1;
+//        unsigned int timeUrlRequestsSent = 0;
+//        unsigned int timeUrlRequestsAnswered = 0;
+//        long timeUrlRequestMostRecentMillis = 0;
+
+        OmNtp::OmNtpStats stats = OmNtp::ntp()->stats;
+
+        long now = millis();
+        float ntpAgo = (now - stats.ntpRequestMostRecentMillis) / 1000.0;
+        float timeUrlAgo = (now - stats.timeUrlRequestMostRecentMillis) / 1000.0;
+
+        w.addContentF(    "ntpRequests: %d/%d %.1fs ago\n", stats.ntpRequestsAnswered, stats.ntpRequestsSent, ntpAgo);
+        w.addContentF(    "timeUrlReqs: %d/%d %.1fs ago\n", stats.timeUrlRequestsAnswered, stats.timeUrlRequestsSent, timeUrlAgo);
+        if(stats.ntpServerIp)
+            w.addContentF(    "ntpServer:   %s\n", omIpToString(stats.ntpServerIp,1));
+        w.addContentF(    "time:        %s\n", OmNtp::ntp()->getTimeString());
+    }
 #endif
+    if(OmEepromClass::active)
+    {
+        w.addContentF("eeprom:      %s/%db\n", OmEeprom.getSignature(), OmEeprom.getDataSize());
+    }
     w.addContentF("built:       %s %s\n", this->__date__, this->__time__);
     if(this->__file__)
-        w.addContentF(" file:       %s\n", this->__file__);
+        w.addContentF("file:%s\n", this->__file__);
 
     w.endElement();
 }
@@ -1023,7 +1180,8 @@ void OmWebPages::renderDefaultFooter(OmXmlWriter &w)
     w.addElement("hr");
     for(auto page : this->pages)
     {
-        this->renderPageButton(w, page->name);
+        if(page->listed)
+            this->renderPageButton(w, page->name);
     }
 }
 
@@ -1063,7 +1221,16 @@ void OmWebPages::renderStyle(OmXmlWriter &w, int bgColor)
                  )JS"
     );
 
+
+//    calc(var(--width) / 10)
+
+//    calc(var(--parentWidth) - 90px)
+
+
+    // dvb2021-08-09 pardon these experiments with trying to size the button predictable smaller than its container, for nested groups.
+//        w.addContentF(".box1,.box2,.button{font-size:30px; width: 90%% ; margin:10px; "
     w.addContentF(".box1,.box2,.button{font-size:30px; width:420px ; margin:10px; "
+//    w.addContentF(".box1,.box2,.button{font-size:30px; width:calc(100%%-150px) ; margin:10px; "
                  "padding:10px ; background:%s;"
                  "border-top-left-radius:15px;"
                  "border-bottom-right-radius:15px;"
@@ -1072,7 +1239,8 @@ void OmWebPages::renderStyle(OmXmlWriter &w, int bgColor)
                  , colorItem
                  );
     // Not sure why I need to add more width to the button, to make it match
-    w.addContent(".button{border:2px solid black;width:440px;display:block}\n");
+//    w.addContent(".button{border:2px solid black;width:440px;display:block}\n");
+    w.addContent(".button{border:2px solid black;width:calc(100% - 30px);display:block}\n");
     w.addContent(".box2{display:inline-block;"
                  "font-size:22px; padding:7px;"
                  "width:auto;overflow:hidden ; "
@@ -1201,7 +1369,7 @@ R"JS(
         oReq.send();
     }
 
-    function selectChange(select, page, selectName)
+    function selectChange(select, page, selectName, url)
     {
         var textId = select.id + '_value';
         var text = document.getElementById(textId);
@@ -1211,6 +1379,18 @@ R"JS(
         oReq.addEventListener('load', reqListener);
         oReq.open('GET', '/_control?page=' + page + '&item=' + selectName + '&value=' + select.value);
         oReq.send();
+
+        if(url == '')
+        {
+            document.body.style.backgroundColor = "#f0f0f0";
+            setTimeout(function(){ window.location.reload(); }, 500);
+        }
+        else if(url != '_')
+        {
+            document.body.style.backgroundColor = "#C0C0C0";
+            setTimeout(function() { window.location.assign(url); }, 700);
+        }
+
     }
 
     function checkboxChange(page, checkboxGroupName, allCheckBoxnames)
@@ -1246,39 +1426,40 @@ R"JS(
                   * So we use touchstart/end also, and disable mousedown/up
                   * if we see touch events. (So we dont get both pairs.)
                   */
-    w.addContentF(R"(
-                  var quellMouse = 0;
-                  function button(button, page, buttonName, v, url)
-                  {
-                      if(v>=2)quellMouse=1;  // ignore mouses after first touch event
-                      if(quellMouse&&v<2)return; // ignore the mouse.
-                      v&=1; // mousedown/up is 1,0 and touchstart/end is 3,2
-                      button.style.backgroundColor=v?'%s':'%s';
-                      var oReq = new XMLHttpRequest();
-                      oReq.addEventListener('load', reqListener);
-                      oReq.open('GET', '/_control?page=' + page + '&item=' + buttonName + '&value=' + v);
-                      oReq.send();
-                      if(url == '')
-                          setTimeout(function(){ window.location.reload(); }, 500);
-                      else if(url != '_')
-                      {
-                          document.body.style.backgroundColor = "#C0C0C0";
-                          setTimeout(function() { window.location.assign(url); }, 700);
-                      }
-                  }
-                  )",
-                 colorButtonPress, colorItem
+    w.addContentF(
+  R"JS(
+  var quellMouse = 0;
+  function button(button, page, buttonName, v, url)
+  {
+      if(v>=2)quellMouse=1;  // ignore mouses after first touch event
+      if(quellMouse&&v<2)return; // ignore the mouse.
+      v&=1; // mousedown/up is 1,0 and touchstart/end is 3,2
+      button.style.backgroundColor=v?'%s':'%s';
+      var oReq = new XMLHttpRequest();
+      oReq.addEventListener('load', reqListener);
+      oReq.open('GET', '/_control?page=' + page + '&item=' + buttonName + '&value=' + v);
+      oReq.send();
+      if(url == '')
+          setTimeout(function(){ window.location.reload(); }, 500);
+      else if(url != '_')
+      {
+          document.body.style.backgroundColor = "#C0C0C0";
+          setTimeout(function() { window.location.assign(url); }, 700);
+      }
+  }
+  )JS",
+    colorButtonPress, colorItem
                  );
     w.endElement();
 }
 
 /// Render the beginning of the page, leaving <body> element open and ready.
-void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle, int bgColor)
+void OmWebPages::renderPageBeginning(OmXmlWriter &w, const char *pageTitle, int bgColor, OmWebPages *p)
 {
-    OmWebPages::renderPageBeginningWithRedirect(w, NULL, 0, pageTitle, bgColor);
+    OmWebPages::renderPageBeginningWithRedirect(w, NULL, 0, pageTitle, bgColor, p);
 }
 
-void OmWebPages::renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle, int bgColor)
+void OmWebPages::renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle, int bgColor, OmWebPages *p)
 {
     w.addContentRaw("<!DOCTYPE html>\n");
     w.beginElement("html");
@@ -1307,8 +1488,20 @@ void OmWebPages::renderPageBeginningWithRedirect(OmXmlWriter &w, const char *red
     w.addAttribute("name", "viewport");
     w.addAttribute("content", "width=480");
     w.endElement();
-    
-    w.addElement("title", pageTitle);
+
+    // fact is, I'd really rather see the name of the device (or ip id)
+    // than particular page title.
+    if(p && p->ri && p->ri->bonjourName)
+    {
+        const char *bonjourName = p->ri->bonjourName;
+        if(bonjourName[0] && (bonjourName[1] == '-'))
+           bonjourName += 2; // if name is x-something, just something
+        w.addElementF("title", "%d %s", p->ri->serverIp[0], bonjourName);
+    }
+    else if(p && p->ri)
+        w.addElementF("title", "%d", p->ri->serverIp[0]);
+    else
+        w.addElement("title", pageTitle);
 
     OmWebPages::renderStyle(w, bgColor);
     OmWebPages::renderScript(w);
@@ -1361,7 +1554,7 @@ void OmWebPages::renderPageButton(OmXmlWriter &w, const char *pageName)
     const char *defaultHttpBase = "/";
     const char *httpBase = defaultHttpBase;
 #ifndef NOT_ARDUINO
-    httpBase = this->httpBase;
+//    httpBase = OmWebPages::httpBase;
 #endif
     w.addAttributeUrlF("href", "%s%s", httpBase, pageName);
     w.beginElement("span", "class", "box2");
@@ -1425,7 +1618,7 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
     Page *page = 0;
 
     // make our httpBase up to date
-    sprintf(httpBase, "http://%s:%d/",omIpToString(requestInfo->serverIp), requestInfo->serverPort);
+    sprintf(OmWebPages::httpBase, "http://%s:%d/",omIpToString(requestInfo->serverIp), requestInfo->serverPort);
 
     this->wp = &w;
     this->ri = requestInfo;
@@ -1434,6 +1627,7 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
     static OmWebRequest request;
     request.init(pathAndQuery);
     const char *requestPath = request.path;
+    this->rq = &request; // here during the url handling callback
 
     if(this->pages.size() == 0)
     {
@@ -1507,21 +1701,23 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
 
     if(!page && this->urlHandler.handlerProc)
     {
+        // oh we have a global url handler, ok.
         this->urlHandler.handlerProc(w, request, urlHandler.ref1, urlHandler.ref2);
         goto goHome;
     }
 
     if(!page)
-    {
-        OMLOG("no page found, just do top menu");
-        this->renderTopMenu(w);
-        result = false;
-        goto goHome;
-    }
+        page = this->homePage;
+
+    // +-----------------------------------
+    // | Page Rendering Happens Now.
+
+    if(page->arrivalAction)
+        page->arrivalAction(page->name, NULL, 0, page->arrivalActionRef1, page->arrivalActionRef2);
 
     // Do a page, starting with the response headers.
     this->renderHttpResponseHeader("text/html", 200);
-    this->renderPageBeginning(w, page->name, this->bgColor);
+    this->renderPageBeginning(w, page->name, this->bgColor, this);
     w.addContent("\n");
     
     if(this->headerProc && page->allowHeader)
@@ -1536,16 +1732,25 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
         w.endElement();
         w.addContent("\n");
     }
-    
+
+#define tempTestGroupEmAll  false
+
+    if(tempTestGroupEmAll)
+    {
+        w.beginElement("div", "class", "box1");
+        w.addContent("grouped");
+    }
     for(PageItem *b : page->items)
     {
         if(b->visible)
         {
-            b->render(w, page);
+            b->render(w, page, !tempTestGroupEmAll);
             w.addContent("\n");
         }
     }
-    
+    if(tempTestGroupEmAll)
+        w.endElement("div");
+
     if(this->footerProc && page->allowFooter)
         this->footerProc(w, 0, this);
     
@@ -1613,5 +1818,121 @@ int OmWebPages::getValue(const char *pageName, const char *itemName)
     PageItem *pi = this->findPageItem(pageName, itemName);
     if(pi)
         result = pi->value;
+    return result;
+}
+
+// helper method for the Form
+static void addTextInput(OmXmlWriter &w, const char *label, const char *name, String &value)
+{
+    if(label == NULL)
+        label = name;
+    w.beginElement("tr");
+    w.beginElement("td");
+    w.addContentF("%s: ", label);
+    w.endElement("td");
+    w.beginElement("td");
+    w.beginElement("input");
+    w.addAttribute("type", "text");
+    w.addAttribute("name", name);
+    w.addAttributeF("value", value.c_str());
+    w.endElement();
+    w.endElement("td");
+    w.endElement("tr");
+//    w.addElement("br");
+}
+
+
+
+void OmWebPages::addEepromConfigForm(OmHtmlProc eepromConfigCallbackProc, int eepromFieldGroup)
+{
+    // handler for the text edit entries
+#define EE_CONFIG_PAGE "_configSubmit"
+
+    this->eepromConfigCallbackProc = eepromConfigCallbackProc;
+
+    // THIS is the unlisted page that handles form submissions, including the restart button.
+    void *oldPage = OmWebPages::p->beginPage(EE_CONFIG_PAGE, false); // unlisted page
+    OmWebPages::p->addHtml([] (OmXmlWriter & w, int ref1, void *ref2)
+                           {
+                               OmWebRequest &r = *OmWebPages::p->rq;
+
+
+                               // render the web page result...
+                               w.beginElement("pre");
+                               int k = r.getQueryCount();
+                               for (int ix = 0; ix < k; ix++)
+                               {
+                                   auto queryKey = r.getQueryKey(ix);
+                                   auto queryValue = r.getQueryValue(ix);
+                                   OmEeprom.setString(queryKey, queryValue);
+                                   w.addContentF("%3d. %s : %s / %s\n", ix + 1, queryKey, queryValue, OmEeprom.getString(queryKey).c_str());
+                               }
+                               int eepromCommitResult = OmEeprom.commit();
+                               w.addContentF("%d bytes changed\n", eepromCommitResult);
+                               String bonjourName = OmEeprom.getString("otaBonjourName");
+                               if(bonjourName.length())
+                                   w.addContentF("→http://%s.local\n", bonjourName.c_str());
+                               w.endElement();
+
+                               if(OmWebPages::p->eepromConfigCallbackProc)
+                                   OmWebPages::p->eepromConfigCallbackProc(w, ref1, ref2);
+                           });
+    OmWebPages::p->addButtonWithLink("restart with new config", "%/", [] (const char *page, const char *item, int value, int ref1, void *ref2)
+                                     {
+                                         ESP.restart();
+                                     });
+    OmWebPages::p->addButtonWithLink("don't restart", "%/");
+
+    // THIS is where we now add the visible form entry page content.
+    OmWebPages::p->resumePage(oldPage);
+
+    OmWebPages::p->addHtml([](OmXmlWriter & w, int ref1, void *ref2)
+                           {
+                               // ref1 is which group to display
+
+                               w.addElement("hr");
+                               w.beginElement("form");
+                               w.addAttribute("action", "/" EE_CONFIG_PAGE);
+                               int k = OmEeprom.getFieldCount();
+                               w.beginElement("table");
+                               for(int ix = 0; ix < k; ix++)
+                               {
+                                   OmEepromField *f = OmEeprom.findField(ix);
+                                   int fieldGroup = f->omeFlags & 0x00ff;
+                                   if(fieldGroup == ref1)
+                                   {
+                                       String value = OmEeprom.getString(f->name);
+                                       addTextInput(w, f->label, f->name, value);
+                                   }
+                               }
+                               w.endElement("table");
+                               w.addElement("br");
+                               w.beginElement("input");
+                               w.addAttribute("type", "submit");
+                               w.addAttribute("value", "Submit");
+                               w.endElement();
+                               w.endElement();
+                           }, eepromFieldGroup);
+
+}
+
+char OmWebPages::httpBase[32]; // string of form "http://10.0.1.1/" that can prefix all internal links, esp since OTA update doesnt play well with bonjour addresses
+
+OmWebPages *OmWebPages::p; // most recently instanteated OmWebPages (usually the one and only)
+
+
+
+uint32_t omGetChipId()
+{
+    uint32_t result;
+#ifdef NOT_ARDUINO
+    result = 0x655321;
+#endif
+#ifdef ARDUINO_ARCH_ESP8266
+    result = system_get_chip_id();
+#endif
+#ifdef ARDUINO_ARCH_ESP32
+    result = ESP.getEfuseMac();
+#endif
     return result;
 }

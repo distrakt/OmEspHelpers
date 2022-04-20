@@ -49,6 +49,7 @@
 #include "OmXmlWriter.h"
 #include "OmUtil.h"
 #include "OmWebRequest.h"
+#include "OmEeprom.h"
 
 // just for IPAddress :-/
 #ifdef ARDUINO_ARCH_ESP8266
@@ -71,7 +72,7 @@ typedef unsigned char IPAddress[4];
 typedef void (* OmWebActionProc)(const char *pageName, const char *parameterName, int value, int ref1, void *ref2);
 
 /*! @brief A callback you provide for rendering custom HTML onto a web page. */
-typedef void (* HtmlProc)(OmXmlWriter &writer, int ref1, void *ref2);
+typedef void (* OmHtmlProc)(OmXmlWriter &writer, int ref1, void *ref2);
 
 /*! @brief A callback you provide for an arbitrary Url Handler */
 typedef void (* OmUrlHandlerProc)(OmXmlWriter &writer, OmWebRequest &request, int ref1, void *ref2);
@@ -138,10 +139,19 @@ public:
         If a page of this name already exists, it is reset to empty. You can rebuild the page
         from scratch, if for example the set of controls needs to change.
      */
-    void beginPage(const char *pageName);
+    void *beginPage(const char *pageName, bool listed = true);
+
+    void resumePage(void *previousPage);
+
+    /// assigns an arrival action proc to the page currently being built. It could, for example,
+    /// rebuild the whole page every time it is rendered, just in case.
+    void setPageArrivalAction(OmWebActionProc arrivalAction, int ref1, void *ref2);
 
     /*! @brief Add a link on the current page that goes to another page. Also can call an action proc. */
     void addPageLink(const char *pageLink, OmWebActionProc proc = NULL, int ref1 = 0, void *ref2 = 0);
+
+    /*! @brief Add a small-button style link to a page */
+    void addPageLinkMini(const char *pageLink, const char *label);
 
     /*! @brief Add a button on the current page. Calls the action proc with value 1 for press, 0 for release. */
     OmWebPageItem *addButton(const char *buttonName, OmWebActionProc proc = NULL, int ref1 = 0, void *ref2 = 0);
@@ -164,6 +174,8 @@ public:
     OmWebPageItem *addColor(const char *itemName, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
 
     /*! @brief Begin a menu select control. Choices are added with addSelectOption() */
+    OmWebPageItem *addSelectWithLink(const char *itemName, const char *url, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
+    /*! @brief Begin a menu select control. Choices are added with addSelectOption() */
     OmWebPageItem *addSelect(const char *itemName, OmWebActionProc proc = NULL, int value = 0, int ref1 = 0, void *ref2 = 0);
     /*! @brief Add one selectable item, and its integer value if selected */
     void addSelectOption(const char *optionName, int optionValue);
@@ -178,7 +190,7 @@ public:
 
 
     /*! @brief Add a block of custom dynamic HTML to the page. Your proc is called each time the page is requested. */
-    void addHtml(HtmlProc proc, int ref1 = 0, void *ref2 = 0);
+    void addHtml(OmHtmlProc proc, int ref1 = 0, void *ref2 = 0);
 
     /*! @brief Add a string of static prebuilt HTML. Included in web page unchecked, you're on your own! */
     void addStaticHtml(String staticHtml);
@@ -221,14 +233,18 @@ public:
     void renderPageButton(OmXmlWriter &w, const char *pageName);
 
     // +----------------------------------
+    // | Eeprom Config Helperizer
+    void addEepromConfigForm(OmHtmlProc callbackProc, int eepromFieldGroup);
+
+    // +----------------------------------
     // | Global Settings
     // | Setup calls that affect all pages
     // |
 
     /*! @brief Override the default header html */
-    void setHeaderProc(HtmlProc headerProc);
+    void setHeaderProc(OmHtmlProc headerProc);
     /*! @brief Override the default footer html */
-    void setFooterProc(HtmlProc footerProc);
+    void setFooterProc(OmHtmlProc footerProc);
 
     /*! @brief set the background color for next web request, 0xRRGGBB */
     void setBgColor(int bgColor); // like 0xff0000 red, 0xffffff white.
@@ -258,15 +274,16 @@ public:
     void renderHttpResponseHeader(const char *contentType, int response);
 
     /*! @brief in a OmUrlHandlerProc Render the beginning of the page, leaving <body> element open and ready. */
-    static void renderPageBeginning(OmXmlWriter &w, const char *pageTitle = "", int bgColor = 0xffffff);
+    static void renderPageBeginning(OmXmlWriter &w, const char *pageTitle = "", int bgColor = 0xffffff, OmWebPages *p = NULL);
     void renderDefaultFooter(OmXmlWriter &w); // builtin footer nav buttons
 
-    static void renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle = "", int bgColor = 0xffffff);
+    static void renderPageBeginningWithRedirect(OmXmlWriter &w, const char *redirectUrl, int redirectSeconds, const char *pageTitle = "", int bgColor = 0xffffff, OmWebPages *p = NULL);
 
     void setValue(const char *pageName, const char *itemName, int value);
     int getValue(const char *pageName, const char *itemName);
 
-    char httpBase[32]; // string of form "http://10.0.1.1/" that can prefix all internal links, esp since OTA update doesnt play well with bonjour addresses
+    /*! @brief Most recent server ip. Nastily global. */
+    static char httpBase[32]; // string of form "http://10.0.1.1/" that can prefix all internal links, esp since OTA update doesnt play well with bonjour addresses
 private:
 
     /*! inner private class */
@@ -299,8 +316,8 @@ private:
     PageItem *currentSelect = 0; // addSelectOption applies to the most recently begun select.
     PageItem *currentCheckboxes = 0; // addCheckboxX adds another checkbox here
     
-    HtmlProc headerProc = NULL;
-    HtmlProc footerProc = NULL;
+    OmHtmlProc headerProc = NULL;
+    OmHtmlProc footerProc = NULL;
     
     OmXmlWriter *wp = 0; // writer pointer during callbacks.
 
@@ -309,10 +326,16 @@ private:
     const char *__date__;
     const char *__time__;
     const char *__file__;
+
+    OmHtmlProc eepromConfigCallbackProc = NULL;
 public:
     OmRequestInfo *ri = 0; // request metadate during callbacks
+    OmWebRequest *rq = 0; // query vars if any, available during callbacks
+    static OmWebPages *p; // most recently instanteated OmWebPages (usually the one and only)
 };
 
 extern OmWebPages OmWebPagesSingleton;
+
+uint32_t omGetChipId();
 
 #endif /* defined(__OmWebPages__) */

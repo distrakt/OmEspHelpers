@@ -75,6 +75,7 @@ public:
     bool accessPoint = false; // set to true if an access point is actually running.
     String accessPointSsid;
     String accessPointPassword;
+    int accessPointSecondsUntilReboot = 0;
     long long accessPointStartMillis = 0; // set when we fire up the ap, and any client access to prolong it.
 
     DNSServer *dns = NULL;
@@ -110,6 +111,7 @@ OmWebServer::OmWebServer(int port)
 
     recentOmWebServer = this;
     recentOmWebServerPrivates = this->p;
+    OmWebServer::s = this;
 }
 
 OmWebServer::~OmWebServer()
@@ -119,11 +121,16 @@ OmWebServer::~OmWebServer()
     recentOmWebServerPrivates = 0;
 }
 
-void OmWebServer::setAccessPoint(String ssid, String password)
+void OmWebServer::setAccessPoint(String ssid, String password, int secondsUntilReboot)
 {
-    this->p->accessPoint = false; // will be set true if running
-    this->p->accessPointSsid = ssid;
-    this->p->accessPointPassword = password;
+    if(ssid.length())
+    {
+        // pass "" for ssid, and then it ONLY sets secondsUntilReboot.
+        this->p->accessPoint = false; // will be set true if running
+        this->p->accessPointSsid = ssid;
+        this->p->accessPointPassword = password;
+    }
+    this->p->accessPointSecondsUntilReboot = secondsUntilReboot;
 }
 
 
@@ -140,8 +147,11 @@ String OmWebServer::getBonjourName()
 /// add to the list of known networks to try.
 void OmWebServer::addWifi(String ssid, String password)
 {
-    this->p->ssids.push_back(ssid);
-    this->p->passwords.push_back(password);
+    if(ssid.length()) // quietly ignore an empty unnamed ssid.
+    {
+        this->p->ssids.push_back(ssid);
+        this->p->passwords.push_back(password);
+    }
 }
 
 /// empty the wifis list.
@@ -205,6 +215,7 @@ void OmWebServer::initiateConnectionTry(String wifi, String password)
     
     WiFi.persistent(false);
     WiFi.begin(wifi.c_str(), password.c_str());
+    this->p->printf("ssid:%s[%d] password:%s[%d]\n", wifi.c_str(), (int)wifi.length(), password.c_str(), (int)password.length());
     this->p->ssid = wifi;
 
     this->p->state = OWS_CONNECTING_TO_WIFI;
@@ -338,7 +349,7 @@ static String urlFromRequest(String r)
  } wl_status_t;
 */
 
-const char *statusString(int wifiStatus)
+const char *OmWebServer::statusString(int wifiStatus)
 {
 #define SSCASE(_x) if(wifiStatus == _x) return #_x;
     SSCASE(WL_NO_SHIELD);
@@ -386,7 +397,6 @@ int OmWebServer::pollForClient()
         this->p->client = this->p->wifiServer->available();
         if(this->p->client.connected())
         {
-            // Serial.printf("\nNEW CLIENT\n"); // excrutiating verbose
             this->p->request = "";
             this->p->clientStartMillis = this->p->uptimeMillis;
             this->p->accessPointStartMillis = this->p->clientStartMillis; // keep the AP mode alive longer, it is in use.
@@ -431,17 +441,16 @@ void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 int OmWebServer::tick()
 {
     int result = 0;
-    {
-        long nowMillis = millis();
-        long deltaMillis = nowMillis - this->p->lastMillis;;
-        this->p->uptimeMillis += deltaMillis;
-        this->p->lastMillis = nowMillis;
-    }
 
+    long nowMillis = millis();
+    long deltaMillis = nowMillis - this->p->lastMillis;;
+    this->p->uptimeMillis += deltaMillis;
+    this->p->lastMillis = nowMillis;
+    
     this->p->ticks++;
     this->p->b.tick();
     if(this->p->ntp)
-        this->p->ntp->tick(this->p->lastMillis);
+        this->p->ntp->tick(deltaMillis);
 #if ARDUINO_ARCH_ESP8266
     if(this->p->bonjourName.length())
         MDNS.update();
@@ -451,7 +460,7 @@ int OmWebServer::tick()
     if(wifiStatus != this->p->lastWifiStatus)
     {
         this->p->lastWifiStatus = wifiStatus;
-        this->p->printf("Wifi status became: %d:%s\n", wifiStatus, statusString(wifiStatus));
+        this->p->printf("Wifi status became: %d:%s\n", wifiStatus, OmWebServer::statusString(wifiStatus));
     }
     
     switch(this->p->state)
@@ -472,8 +481,6 @@ int OmWebServer::tick()
             auto wifiStatus = WiFi.status();
             if(wifiStatus == WL_CONNECTED)
             {
-                // hooray, we've achieved connection.
-                this->maybeStatusCallback(false, false, true); // tell the world.
                 // got ssid
                 // maybe bonjour?
                 if(this->p->bonjourName.length() > 0)
@@ -498,6 +505,8 @@ int OmWebServer::tick()
 
                 // Enter the Running State. This is good.
                 this->p->state = OWS_RUNNING;
+                // hooray, we've achieved connection.
+                this->maybeStatusCallback(false, false, true); // tell the world.
             }
             else
             {
@@ -505,7 +514,8 @@ int OmWebServer::tick()
                 // We only care about WL_CONNECTED vs every other status. The sequence of status
                 // changes isn't rigorously followed the same between ESP32 and EPS8266, so we do timeout instead.
                 int howLong = this->p->uptimeMillis - this->p->wifiTryStartedMillis;
-                if(howLong > 7000)
+#define OWS_WIFI_TRY_TIMEOUT 16000
+                if(howLong > OWS_WIFI_TRY_TIMEOUT)
                 {
                     this->maybeStatusCallback(false, true, false);
                     // connection failed, try next known network
@@ -588,19 +598,20 @@ int OmWebServer::tick()
         case OWS_AP_RUNNING:
         {
             result += this->pollForClient();
-            // TODO: if no connections for a while, go back to OWS_BEGIN to reestablish station mode.
+            // if no connections for a while, and a reboot time given, reboot.
             // this for an appliance that's connected, then the wifi fails a while, but comes back.
             // no need to lapse into permanant AP mode.
 
-#define AP_TIMEOUT_SECONDS 120
-            // after AP_TIMEOUT_SECONDS, go ahead and retry the available wifis, if any.
-            if(this->p->ssids.size())
+            // after accessPointSecondsUntilReboot, go ahead and retry the available wifis, if any.
+            // ACCESS POINT TIMEOUT
+            if(this->p->accessPointSecondsUntilReboot > 0)
             {
                 int secondsSinceLastClientAccess = (this->p->uptimeMillis - this->p->accessPointStartMillis) / 1000;
-                if(secondsSinceLastClientAccess > AP_TIMEOUT_SECONDS)
+                if(secondsSinceLastClientAccess > this->p->accessPointSecondsUntilReboot)
                 {
-                    this->p->printf("Access point %s unused for %d seconds; retrying wifis", this->p->accessPointSsid.c_str(), AP_TIMEOUT_SECONDS);
-                    this->p->state = OWS_BEGIN;
+                    this->p->printf("Access point %s unused for %d seconds; rebooting", this->p->accessPointSsid.c_str(), secondsSinceLastClientAccess);
+                    delay(300);
+                    ESP.restart();
                 }
             }
             break;
@@ -744,7 +755,7 @@ int OmWebServer::getPort()
     return this->p->port;
 }
 
-unsigned int OmWebServer::getIp()
+uint32_t OmWebServer::getIp()
 {
     IPAddress localIp = WiFi.localIP();
     if(this->p->accessPoint)
@@ -756,18 +767,6 @@ unsigned int OmWebServer::getIp()
     unsigned int localIpInt = (localIp[0] << 24) | (localIp[1] << 16) | (localIp[2] << 8) | (localIp[3] << 0);
     return localIpInt;
 }
-
-//int OmWebServer::getClientPort()
-//{
-//    return this->p->webServer->client().remotePort();
-//}
-
-//unsigned int OmWebServer::getClientIp()
-//{
-//    IPAddress clientIp = this->p->webServer->client().remoteIP();
-//    unsigned int clientIpInt = (clientIp[0] << 24) | (clientIp[1] << 16) | (clientIp[2] << 8) | (clientIp[3] << 0);
-//    return clientIpInt;
-//}
 
 unsigned int OmWebServer::getTicks()
 {
@@ -795,3 +794,4 @@ long long OmWebServer::uptimeMillis()
     return this->p->uptimeMillis;
 }
 
+OmWebServer *OmWebServer::s = NULL; // most recent created. Really, the only one.

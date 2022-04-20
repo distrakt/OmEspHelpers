@@ -40,10 +40,11 @@ OmWebPages p;
 
 void setup() 
 {
+  Serial.begin(115200);
+  Serial.printf("\n\n");
   if(OmOta.setup(WIFI_SSID, WIFI_PASSWORD)) return;
 
   // if OmOta didnt return, we're in regular mode.
-  Serial.begin(115200);
   pinMode(led, OUTPUT);
   pinMode(button, INPUT_PULLUP);
 
@@ -58,7 +59,7 @@ void setup()
 
   p.addStaticHtml("<pre>Hello, World!</pre>"); // you could change this, to prove you got a new version.
   
-  OmOta.addUpdateControl(p);
+  OmOta.addUpdateControl();
 }
 
 void loop()

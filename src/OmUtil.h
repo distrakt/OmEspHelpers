@@ -16,9 +16,10 @@ bool omStringEqual(const char *s1, const char *s2, int maxLen = 100);
 const char *omTime(long long millis, int secondsDecimals = 0);
 /*! @brief string pointer to int, very forgiving
     results undefined for nonnumeric characters
-    reads 0xAbCd hex also.
+    reads 0xAbCd hex also. Can also specify a sort of fixed point,
+    so omStringToInt("1.234", 3) gives 1234.
  */
-int omStringToInt(const char *s);
+int omStringToInt(const char *s, int fixedDecimals = 0);
 /*! @brief ip to string
  flip=true for ESP library IPAddress object.);
  */

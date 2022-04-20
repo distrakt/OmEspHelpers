@@ -12,11 +12,147 @@
 #ifdef ARDUINO_ARCH_ESP32
 #include <HTTPClient.h>
 #endif
+
+#include "math.h"
+#include "stdio.h"
+
+#define MINUTES_PER_NTP_POLL 10 // minutes between ntp queries, randomized a little
+#define NTP_PER_TIMEURL_POLL 10 // every N ntp polls, also do a timeurl poll
+
+// fumod is handy. fumod(-5,20) is 15.
+float fumod(float a, float b)
+{
+    if(b == 0)
+        return a;
+
+    float x = floor(a / b);
+    x *= b;
+    float r = a - x;
+    return r;
+}
+
+#define SECONDS_IN_HOUR (60 * 60)
+#define SECONDS_IN_DAY (60 * 60 * 24)
+
+OmNtpSyncRecord::OmNtpSyncRecord(unsigned long nowMs, int hour, int minute, int second)
+{
+    this->acquired = true;
+    this->acquiredMs = nowMs;
+    this->reportedSeconds = hour * 3600 + minute * 60 + second;
+}
+
+float OmNtpSyncRecord::getSwd(unsigned long nowMs, int zone)
+{
+    float result = -1;
+    if(this->acquired)
+    {
+        result = (nowMs - this->acquiredMs) / 1000.0 + this->reportedSeconds + zone * 3600.0;
+        result = fumod(result, SECONDS_IN_DAY);
+    }
+    return result;
+}
+
+double OmNtpSyncRecord::getU(unsigned long nowMs)
+{
+    double result = -1;
+    if(this->acquired)
+    {
+        result = (nowMs - this->acquiredMs) / 1000.0 + this->reportedSeconds;
+    }
+    return result;
+}
+
+
+float omGetSecondsWithinDay(unsigned long nowMs, OmNtpSyncRecord &utcTime, OmNtpSyncRecord &localTime, int zone)
+{
+    // here we can have either or both of utcTime (from ntp) and localTime (from a simple server).
+    // we presume that ntp is more accurate, but localTime carries the correct hour.
+    // if local time is missing, we use the zone value and add it.
+    float utcSwd = utcTime.getSwd(nowMs, zone);
+    float localSwd = localTime.getSwd(nowMs); // localtime is presumed already in-zone.
+    if(utcSwd >= 0 && localSwd >= 0)
+    {
+        // trickiest case. we reconcile the two.
+        float utcSwh = fumod(utcSwd, SECONDS_IN_HOUR);
+        float localSwh = fumod(localSwd, SECONDS_IN_HOUR);
+        float correctionSeconds = utcSwh - localSwh; // can range (-SECONDS_IN_HOUR, +SECONDS_IN_HOUR)
+        // this is the tricky bit. Since we're taking the "hours" from local time, we
+        // do have to assume that the minutes are not more than a half hour wrong from each other.
+        // in practice it's always less than a second. but tricky things happen at hour crossings.
+        // SO, we ensure the correction is at most + or - a half of an hour.
+        if(correctionSeconds < -(SECONDS_IN_HOUR/2))
+            correctionSeconds += SECONDS_IN_HOUR;
+        else if(correctionSeconds > +(SECONDS_IN_HOUR/2))
+            correctionSeconds -= SECONDS_IN_HOUR;
+        localSwd += correctionSeconds;
+        localSwd = fumod(localSwd, SECONDS_IN_DAY);
+    }
+    else if(utcSwd >= 0)
+    {
+        // we have only the utc time (which has zone already added)
+        localSwd = utcSwd;
+    }
+    // else, either we have localSwd (yay) or we don't (boohoo) and it's -1.
+    return localSwd;
+}
+
+bool omGetHms(float secondsWithinDay, int &hourOut, int &minuteOut, float &secondOut)
+{
+    bool result;
+    if(secondsWithinDay < 0)
+    {
+        result = false;
+        hourOut = -1;
+        minuteOut = -1;
+        secondOut = -1;
+    }
+    else
+    {
+        result = true;
+        int secondsWithinDayI = floor(secondsWithinDay);
+        hourOut = secondsWithinDayI / SECONDS_IN_HOUR;
+        minuteOut = (secondsWithinDayI / 60) % 60;
+        secondOut = fumod(secondsWithinDay, 60);
+    }
+    return result;
+}
+
+bool omGetHms(float secondsWithinDay, int &hourOut, int &minuteOut, int &secondOut)
+{
+    float secondF;
+    bool result = omGetHms(secondsWithinDay, hourOut, minuteOut, secondF);
+    secondOut = secondF;
+    return result;
+}
+
+const char *omGetHmsString(float secondsWithinDay)
+{
+    int hour;
+    int minute;
+    int second;
+    bool got;
+    got = omGetHms(secondsWithinDay, hour, minute, second);
+    static char timeString[10];
+    if(got)
+        sprintf(timeString, "%02d:%02d:%02d", hour, minute, second);
+    else
+        sprintf(timeString, "--:--:--");
+    return timeString;
+}
+
+#ifndef NOT_ARDUINO
+// the actual class, including arduino-specific UDP and URL code.
+
 static const unsigned int kLocalPort = 2390;      // local port to listen for UDP packets
 //const char *kNtpServerName = "time.nist.gov";
-const char *kNtpServerName2 = "time.nist.gov";
-const char *kNtpServerName1 = "time.google.com";
-const char *kNtpServerName3 = "pool.ntp.org";
+
+const char *ntpServerNames[] =
+{
+    "time.nist.gov",
+    "time.google.com",
+    "pool.ntp.org"
+};
+#define ARRAYCOUNT(_a) (sizeof(_a) / sizeof(_a[0]))
 
 OmNtp::OmNtp()
 {
@@ -30,7 +166,7 @@ void OmNtp::setWifiAvailable(bool wifiAvailable)
     if(this->wifiAvailable)
     {
         this->countdownMilliseconds = 67;
-        this->setLocalTimeZone();
+        this->getLocalTime();
     }
 }
 
@@ -44,12 +180,17 @@ int OmNtp::getTimeZone()
     return this->timeZone;
 }
 
-void OmNtp::setLocalTimeZone()
+void OmNtp::getLocalTime()
 {
     if(this->timeUrl == 0)
+    {
+        this->localTime.acquired = false;
         return;
+    }
+
     if(!this->wifiAvailable)
         return;
+
     HTTPClient http;
     // NOTE. The SDK's header file marks http.begin(url) as deprecated. But the
     // recommended one with a WiFiClient argument crashes. So I don't use it. dvb 2020-05-30.
@@ -58,48 +199,63 @@ void OmNtp::setLocalTimeZone()
 //    WiFiClient client; // esp32 for this?
 //    http.begin(client, this->timeUrl);
 #endif
+
     http.begin(this->timeUrl);
+    unsigned long t0 = millis();
     int httpCode = http.GET();
+    unsigned long t1 = millis();
     OMLOG("%s: %d", this->timeUrl, httpCode);
+    this->stats.timeUrlRequestsSent++;
     if (httpCode == HTTP_CODE_OK)
     {
         String payload = http.getString();
+        int localHour = omStringToInt(payload.substring(11,13).c_str()); // String is not the same as std::string, by the way.
+        int localMinute = omStringToInt(payload.substring(14,16).c_str());
+        int localSecond = omStringToInt(payload.substring(17,19).c_str());
+
+        unsigned long now = t1 + ((t1 - t0) / 2); // account for round trip time
         OMLOG("got: %s", payload.c_str());
-        this->localHour = omStringToInt(payload.substring(11,13).c_str()); // String is not the same as std::string, by the way.
-        this->localMinute = omStringToInt(payload.substring(14,16).c_str());
-        this->localSecond = omStringToInt(payload.substring(17,19).c_str());
-        OMLOG("got hms: %d %d %d", this->localHour, this->localMinute, this->localSecond);
-        this->localTimeGot = true;
-        this->localTimeGotMillis = millis();
-        this->localTimeEverGot = true;
+        OMLOG("got hms: %d %d %d", localHour, localMinute, localSecond);
+        OMLOG("get roundrip: %ld", t1 - t0);
+
+        localHour = (localHour + this->timeUrlOffset) % 24; // NOTE: if we were getting the date, this could make the date wrong.
+        this->localTime = OmNtpSyncRecord(now, localHour, localMinute, localSecond);
+        this->stats.timeUrlRequestsAnswered++;
+        this->stats.timeUrlRequestMostRecentMillis = this->localTime.acquiredMs;
     }
     else
     {
         OMLOG("failed to get time from %s", this->timeUrl);
     }
-    this->localTimeRefetchCountdown = random(30,80);
+
+    // when to try again, as a fraction of ntp-attempts
+    // the overall interval is randomized, so no need to dither here
+    // the overall checks are around every 5-10 minutes; these are a divider of that.
+    // at 10, it will catch a time change within 2 hours. ish.
+    if(this->localTime.acquired)
+        this->localTimeRefetchCountdown = NTP_PER_TIMEURL_POLL; // we got it once, we can wait a long time before looking again
+    else
+        this->localTimeRefetchCountdown = 2; // we really want to have it when we can please.
 }
 
 bool OmNtp::getUTime(uint32_t &uTimeOut, int &uFracOut) // seconds of 1970-1-1, and milliseconds.
 {
-    uint32_t uTime = this->uTime;
+    unsigned long now = millis();
+    double uTimeF = this->ntpTime.getU(now);
+    uint32_t uTime = 0;
+    int uMillis = 0;
+    bool result = false;
 
-    if(uTime == 0)
+    if(uTimeF >= 0)
     {
-        // unknown.
-        uTimeOut = 0;
-        uFracOut = 0;
-        return false;
+        uTime = uTimeF;
+        uMillis = (uTimeF - uTime) * 1000;
+        result = true;
     }
 
-    // time since our last update...
-    int milliDelta = millis() - this->uTimeAcquiredMillis;
-    uTime += milliDelta / 1000;
-    int uFrac = milliDelta % 1000;
-
     uTimeOut = uTime;
-    uFracOut = uFrac;
-    return true;
+    uFracOut = uMillis;
+    return result;
 }
 
 uint32_t OmNtp::getUTime()
@@ -110,62 +266,25 @@ uint32_t OmNtp::getUTime()
     return uTime;
 }
 
-bool OmNtp::uTimeToTime(uint32_t uTime, int uFrac, int &hourOut, int &minuteOut, float &secondOut)
-{
-    uTime += this->timeZone * 3600; // bump the time zone.
-
-    int secondsWithinDay = uTime % 86400;
-    int hour = secondsWithinDay / 3600;
-    int secondsWithinHour = secondsWithinDay % 3600;
-    int minute = secondsWithinHour / 60;
-    int second = secondsWithinHour % 60;
-
-    hourOut = hour;
-    minuteOut = minute;
-    secondOut = second + uFrac / 1000.0;
-    return true;
-}
-
-
 bool OmNtp::getTime(int &hourOut, int &minuteOut, float &secondOut)
 {
-    uint32_t uTime;
-    int uFrac;
-    this->getUTime(uTime, uFrac);
-
-    if(uTime == 0)
-    {
-        // unknown.
-        hourOut = 0;
-        minuteOut = 0;
-        secondOut = 0;
-        return false;
-    }
-    this->uTimeToTime(uTime, uFrac, hourOut, minuteOut, secondOut);
-    return true;
+    float swd = omGetSecondsWithinDay(millis(), this->ntpTime, this->localTime, this->timeZone);
+    bool result = omGetHms(swd, hourOut, minuteOut, secondOut);
+    return result;
 }
 
 bool OmNtp::getTime(int &hourOut, int &minuteOut, int &secondOut)
 {
-    float secondF;
-    bool result = this->getTime(hourOut, minuteOut, secondF);
-    secondOut = (int)secondF;
+    float swd = omGetSecondsWithinDay(millis(), this->ntpTime, this->localTime, this->timeZone);
+    bool result = omGetHms(swd, hourOut, minuteOut, secondOut);
     return result;
 }
 
 const char *OmNtp::getTimeString()
 {
-    int hour;
-    int minute;
-    int second;
-    bool got;
-    got = this->getTime(hour, minute, second);
-    static char timeString[10];
-    if(got)
-        sprintf(timeString, "%02d:%02d:%02d", hour, minute, second);
-    else
-        sprintf(timeString, "--:--:--");
-    return timeString;
+    float swd = omGetSecondsWithinDay(millis(), this->ntpTime, this->localTime, this->timeZone);
+    const char *result = omGetHmsString(swd);
+    return result;
 }
 
 static int tryOneDnsLookup(const char *serverName, IPAddress &ipAddressOut)
@@ -180,13 +299,19 @@ static int tryOneDnsLookup(const char *serverName, IPAddress &ipAddressOut)
 void OmNtp::begin()
 {
     this->udp.begin(kLocalPort); // Yeah, so, this will fail if you instantiate two OmNtp's. Yup.
-    int did;
-    did = tryOneDnsLookup(kNtpServerName1, this->ntpServerIp);
-    if(!did)
-        did = tryOneDnsLookup(kNtpServerName2, this->ntpServerIp);
-    if(!did)
-        did = tryOneDnsLookup(kNtpServerName3, this->ntpServerIp);
-    
+    int did = false;
+
+    for(const char *ntpServerName : ntpServerNames)
+    {
+        did = tryOneDnsLookup(ntpServerName, this->ntpServerIp);
+        if(did)
+        {
+            this->stats.ntpServerName = ntpServerName;
+            this->stats.ntpServerIp = this->ntpServerIp;
+            break;
+        }
+    }
+
     if(did != 0)
     {
         this->begun = true;
@@ -197,13 +322,16 @@ void OmNtp::begin()
 
 void OmNtp::checkForPacket()
 {
-    int cb = udp.parsePacket();
+    int cb = this->udp.parsePacket();
     if (!cb)
     {
         return; // no incoming packet
     }
 
     unsigned long int now = millis();
+
+    this->stats.ntpRequestsAnswered++;
+    this->stats.ntpRequestMostRecentMillis = now;
 
     OMLOG("packet received, length=%d\n", cb);
     this->ntpRequestSent = 0;
@@ -221,48 +349,22 @@ void OmNtp::checkForPacket()
     OMLOG("Seconds since Jan 1 1900 = %d\n", secsSince1900);
     
     const unsigned long seventyYears = 2208988800UL;
-    unsigned long epoch = secsSince1900 - seventyYears; // classic unix epoch to jan 1 1970.
-    OMLOG("Unix time = %d\n", epoch);
+    unsigned long secsSince1970 = secsSince1900 - seventyYears; // relative to unix epoch jan 1 1970 UTC.
+    OMLOG("Unix time = %d\n", secsSince1970);
     
-    int secondsWithinDay = epoch % 86400;
+    int secondsWithinDay = secsSince1970 % 86400;
     int hour = secondsWithinDay / 3600;
     int secondsWithinHour = secondsWithinDay % 3600;
     int minute = secondsWithinHour / 60;
     int second = secondsWithinHour % 60;
     
     OMLOG(" UTC: %02d:%02d:%02d\n", hour, minute, second);
-    this->hour = hour;
-    this->minute = minute;
-    this->second = second;
-    this->uTime = epoch;
-    this->uTimeAcquiredMillis = now;
+
+    this->ntpTime = OmNtpSyncRecord(now, hour, minute, second);
     OMLOG("Time: %s\n", this->getTimeString());
-
-    // and, if we've recently got a CA time, derive the apparent time zone.
-#define TWELVEHOURSMILLIS (12*60*60*1000)
-    if(this->localTimeGot && ((now - this->localTimeGotMillis) < TWELVEHOURSMILLIS))
-    {
-        int uSeconds = this->hour * 3600 + this->minute * 60 + this->second;
-        int localSeconds = this->localHour * 3600 + this->localMinute * 60 + this->localSecond;
-        OMLOG("utc seconds: %d, ca seconds: %d", uSeconds, localSeconds);
-
-        localSeconds += (now - this->localTimeGotMillis) / 1000;
-        
-        int diffSeconds = localSeconds - uSeconds;
-        if(diffSeconds < 0)
-            diffSeconds += (24 * 3600);
-        int diffHours = (diffSeconds + 1800) / 3600;
-        diffHours = (diffHours + 36) % 24 - 12; // -12 to +12
-        this->timeZone = diffHours;
-        OMLOG("CA Time Zone appears to be: %d", this->timeZone);
-    }
-    else
-    {
-        this->localTimeGot = false;
-    }
 }
 
-void OmNtp::tick(long milliseconds)
+void OmNtp::tick(unsigned int deltaMillis)
 {
     if(!this->wifiAvailable)
         return;
@@ -270,15 +372,16 @@ void OmNtp::tick(long milliseconds)
     if(this->ntpRequestSent)
         this->checkForPacket();
 
-    long millisecondsDelta = milliseconds - this->lastMilliseconds;
-    this->lastMilliseconds = milliseconds;
-    this->countdownMilliseconds -= millisecondsDelta;
+    this->countdownMilliseconds -= deltaMillis;
 
     if(this->countdownMilliseconds > 0)
         return;
-    
-    this->countdownMilliseconds = this->intervalMilliseconds + random(100, 200) * 1000;
-    if(this->hour < 0)
+
+    // +--------------------------------
+    // | Coarsely we only do anything on the countdown.
+
+    this->countdownMilliseconds = MINUTES_PER_NTP_POLL * 60 * 1000 + random(0,90*1000); // jittered by some seconds.
+    if((!this->ntpTime.acquired) && (!this->localTime.acquired))
         this->countdownMilliseconds = random(10000, 20000); // more frequent til we get the first one.
 
     if(!this->begun)
@@ -287,8 +390,10 @@ void OmNtp::tick(long milliseconds)
     if(!this->begun)
         return;
 
-    // Interval expired. Time to send out another time query.
-    // We do this blindly, and poll for any incoming time packets.
+    // +-----------------------------
+    // | Interval expired. Time to send out another time query.
+    // | We do this blindly, and poll for any incoming time packets.
+    // | Send out a utp packet
     memset(packetBuffer, 0, kNtpPacketSize);
     // Initialize values needed to form NTP request
     // (see URL above for details on the packets)
@@ -308,14 +413,15 @@ void OmNtp::tick(long milliseconds)
     udp.write(packetBuffer, kNtpPacketSize);
     udp.endPacket();
     this->ntpRequestSent = 1;
+    this->stats.ntpRequestsSent++;
     OMLOG("sent ntp request\n", 1);
 
     // and try the local time zone again. In case of spring forward &c.
-    if(!this->localTimeEverGot || (this->localTimeRefetchCountdown-- == 0))
+    if((!this->localTime.acquired) || (this->localTimeRefetchCountdown-- <= 0))
     {
         if(this->timeUrl)
         {
-            this->setLocalTimeZone();
+            this->getLocalTime();
             OMLOG("refreshing local time zone %s", this->timeUrl);
         }
     }
@@ -331,8 +437,32 @@ OmNtp *OmNtp::ntp()
 void OmNtp::setTimeUrl(const char *timeUrl)
 {
     this->timeUrl = timeUrl;
+    this->stats.timeUrl = this->timeUrl;
     if(this->wifiAvailable)
-        this->setLocalTimeZone();
+        this->getLocalTime();
 }
 
+void OmNtp::setTimeUrlOffset(int hoursFromTimeUrl)
+{
+    this->timeUrlOffset = hoursFromTimeUrl;
+    this->getLocalTime();
+}
+
+void OmNtp::sGetTimeOfDay(int &minuteWithinDayOut, float &secondWithinMinuteOut)
+{
+    OmNtp *ntp = OmNtp::ntp();
+    if(ntp)
+    {
+        int h,m;
+        ntp->getTime(h, m, secondWithinMinuteOut);
+        minuteWithinDayOut = h * 60 + m;
+    }
+    else
+    {
+        minuteWithinDayOut = -1;
+        secondWithinMinuteOut = -1;
+    }
+}
+
+#endif
 // end of file

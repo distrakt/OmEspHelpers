@@ -45,7 +45,6 @@ void otaLoop(void) ;
 class OmOtaClass
 {
   private:
-    OmEeprom *ee = NULL; // the one you passed, or the one we create.
     _ESPWEBSERVER *serverPtr = NULL;
     OtaStatusProc statusProc = NULL;
     bool otaMode = false;
@@ -53,14 +52,32 @@ class OmOtaClass
     bool rebootOnGet = false;
 
     void doProc(EOtaSetupState state, int progress);
+    bool doAWiFiTry(String ssid, String password, int &wifiDots);
     EOtaSetupState lastState = OSS_BEGIN;
 
-  public:
-    /*! Must be called before ee.begin, if you're using OmEeprome */
-    void addEeFields(OmEeprom &ee);
+    String ssidActuallyConnected;
+    long long otaStarted = 0;
 
-    /*! If returns true, skip the rest of your own setup. Uses the ee you passed, or hijacks the whole Eeprom if you didnt. */
+  public:
+    char *defaultSignature = "OmOta_xyzzy"; // manually reassign before use...
+
+#define OOC_STRING_LEN 20
+    // you can just read these.
+    char otaBonjourName[OOC_STRING_LEN];
+    char otaWifiSsid[OOC_STRING_LEN];
+    char otaWifiPassword[OOC_STRING_LEN];
+
+    void addEeFields();
+
+    /** If returns true, skip the rest of your own setup. Uses the whole eeprom, unless you set up eeprom
+     * yourself, and call OmOta.addEeFields().
+     */
     bool setup(const char *wifiSsid, const char *wifiPassword, const char *wifiBonjour = NULL, OtaStatusProc statusProc = NULL);
+
+    /** Setup using eeprom. optional callback setup.
+     */
+    bool setup(OtaStatusProc statusProc = NULL);
+
 
     /*! Call at the beginning of your loop() function. If it returns true, skip the rest of your loop
        (Any work needed to update displays during setup and upload and such must be handled in your statusProc)
@@ -74,11 +91,18 @@ class OmOtaClass
     
     /*! Add an update control to the current page in progress
      */
-    void addUpdateControl(OmWebPages &p);
+    void addUpdateControl();
 
     /*! will return a printable IP Address String only after OSS_WIFI_CONNECT has happened
      */
     const char *getIpAddress();
+    
+    /** Add form for submitting new Wifi credentials and bonjour name
+     */
+    void addWifiConfigForm();
+
+    /** after eeprom is fully init'd, call to update the public fields of the wifi config. */
+    void retrieveWifiConfig();
 };
 
 // magics into existence if you use it.

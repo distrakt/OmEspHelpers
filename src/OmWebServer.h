@@ -55,6 +55,12 @@ typedef void (* OmConnectionStatus)(const char *ssid, bool trying, bool failure,
 class OmWebServerPrivates;
 
 /*! @brief Manages wifi connection, and forwarding http requests to a handler, typically OmWebPages */
+
+class OmWebServerStatus
+{
+public:
+};
+
 class OmWebServer : public OmIByteStream
 {
     OmWebServerPrivates *p = NULL;
@@ -72,8 +78,17 @@ public:
     You'll have to communicate the IP address to the user by your
     own means, on screen display or something.
     set "" for no access point.
-    NOTE: 2019-12-14 works sometimes. I dont highly recommend. :( */
-    void setAccessPoint(String ssid, String password);
+    NOTE: 2019-12-14 works sometimes. I dont highly recommend. :(
+     NOTE:2021-06-12 works pretty well now...
+     if you provide a secondsUntilReboot, it will only stay in AP mode that long
+     before rebooting and going through your startup perhaps with other SSIDs again.
+     This, so after a power failure and reboot, if you only use AP for config, it can
+     find its way home. Eventually.
+     NOTE:2021-07-11 if you pass in setAccessPoint("", "", 0) it will clear
+     the secondsUntilReboot and stay in AP mode indefinitely. So you could add a control
+     to disable the timeout in a remote-use setting.
+     */
+    void setAccessPoint(String ssid, String password, int secondsUntilReboot = 0);
     
     /*! @brief add to the list of known networks to try. */
     void addWifi(String ssid, String password);
@@ -115,9 +130,8 @@ public:
 
     const char *getSsid();
     int getPort();
-    unsigned int getIp();
+    uint32_t getIp();
     int getClientPort();
-    unsigned int getClientIp();
     unsigned int getTicks();
 
     /*! @brief is it? */
@@ -129,6 +143,11 @@ public:
     bool done() override;
     bool put(const char *s); // helpers to send longer amounts & strings
     bool put(uint8_t *d, int size); // helpers to send longer amounts & strings
+
+    // handy strings for esp wifi status
+    static const char *statusString(int wifiStatus);
+
+    static OmWebServer *s; // most recent created. Really, the only one.
 private:
     /* public for callback purposes, not user-useful */
     void handleRequest(String request, WiFiClient &client);

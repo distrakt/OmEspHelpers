@@ -77,7 +77,7 @@ const char *omTime(long long millis, int secondsDecimals)
 }
 
 
-int omStringToInt(const char *s)
+int omStringToInt(const char *s, int fixedDecimals)
 {
     int k = (int)strlen(s);
     int radix = 10;
@@ -88,23 +88,35 @@ int omStringToInt(const char *s)
     }
     int x = 0;
     bool sign = false;
+    bool pastDecimal = false;
     while(char c = *s++)
     {
         if(c == '-')
             sign = !sign;
+        else if(c == '.')
+            pastDecimal = true;
         else
         {
+            if(pastDecimal)
+            {
+                fixedDecimals--;
+                if(fixedDecimals < 0)
+                    break;
+            }
             int d = 0;
             if(c >= 'A' && c <= 'Z')
                 c += 'a' - 'A';
-            if(c >= 'a' && c <= 'f')
+            else if(c >= 'a' && c <= 'f')
                 d = c - 'a' + 10;
-            else
+            else if(c >= '0' && c <= '9')
                 d = c - '0';
             x = x * radix;
             x += d;
         }
     }
+    while(fixedDecimals-- > 0)
+        x *= radix;
+
     if(sign)
         x = -x;
     return x;

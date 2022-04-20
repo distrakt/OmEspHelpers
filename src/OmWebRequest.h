@@ -107,7 +107,7 @@ public:
         }
     }
     
-    const char *getValue(const char *key)
+    char *getValue(const char *key)
     {
         for(int ix = 0; ix < (int)this->query.size() - 1; ix += 2)
         {
