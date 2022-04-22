@@ -402,28 +402,6 @@ void OmOtaClass::addUpdateControl()
                         });
 }
 
-// helper method for the Form
-static void addTextInput(OmXmlWriter &w, const char *label, const char *name, const char *value)
-{
-    w.addContentF("%s: ", label);
-    w.beginElement("input");
-    w.addAttribute("type", "text");
-    w.addAttribute("name", name);
-    w.addAttributeF("value", value);
-    w.endElement();
-    w.addElement("br");
-}
-
-static void webRequestToEepromWrite(OmWebRequest &r, const char *fieldName, int makeBonjourLegal = 0)
-{
-    // depends on the html form id being same as the eeprom field name...
-    char *newBn = r.getValue(fieldName);
-    if (newBn)
-    {
-        OmEeprom.put(fieldName, newBn);
-    }
-}
-
 void OmOtaClass::retrieveWifiConfig()
 {
     OmEeprom.get("otaBonjourName", this->otaBonjourName);

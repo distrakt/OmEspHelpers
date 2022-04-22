@@ -23,8 +23,8 @@ typedef enum
 {
     /// low 8 bits form an enum of categories
     /// omit from easy user form UI
-    OME_GROUP_OTA = 1,
-    OME_GROUP_WIFI_SETUP = 2,
+    OME_GROUP_OTA = 201,
+    OME_GROUP_WIFI_SETUP = 202,
     /// 8th bit and up are format flags
     /// a string which should be constrained to FQDN characters a-z, 0-9, -.
     OME_FLAG_BONJOUR = 0x0100,
@@ -62,12 +62,20 @@ public:
     /** Commit the current in-memory eeprom to persistent eeprom/flash. Return number of bytes written, or -1 for failure. */
     int commit();
 
-    /** To help debug. */
+    /// Print out the in-memory contents of the Eeprom and other misc. Helpful for debugging.
     void dumpState(const char *note = NULL);
 
     // And now, the friendlier API calls.
+
+    /// Add a string field, in group 0
     char *addString(const char *fieldName, uint8_t length);
+    /// Add a string field.
+    /// @param fieldName name stored with the field
+    /// @param length maximum length of string
+    /// @param omeFlags lowest 8 bits specifies a "group" for this field, which can be presented as a Form on a page
+    /// @param label presentation name for this field -- not saved in eeprom so you can change it when needed.
     char *addString(const char *fieldName, uint8_t length, int omeFlags, const char *label);
+
     int8_t *addInt8(const char *fieldName, int omeFlags = 0, const char *label = NULL);
     int16_t *addInt16(const char *fieldName, int omeFlags = 0, const char *label = NULL);
     int32_t *addInt32(const char *fieldName, int omeFlags = 0, const char *label = NULL);
@@ -103,6 +111,8 @@ public:
 private:
     int signatureSize;
     const char *signature;
+
+    bool verbose = false;
 
     std::vector<OmEepromField> fields;
     bool didBegin = false;

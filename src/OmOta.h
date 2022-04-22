@@ -59,7 +59,7 @@ class OmOtaClass
     long long otaStarted = 0;
 
   public:
-    char *defaultSignature = "OmOta_xyzzy"; // manually reassign before use...
+    const char *defaultSignature = "OmOta_xyzzy"; // can manually reassign before use...
 
 #define OOC_STRING_LEN 20
     // you can just read these.

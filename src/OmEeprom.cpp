@@ -12,6 +12,8 @@
 // | HELPERS
 // +------------------------------------------------
 
+#define EELOG(_args...) if(this->verbose) { OMLOG(_args); } //OmLog::logS(__FILE__, __LINE__, '*', _args)
+#define DUMPSTATE(_note) if(this->verbose) { this->dumpState(_note); }
 #if 0
 /// read a string, but max string length IS size - 1.
 static void eeGetString(int offset, char *out, int size)
@@ -86,9 +88,9 @@ void OmEepromClass::end()
     OmEepromClass::active = false;
 }
 
-void OmEepromClass::begin(const char *signature)
+void OmEepromClass::begin(__attribute__((unused)) const char *signature)
 {
-    this->dumpState("begin");
+    DUMPSTATE("begin");
     if(this->didBegin)
     {
         OMERR("already did begin");
@@ -167,7 +169,7 @@ void OmEepromClass::begin(const char *signature)
                 fieldName += (char)ch;
         } while(ch);
         // we have a field name!
-        printf("found field '%s', type %d, size %d\n", fieldName.c_str(), type, size);
+        EELOG("found field '%s', type %d, size %d\n", fieldName.c_str(), type, size);
 
         if(type == OME_TYPE_INT)
         {
@@ -271,7 +273,7 @@ bool OmEepromClass::put(const char *fieldName, const void *value)
         {
             int fx = field->offset + ix;
             char ch = this->data[fx];
-            OMLOG("ix=%d fx=%d wx=%d ch=%d", ix, fx, wx, ch);
+            EELOG("ix=%d fx=%d wx=%d ch=%d", ix, fx, wx, ch);
             if(ch == 0)
                 break;
             if( (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || (ch == '-'))
@@ -287,7 +289,7 @@ bool OmEepromClass::put(const char *fieldName, const void *value)
                     this->data[wx++] = '-';
                 this->data[wx++] = ch;
                 anyNonHyphens = true;
-                OMLOG("--> %d %c", ch, ch);
+                EELOG("--> %d %c", ch, ch);
             }
             lastWasHyphen = isHyphen;
         }
@@ -319,7 +321,7 @@ OmEepromField *OmEepromClass::findField(int ix)
         OMERR("findField: did not begin");
         return NULL;
     }
-    if(ix < 0 || ix >= this->fields.size())
+    if(ix < 0 || ix >= (int)this->fields.size())
     {
         OMERR("no field %d", ix);
         return NULL;
@@ -330,7 +332,7 @@ OmEepromField *OmEepromClass::findField(int ix)
 
 int OmEepromClass::commit()
 {
-    this->dumpState("commit");
+    DUMPSTATE("commit");
     if(!this->didBegin) return -1;
     int k = 0;
     for(int ix = 0; ix < this->dataSize; ix++)
@@ -349,7 +351,6 @@ int OmEepromClass::commit()
 
 void OmEepromClass::dumpState(const char *note)
 {
-    return;
     if(note)
         OMLOG(note);
     OMLOG("eeprom dataSize: %d", this->dataSize);
@@ -365,6 +366,16 @@ void OmEepromClass::dumpState(const char *note)
         {
             this->get(f.name, dumpBuffer);
             char *w = printBuffer;
+            if(f.type == OME_TYPE_INT)
+            {
+                long z = this->getInt(f.name);
+                w += sprintf(w, "int:%ld ", z);
+            }
+            else if(f.type == OME_TYPE_STRING)
+            {
+                String z = this->getString(f.name);
+                w += sprintf(w, "string:%s ", z.c_str());
+            }
             for(int ix = 0; ix < f.length; ix++)
             {
                 if(w < printBufferEnd)
@@ -456,6 +467,10 @@ String OmEepromClass::getString(const char *fieldName)
             s = ((char *)this->data) + field->offset;
             break;
         }
+
+        default:
+            //unhandled, leave string empty
+            break;
     }
     return s;
 }
@@ -533,21 +548,21 @@ int OmEepromClass::getDataSize()
 
 const char *OmEepromClass::getFieldName(int ix)
 {
-    if(ix < 0 || ix > this->fields.size())
+    if(ix < 0 || ix > (int)this->fields.size())
         return NULL;
     return this->fields[ix].name;
 }
 
 int OmEepromClass::getFieldLength(int ix)
 {
-    if(ix < 0 || ix > this->fields.size())
+    if(ix < 0 || ix > (int)this->fields.size())
         return -1;
     return this->fields[ix].length;
 }
 
 int OmEepromClass::getFieldType(int ix)
 {
-    if(ix < 0 || ix > this->fields.size())
+    if(ix < 0 || ix > (int)this->fields.size())
         return -1;
     return this->fields[ix].type;
 }
@@ -569,6 +584,10 @@ void OmEepromClass::setString(const char *fieldName, String value)
 
             case OME_TYPE_STRING:
                 this->put(fieldName, value.c_str());
+                break;
+
+            default:
+                // not handled... do nothing
                 break;
         }
     }
