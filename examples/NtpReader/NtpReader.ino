@@ -50,7 +50,6 @@ void loop()
 {
   delay(10);
   s.tick();
-  ntp.tick();
 
   ticks++;
   if(ticks % 877 == 0)

@@ -55,8 +55,8 @@ void loop()
       break;
 
     case 8:
-      OMLOG("Writing to atual Eeprom.");
-      OMLOG("If you reset now, you'll see the old values.");
+      OMLOG("Writing to the nonvolatile Eeprom.");
+      OMLOG("If you reset now, you'll see these new values.");
       OmEeprom.commit();
       break;
   }
