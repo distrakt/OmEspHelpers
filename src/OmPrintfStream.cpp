@@ -21,11 +21,8 @@ static bool endsWith(const char *s, const char *ending)
     bool match = strcmp(s, ending) == 0;
     return match;
 }
-#if NOT_ARDUINO
-bool OmPrintfStream::handlePercent(const char *start, const char *end, va_list v)
-#else
-bool OmPrintfStream::handlePercent(const char *start, const char *end, va_list &v)
-#endif
+
+bool OmPrintfStream::handlePercent(const char *start, const char *end, VA_LIST_ARG)
 {
     bool result = true;
     const int littleBufferSize = 64;

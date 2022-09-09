@@ -4,9 +4,13 @@
 #if NOT_ARDUINO
 // on mac, we must simply pass 'v'. But on esp32
 // we need &v reference, otherwise the walk is lost.
-#define VA_LIST_ARG va_list v
+    #ifdef __aarch64__
+        #define VA_LIST_ARG va_list &v
+    #else
+        #define VA_LIST_ARG va_list v
+    #endif
 #else
-#define VA_LIST_ARG va_list &v
+    #define VA_LIST_ARG va_list &v
 #endif
 
 /*!

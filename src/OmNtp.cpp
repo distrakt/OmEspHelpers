@@ -194,13 +194,13 @@ void OmNtp::getLocalTime()
     HTTPClient http;
     // NOTE. The SDK's header file marks http.begin(url) as deprecated. But the
     // recommended one with a WiFiClient argument crashes. So I don't use it. dvb 2020-05-30.
-#if 0
-    Crashes!
-//    WiFiClient client; // esp32 for this?
-//    http.begin(client, this->timeUrl);
+#if 1
+//    Crashes!
+    http.begin(client, this->timeUrl);
+#else
+    http.begin(this->timeUrl);
 #endif
 
-    http.begin(this->timeUrl);
     unsigned long t0 = millis();
     int httpCode = http.GET();
     unsigned long t1 = millis();
