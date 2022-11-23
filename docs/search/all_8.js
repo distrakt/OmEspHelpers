@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['loop_53',['loop',['../class_om_ota_class.html#a4855ce5dfc16f4455a35343931843585',1,'OmOtaClass']]]
+  ['iswificonnected_0',['isWifiConnected',['../class_om_web_server.html#a7c666106a42844fbc9a18ed8f96d285b',1,'OmWebServer']]]
 ];

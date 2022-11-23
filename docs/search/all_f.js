@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['uptimemillis_118',['uptimeMillis',['../class_om_web_server.html#a3b0b49ea906b5c2d7f81ec4d5d371c54',1,'OmWebServer']]]
+  ['tick_0',['tick',['../class_om_ntp.html#a8d5713d7d12fcf1eaac609d724726c1c',1,'OmNtp::tick()'],['../class_om_web_server.html#ae248e6438e02cc4924da3f4c3fd9496e',1,'OmWebServer::tick()']]]
 ];

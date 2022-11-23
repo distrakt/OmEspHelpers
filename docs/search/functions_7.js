@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['iswificonnected_202',['isWifiConnected',['../class_om_web_server.html#a7c666106a42844fbc9a18ed8f96d285b',1,'OmWebServer']]]
+  ['handlerequest_0',['handleRequest',['../class_om_web_pages.html#a7884b14a13afe0bad12cc7cf97640b8d',1,'OmWebPages']]]
 ];

@@ -1,4 +1,26 @@
 var searchData=
 [
-  ['tick_239',['tick',['../class_om_ntp.html#ab144cf681806189e2d2326db995d8ce8',1,'OmNtp::tick()'],['../class_om_web_server.html#ae248e6438e02cc4924da3f4c3fd9496e',1,'OmWebServer::tick()']]]
+  ['setaccesspoint_0',['setAccessPoint',['../class_om_web_server.html#a31cae2ab3e2759b1f488a1d1313c1436',1,'OmWebServer']]],
+  ['setbgcolor_1',['setBgColor',['../class_om_web_pages.html#a4e5ccbbc86d44b4fbde5e7e92ce74e08',1,'OmWebPages']]],
+  ['setbonjourname_2',['setBonjourName',['../class_om_web_server.html#ac1ca4cd29fbb1511b90a24f77ce05ee1',1,'OmWebServer']]],
+  ['setbuilddateandtime_3',['setBuildDateAndTime',['../class_om_web_pages.html#a81b4a24b39ad0ca4c50a500c02c0cdea',1,'OmWebPages']]],
+  ['setfooterproc_4',['setFooterProc',['../class_om_web_pages.html#aa2929eb924217ebbae615b791e72626a',1,'OmWebPages']]],
+  ['sethandler_5',['setHandler',['../class_om_web_server.html#aa90899ca5231ecce1e210f89ba45c5b2',1,'OmWebServer']]],
+  ['setheaderproc_6',['setHeaderProc',['../class_om_web_pages.html#a8b736337e2875afa07b14f66b276dde0',1,'OmWebPages']]],
+  ['setindenting_7',['setIndenting',['../class_om_xml_writer.html#a11be1d44d8090f054f199152624d1c7e',1,'OmXmlWriter']]],
+  ['setname_8',['setName',['../class_om_web_page_item.html#a8267c48c95a69f6df547d602dbbd75bb',1,'OmWebPageItem']]],
+  ['setntp_9',['setNtp',['../class_om_web_server.html#ad4df58423d0ab1baa8b7e81a66364bdd',1,'OmWebServer']]],
+  ['setpagearrivalaction_10',['setPageArrivalAction',['../class_om_web_pages.html#adebf6db6d26f38b3edde0176ed14720b',1,'OmWebPages']]],
+  ['setport_11',['setPort',['../class_om_web_server.html#a9be95b8b3c1126d4204fe4ac1c8e70e1',1,'OmWebServer']]],
+  ['setstatuscallback_12',['setStatusCallback',['../class_om_web_server.html#ac7bfb8f01558b7e2a79a4efa6370a602',1,'OmWebServer']]],
+  ['setstatusledpin_13',['setStatusLedPin',['../class_om_web_server.html#a86c122038357120cf555fb918e655676',1,'OmWebServer']]],
+  ['settimeurl_14',['setTimeUrl',['../class_om_ntp.html#a22ebe81459fd202cf86c065aeda1b7df',1,'OmNtp']]],
+  ['settimeurloffset_15',['setTimeUrlOffset',['../class_om_ntp.html#a9f5ef01b24e3d9bcadf0cc1114f08fcf',1,'OmNtp']]],
+  ['settimezone_16',['setTimeZone',['../class_om_ntp.html#a3e2b7dd3a18ff3539cfeaf3256ab8656',1,'OmNtp']]],
+  ['setup_17',['setup',['../class_om_ota_class.html#a922a706e988bb0f115f04d3eed939c63',1,'OmOtaClass::setup(const char *wifiSsid, const char *wifiPassword, const char *wifiBonjour=NULL, OtaStatusProc statusProc=NULL)'],['../class_om_ota_class.html#a0208b99522826758fcafe1d04e36e997',1,'OmOtaClass::setup(OtaStatusProc statusProc=NULL)']]],
+  ['setvalue_18',['setValue',['../class_om_web_page_item.html#adc7b1eb64e80637ed52e2e5aa2cc46c1',1,'OmWebPageItem']]],
+  ['setverbose_19',['setVerbose',['../class_om_web_server.html#a3f708593056a71fc175387cf90db026b',1,'OmWebServer']]],
+  ['setvisible_20',['setVisible',['../class_om_web_page_item.html#af508ff6e9b3f0ad6c1b38c527c6542b6',1,'OmWebPageItem::setVisible(bool visible)'],['../class_om_web_page_item.html#a166a7106c8960b3c59a9210cdeb5697a',1,'OmWebPageItem::setVisible(bool visible, const char *name, int value)']]],
+  ['setwifiavailable_21',['setWifiAvailable',['../class_om_ntp.html#acc4f8aab7ae9834f2f167e44a041c70c',1,'OmNtp']]],
+  ['sgettimeofday_22',['sGetTimeOfDay',['../class_om_ntp.html#a07ebf493092b38a35a410fbc9c743480',1,'OmNtp']]]
 ];
