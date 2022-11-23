@@ -409,6 +409,7 @@ int OmWebServer::pollForClient()
         {
             char c = this->p->client.read();
             // Serial.printf("%c", c); // excrutiating verbose
+            // TODO: limit the size of this activity. Easy to intentionally crash this with a big request.
             this->p->request += c;
             if(endsWithCrlfCrlf(this->p->request))
             {

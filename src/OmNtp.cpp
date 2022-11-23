@@ -196,6 +196,7 @@ void OmNtp::getLocalTime()
     // recommended one with a WiFiClient argument crashes. So I don't use it. dvb 2020-05-30.
 #if 1
 //    Crashes!
+    // oh it doesnt crash any more, it is preferred. as long as we persist a client instance.
     http.begin(client, this->timeUrl);
 #else
     http.begin(this->timeUrl);

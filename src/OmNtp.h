@@ -166,8 +166,8 @@ private:
     long countdownMilliseconds = -1;
 
     static OmNtp *lastNtpBegun; // handy global of if instance exists.
-    
-    WiFiClient client; // for sending requests
+public:
+    WiFiClient client; // shared, for sending requests
 };
 #endif //NOT_ARDUINO
 
