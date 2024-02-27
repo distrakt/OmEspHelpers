@@ -1,1 +1,7 @@
 pictures for the readme.
+
+esp32 must be package version 1.0.6, the next one up 2.0.0 and further breaks OmEspHelpers for now 2023
+
+if upload fails for missing python, try:
+sed -i -e 's/=python /=python3 /g' ~/Library/Arduino15/packages/esp32/hardware/esp32/*/platform.txt
+

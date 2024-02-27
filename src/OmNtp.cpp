@@ -194,13 +194,9 @@ void OmNtp::getLocalTime()
     HTTPClient http;
     // NOTE. The SDK's header file marks http.begin(url) as deprecated. But the
     // recommended one with a WiFiClient argument crashes. So I don't use it. dvb 2020-05-30.
-#if 1
 //    Crashes!
     // oh it doesnt crash any more, it is preferred. as long as we persist a client instance.
     http.begin(client, this->timeUrl);
-#else
-    http.begin(this->timeUrl);
-#endif
 
     unsigned long t0 = millis();
     int httpCode = http.GET();
@@ -299,7 +295,6 @@ static int tryOneDnsLookup(const char *serverName, IPAddress &ipAddressOut)
 /// Call begin when the wifi is up
 void OmNtp::begin()
 {
-    this->udp.begin(kLocalPort); // Yeah, so, this will fail if you instantiate two OmNtp's. Yup.
     int did = false;
 
     for(const char *ntpServerName : ntpServerNames)
@@ -323,10 +318,11 @@ void OmNtp::begin()
 
 void OmNtp::checkForPacket()
 {
-    int cb = this->udp.parsePacket();
-    if (!cb)
+    // check for packet, read data if any.
+    int cb = this->udp.checkUdp(packetBuffer, kNtpPacketSize);
+    if (cb <= 0)
     {
-        return; // no incoming packet
+        return; // no incoming packet, or error reading it
     }
 
     unsigned long int now = millis();
@@ -336,9 +332,6 @@ void OmNtp::checkForPacket()
 
     OMLOG("packet received, length=%d\n", cb);
     this->ntpRequestSent = 0;
-    
-    // We've received a packet, read the data from it
-    udp.read(packetBuffer, kNtpPacketSize); // read the packet into the buffer
     
     //the timestamp starts at byte 40 of the received packet and is four bytes,
     // or two words, long. First, esxtract the two words:
@@ -410,9 +403,7 @@ void OmNtp::tick(unsigned int deltaMillis)
     
     // all NTP fields have been given values, now
     // you can send a packet requesting a timestamp:
-    udp.beginPacket(this->ntpServerIp, 123); //NTP requests are to port 123
-    udp.write(packetBuffer, kNtpPacketSize);
-    udp.endPacket();
+    udp.sendUdp(this->ntpServerIp, 123, packetBuffer, kNtpPacketSize);
     this->ntpRequestSent = 1;
     this->stats.ntpRequestsSent++;
     OMLOG("sent ntp request\n", 1);

@@ -321,8 +321,6 @@ void OmXmlWriter::addAttributeUrlF(const char *attribute, const char *fmt,...)
     putf(" %s=\"%s\"",attribute,valueEscaped);
 }
 
-
-
 void OmXmlWriter::addAttribute(const char *attribute, long long int value)
 {
     this->endAttribute(); // just in case

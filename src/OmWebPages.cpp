@@ -16,6 +16,7 @@
 #ifndef NOT_ARDUINO
 #include "Arduino.h"
 #include "OmNtp.h"
+#include "OmUdp.h"
 
 #ifdef ARDUINO_ARCH_ESP8266
 #include "user_interface.h" // system_free_space and others.
@@ -975,6 +976,12 @@ void OmWebPages::renderStatusXml(OmXmlWriter &w)
 {
     this->renderHttpResponseHeader("text/xml", 200);
 
+    /*
+    // alternatively, plain text so iphone chrome can show it
+    this->renderHttpResponseHeader("text/plain", 200);
+    w.indenting = true;
+     */
+
     long long now;
 #ifndef NOT_ARDUINO
     now= millis();
@@ -991,7 +998,11 @@ void OmWebPages::renderStatusXml(OmXmlWriter &w)
     w.addAttributeF("requests","%d", this->requestsAll);
     w.addAttributeF("maxHtml", "%d", this->greatestRenderLength);
 
-#ifndef NOT_ARDUINO
+#ifdef NOT_ARDUINO
+    // mac stubs for testing
+    w.addAttributeF("serverIp", "localhost:5555");
+    w.addAttributeF("bonjour", "--bonjour for this mac--");
+#else
     if(this->ri)
     {
         w.addAttributeF("clientIp", "%s:%d", omIpToString(ri->clientIp, true), ri->clientPort);
@@ -1010,12 +1021,29 @@ void OmWebPages::renderStatusXml(OmXmlWriter &w)
     if(this->__file__)
         w.addAttributeF("file", "%s", this->__file__);
 
+#ifndef NOT_ARDUINO
+    {
+        w.beginAttribute("udp");
+        OmUdp *u = OmUdp::first;
+        int k = 0;
+        while(u && k < 20)
+        {
+            if(k)
+                w.putf(",%d", u->portNumber);
+            else
+                w.putf("%d", u->portNumber);
+            k++;
+            u = u->next;
+        }
+        w.endAttribute();
+    }
+#endif
+
     w.endElement("status");
 
     if(OmEepromClass::active)
     {
         w.beginElement("eeprom");
-        w.addAttribute("signature", OmEeprom.getSignature());
         w.addAttribute("dataSize", OmEeprom.getDataSize());
         int k = OmEeprom.getFieldCount();
         w.addAttribute("fieldCount", k);
@@ -1166,7 +1194,7 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
 #endif
     if(OmEepromClass::active)
     {
-        w.addContentF("eeprom:      %s/%db\n", OmEeprom.getSignature(), OmEeprom.getDataSize());
+        w.addContentF("eeprom:      %db\n", OmEeprom.getDataSize());
     }
     w.addContentF("built:       %s %s\n", this->__date__, this->__time__);
     if(this->__file__)
@@ -1383,12 +1411,12 @@ R"JS(
         if(url == '')
         {
             document.body.style.backgroundColor = "#f0f0f0";
-            setTimeout(function(){ window.location.reload(); }, 500);
+            setTimeout(function(){ window.location.reload(); }, 800);
         }
         else if(url != '_')
         {
             document.body.style.backgroundColor = "#C0C0C0";
-            setTimeout(function() { window.location.assign(url); }, 700);
+            setTimeout(function() { window.location.assign(url); }, 800);
         }
 
     }
@@ -1444,7 +1472,7 @@ R"JS(
       else if(url != '_')
       {
           document.body.style.backgroundColor = "#C0C0C0";
-          setTimeout(function() { window.location.assign(url); }, 700);
+          setTimeout(function() { window.location.assign(url); }, 1000);
       }
   }
   )JS",
@@ -1711,6 +1739,9 @@ bool OmWebPages::handleRequest(OmIByteStream *consumer, const char *pathAndQuery
 
     // +-----------------------------------
     // | Page Rendering Happens Now.
+    // |
+    // | The arrival action happens first, so it can
+    // | in fact build the page "just in time".
 
     if(page->arrivalAction)
         page->arrivalAction(page->name, NULL, 0, page->arrivalActionRef1, page->arrivalActionRef2);
@@ -1802,6 +1833,9 @@ void OmWebPages::renderHttpResponseHeader(const char *contentType, int response)
     this->wp->addContentF("HTTP/1.1 %d OK\n"
                    "Content-type:%s\n"
                    "Connection: close\n"
+                          // TODO: consider only allowing CORS on the _status page, for scanning
+                          // TODO: having it open on all pages lets a web page operate the device
+                   "Access-Control-Allow-Origin: *\n"
                    "\n", response, contentType);
 }
 

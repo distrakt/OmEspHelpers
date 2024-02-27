@@ -123,7 +123,7 @@ int omStringToInt(const char *s, int fixedDecimals)
 }
 
 
-const char *omIpToString(unsigned long ip, bool flip)
+const char *omIpToString(unsigned int ip, bool flip)
 {
     static char s[20];
     if(!flip)

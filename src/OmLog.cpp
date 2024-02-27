@@ -1,5 +1,5 @@
 /*
- * OmNtp.cpp
+ * OmLog.cpp
  * 2016-12-13 dvb
  * Implementation of OmLog
  */

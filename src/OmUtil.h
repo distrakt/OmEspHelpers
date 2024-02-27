@@ -23,7 +23,7 @@ int omStringToInt(const char *s, int fixedDecimals = 0);
 /*! @brief ip to string
  flip=true for ESP library IPAddress object.);
  */
-const char *omIpToString(unsigned long ip, bool flip = false);
+const char *omIpToString(unsigned int, bool flip = false);
 /*! @brief ip to string */
 const char *omIpToString(unsigned char ip[4]);
 int omHexToInt(const char *s, int digitCount);

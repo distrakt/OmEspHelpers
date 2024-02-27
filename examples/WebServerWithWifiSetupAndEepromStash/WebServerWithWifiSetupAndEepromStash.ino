@@ -31,12 +31,7 @@ void setup()
   // Now we'll add some fields, in two groups.
   #define GRP_A 21 // number doesnt matter, just under 200
   #define GRP_B 49 // a different number
-  OmEeprom.addInt8("otaMode", OME_GROUP_OTA, NULL);
-  OmEeprom.addString("otaBonjourName", OOC_STRING_LEN, OME_GROUP_WIFI_SETUP | OME_FLAG_BONJOUR, "Bonjour name");
-  OmEeprom.addString("otaWifiSsid", OOC_STRING_LEN, OME_GROUP_WIFI_SETUP, "Wifi");
-  OmEeprom.addString("otaWifiPassword", OOC_STRING_LEN, OME_GROUP_WIFI_SETUP, "Password");
 
- 
   OmEeprom.addInt8("param1", GRP_A, "Param 1 (small number)"); // last is the "pretty name" for display
   OmEeprom.addString("param2", 12, GRP_A, "Param 2 (string)"); // 12 chars max
 

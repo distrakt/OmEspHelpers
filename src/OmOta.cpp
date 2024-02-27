@@ -3,6 +3,24 @@
  It serves up an OTA access page instead.
  */
 
+/*
+ 2023-11-22 to post an update file from python, request.post() works
+ described: https://stackoverflow.com/questions/67160638/how-to-post-bin-file-for-ota-in-esp32-without-manually-opening-the-page-in-the-b
+ 
+ example
+ #!Python
+ import requests
+ files = {'file': open(r"<full path of the bin file including dir>home_automate_inc_ota_v.0.2a.ino.esp32.bin", 'rb')}
+
+ final_resp = requests.post("http://192.168.0.50/update", files=files)
+ 
+ and to enter the update mode, can activate the button with value 111
+ the web page can only send 1 or 0, but curl or py can
+ curl 'http://10.0.4.167:80/_control?page=p8&item=i6&value=111'
+ 
+ use _status to find the update button
+ */
+
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -16,7 +34,7 @@
 // with flexible procs and interfaces, parameters are often optionally used.
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-#define OTA_MODE_TIMEOUT_SECONDS 600
+#define OTA_MODE_TIMEOUT_SECONDS 300
 
 /*
  Flash image upload page
@@ -138,8 +156,13 @@ bool OmOtaClass::setup(const char *wifiSsid, const char *wifiPassword, const cha
     {
         this->addEeFields();
         OmEeprom.begin(this->defaultSignature);
-        OmEeprom.dumpState("omota 3");
     }
+
+    OmEeprom.dumpState("omota 3");
+
+    this->otaMode = OmEeprom.getInt("otaMode");
+    OmEeprom.set("otaMode", 0); // out of ota mode next time.
+    OmEeprom.commit();
 
     this->bonjourName[0] = 0;
     if (wifiBonjour)
@@ -156,32 +179,17 @@ bool OmOtaClass::setup(const char *wifiSsid, const char *wifiPassword, const cha
         OmWebServer::s->setAccessPoint(apSsid, "", 90);
     }
 
-    this->otaMode = OmEeprom.getInt("otaMode");
     if (!this->otaMode)
         return false; // back to the main program... else continue on down with upload and setup.
 
-
-    Serial.begin(115200);
     OMLOG("Welcome to Ota Upload");
 
-    OmEeprom.set("otaMode", 0); // out of ota mode next time.
-    OmEeprom.commit();
-    OMLOG("dom 01");
-
     this->doProc(OSS_BEGIN, 0);
-    OMLOG("dom 02");
-
-    OMLOG("dom 03");
 
     this->serverPtr = new _ESPWEBSERVER(80);
-    OMLOG("dom 04");
 
     // Connect to WiFi network
     WiFi.persistent(false);
-//    WiFi.begin(wifiSsid, wifiPassword);
-    //  WiFi.begin(ssid, "bad"); //TEST WITH BAD PASSWORD
-    //    Serial.println("\n");
-    OMLOG("dom 05");
 
     // Wait for connection
     int wifiDots = 0;
@@ -298,6 +306,7 @@ gotWifi:
 
     this->serverPtr->onNotFound( []() {
         OmOta.serverPtr->sendHeader("Connection", "close");
+        OMLOG("redirect to main page\n");
         OmOta.serverPtr->send(200, "text/html", kServerRedirect);
     });
 
@@ -365,8 +374,9 @@ void OmOtaClass::rebootToOta()
     OmEeprom.set("otaMode", 1);
     OmEeprom.commit();
     Serial.printf("OmOta: rebooting\n");
-    delay(500);
-    ESP.restart();
+    OmWebServer::s->rebootIn(750); // enough time to server the "ok", must be less than pageButtonWithLink delay
+//    delay(500); // 2023-11-22 now it's done in the webserver.
+//    ESP.restart();
 }
 
 static int ir(int low, int high)
@@ -395,7 +405,10 @@ void OmOtaClass::addUpdateControl()
                             int v = otaCodeSlider->getValue();
                             otaCodeSlider->setValue(0);
 
-                            if (v == otaCode)
+        // reboot if the slider was set to the magic update code...
+        // or this button was invoked as value 111
+        // this backdoor is to facilitate automated uploads.
+                            if (v == otaCode || value == 111)
                             {
                                 OmOta.rebootToOta();
                             }
@@ -413,6 +426,7 @@ void OmOtaClass::retrieveWifiConfig()
     OMLOG("1 otaWifiSsid %s", this->otaWifiSsid);
     if(this->otaWifiSsid[0] && this->otaBonjourName[0])
     {
+        OMLOG("2 ota bonjour name[%d]", strlen(this->otaBonjourName));
         strcpy(this->bonjourName, this->otaBonjourName);
         OMLOG("2 ota bonjour name %s", this->otaBonjourName);
         OMLOG("2 bonjour name %s", this->bonjourName);

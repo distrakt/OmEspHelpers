@@ -28,6 +28,8 @@
  * The IP address will also be "blinked" on the BUILTIN_LED.
  */
 
+#ifndef NOT_ARDUINO
+
 #ifndef __OmWebServer__
 #define __OmWebServer__
 
@@ -89,7 +91,10 @@ public:
      to disable the timeout in a remote-use setting.
      */
     void setAccessPoint(String ssid, String password, int secondsUntilReboot = 0);
-    
+
+    /*! @brief return true if we're currently in access point mode */
+    bool isAccessPoint();
+
     /*! @brief add to the list of known networks to try. */
     void addWifi(String ssid, String password);
     /*! @brief reset the list of known networks to try, to empty again. */
@@ -143,6 +148,9 @@ public:
     bool done() override;
     bool put(const char *s); // helpers to send longer amounts & strings
     bool put(uint8_t *d, int size); // helpers to send longer amounts & strings
+    
+    // queue up a system restart a little in the future
+    void rebootIn(int millis);
 
     // handy strings for esp wifi status
     static const char *statusString(int wifiStatus);
@@ -161,3 +169,5 @@ private:
 };
 
 #endif // __OmWebServer__
+
+#endif

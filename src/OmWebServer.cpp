@@ -7,7 +7,7 @@
 #include "Arduino.h"
 #include "OmWebServer.h"
 #include "OmBlinker.h"
-
+#include "OmUdp.h"
 
 #ifdef ARDUINO_ARCH_ESP8266
 #include <ESP8266WiFi.h>
@@ -76,9 +76,13 @@ public:
     String accessPointSsid;
     String accessPointPassword;
     int accessPointSecondsUntilReboot = 0;
+    unsigned int wifiJoinSuccesses = 0;
     long long accessPointStartMillis = 0; // set when we fire up the ap, and any client access to prolong it.
 
     DNSServer *dns = NULL;
+    
+    long long rebootMillis = 0; // if nonzero, reboot when update exceeds.
+    
     void printf(const char *format, ...)
     {
         if(!this->doSerial)  // serial disabled?
@@ -112,6 +116,8 @@ OmWebServer::OmWebServer(int port)
     recentOmWebServer = this;
     recentOmWebServerPrivates = this->p;
     OmWebServer::s = this;
+
+    this->setStatusLedPin(-1); // but by default, disable this.
 }
 
 OmWebServer::~OmWebServer()
@@ -196,7 +202,23 @@ void OmWebServer::maybeStatusCallback(bool trying, bool failure, bool success)
     if(success)
     {
         this->p->printf("Joined wifi network \"%s\"\n", ssid);
+
+        this->p->printf("-----------------------------------");
         this->p->printf("Accessible at http://%s:%d\n", omIpToString(this->getIp()), this->getPort());
+        if(this->p->bonjourName.length() > 0)
+            this->p->printf("http://%s.local\n", this->p->bonjourName.c_str());
+    }
+
+    // tell any UDP handlers
+    {
+        OMLOG("udp handler wifi update");
+        OmUdp *udp = OmUdp::first;
+        while(udp)
+        {
+            OMLOG("upd tell %p: %d %d %d", udp, trying, failure, success);
+            udp->wifiStatus(this->getSsid(), trying, failure, success);
+            udp = udp->next;
+        }
     }
     
     if(this->p->statusCallback)
@@ -213,6 +235,13 @@ void OmWebServer::initiateConnectionTry(String wifi, String password)
         return;
     }
     
+    WiFi.disconnect();
+    delay(80);
+    WiFi.mode(WIFI_STA);
+    delay(80);
+    WiFi.disconnect();
+    delay(80);
+    WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
     WiFi.begin(wifi.c_str(), password.c_str());
     this->p->printf("ssid:%s[%d] password:%s[%d]\n", wifi.c_str(), (int)wifi.length(), password.c_str(), (int)password.length());
@@ -387,10 +416,8 @@ int OmWebServer::pollForClient()
         if(this->p->uptimeMillis - this->p->clientStartMillis > CLIENT_DEADLINE)
         {
             this->p->client.stop();
-            // Serial.printf("\nKILLED CLIENT\n"); // excrutiating verbose
         }
     }
-
 
     if(!this->p->client || !this->p->client.connected())
     {
@@ -448,6 +475,13 @@ int OmWebServer::tick()
     this->p->uptimeMillis += deltaMillis;
     this->p->lastMillis = nowMillis;
     
+    // playing with fire here...
+    // can queue up a reboot a little in the future
+    if(this->p->rebootMillis && this->p->uptimeMillis > this->p->rebootMillis)
+    {
+        ESP.restart();
+    }
+    
     this->p->ticks++;
     this->p->b.tick();
     if(this->p->ntp)
@@ -494,8 +528,8 @@ int OmWebServer::tick()
                 if(!this->p->wifiServer)
                 {
                     this->p->wifiServer = new WiFiServer(this->p->port);
-                    this->p->wifiServer->begin();
                 }
+                this->p->wifiServer->begin();
 
                 this->p->b.clear();
                 this->p->b.addNumber(this->getIp() & 0xff); // blink out the last Octet, like 192.168.0.234, blink the 234.
@@ -506,6 +540,10 @@ int OmWebServer::tick()
 
                 // Enter the Running State. This is good.
                 this->p->state = OWS_RUNNING;
+                
+                // Have we ever gotten our wifi? Yes we have!
+                this->p->wifiJoinSuccesses++; // (except wrong every 4 billionth time)
+                
                 // hooray, we've achieved connection.
                 this->maybeStatusCallback(false, false, true); // tell the world.
             }
@@ -521,8 +559,18 @@ int OmWebServer::tick()
                     this->maybeStatusCallback(false, true, false);
                     // connection failed, try next known network
                     this->p->wifiIndex += 1;
-                    // if we've tried them all, AND there's an access point, go do that.
-                    if(this->p->wifiIndex >= (int)this->p->ssids.size() && this->p->accessPointSsid.length())
+                    // become an access point:
+                    //  • if we've tried all our wifis,
+                    //  • and there's an access point name
+                    //  • and we've never been connected to a wifi on this power cycle
+                    // if we've been on a wifi, we will wait possibly forever to rejoin
+                    // that wifi. We dont want to lapse to Access Point and reboot,
+                    // wrecking our uptime. If you need the access point to reconfig,
+                    // you'll have to manually reboot or power cycle. This is a rare
+                    // occurrence, when you're redoing your wifis or something.
+                    if(this->p->wifiIndex >= (int)this->p->ssids.size()
+                       && this->p->accessPointSsid.length()
+                       && (this->p->wifiJoinSuccesses == 0))
                     {
                         this->p->state = OWS_AP_START;
                     }
@@ -567,8 +615,17 @@ int OmWebServer::tick()
                 WiFi.mode(WIFI_AP);
                 WiFi.softAP(this->p->accessPointSsid.c_str(), this->p->accessPointPassword.length() ? this->p->accessPointPassword.c_str() : 0);
 #ifdef ARDUINO_ARCH_ESP32
+//                ARDUINO_EVENT_WIFI_STA_DISCONNECTED
+// something in https://github.com/tzapu/WiFiManager/issues/1246 for 2.0 name change
+#define esp32_2_0_orLater 0
+#if esp32_2_0_orLater
+                WiFi.onEvent(WiFiStationConnected, ARDUINO_EVENT_WIFI_AP_STACONNECTED);
+                WiFi.onEvent(WiFiStationDisconnected, ARDUINO_EVENT_WIFI_AP_STADISCONNECTED);
+#else
+                // and version 1.0.6 has like 50k more free space left. :-/ dvb2024
                 WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_AP_STACONNECTED);
                 WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_AP_STADISCONNECTED);
+#endif
 #endif
                 IPAddress apIp = WiFi.softAPIP();
                 if(!this->p->dns)
@@ -793,6 +850,17 @@ bool OmWebServer::isWifiConnected()
 long long OmWebServer::uptimeMillis()
 {
     return this->p->uptimeMillis;
+}
+
+void OmWebServer::rebootIn(int millis)
+{
+    this->p->printf("rebooting in %dms", millis);
+    this->p->rebootMillis = this->p->uptimeMillis + millis;
+}
+
+bool OmWebServer::isAccessPoint()
+{
+    return this->p->accessPoint;
 }
 
 OmWebServer *OmWebServer::s = NULL; // most recent created. Really, the only one.

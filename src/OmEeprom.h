@@ -5,7 +5,7 @@
 #ifndef OMEEPROM_H
 #define OMEEPROM_H
 
-#if NOT_ARDUINO
+#ifdef NOT_ARDUINO
 #include <string>
 #define String std::string
 #else
@@ -54,11 +54,11 @@ public:
     static bool active;
     OmEepromField *addField(const char *fieldName, EOmEepromFieldType type, uint8_t length, int omeFlags, const char *label);
 
-    void begin(const char *signature = "x");
+    void begin(const char *signature = "x"); // signature is ignored.
     void end();
 
-    bool get(const char *fieldName, void *valueOut);
-    bool put(const char *fieldName, const void *value);
+    bool get(const char *fieldName, void *valueOut, int valueLength = -1); // value length if provided limits write length
+    bool put(const char *fieldName, const void *value, int valueLength = -1); // valueLength if provided limits bytes copied, pads with 0
     /** Commit the current in-memory eeprom to persistent eeprom/flash. Return number of bytes written, or -1 for failure. */
     int commit();
 
@@ -84,7 +84,7 @@ public:
 
     void set(const char *fieldName, String stringValue);
     void set(const char *fieldName, int32_t intValue);
-    void set(const char *fieldName, int first, int count, uint8_t *bytes);
+    bool set(const char *fieldName, int first, int count, uint8_t *bytes);
 
     String getString(const char *fieldName);
     void setString(const char *fieldName, String value);
@@ -93,7 +93,6 @@ public:
     uint8_t getByte(const char *fieldName, int index);
 
     int getFieldCount();
-    const char *getSignature();
     int getDataSize();
     const char *getFieldName(int ix);
     int getFieldLength(int ix);
@@ -108,11 +107,9 @@ public:
     /// retrieve value as string. convert from int for int type. (todo -- format styles? flags?)
     String fieldToString(const char *fieldName);
 
-private:
-    int signatureSize;
-    const char *signature;
-
     bool verbose = false;
+
+private:
 
     std::vector<OmEepromField> fields;
     bool didBegin = false;

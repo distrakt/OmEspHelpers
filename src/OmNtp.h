@@ -67,6 +67,7 @@ bool omGetHms(float secondsWithinDay, int &hourOut, int &minuteOut, int &secondO
 
 #ifndef NOT_ARDUINO
 #include "WiFiUdp.h"
+#include "OmUdp.h"
 
 /*! class to keep a local clock synchronized from a server */
 class OmNtp
@@ -146,7 +147,9 @@ private:
     void begin();
     void checkForPacket();
 
-    WiFiUDP udp; // the connection
+    static const unsigned int kLocalPort = 2390;      // local port to listen for UDP packets
+    OmUdp udp = OmUdp(kLocalPort);
+//    WiFiUDP udp; // the connection
     int timeZone; // offset the hour reported by this much.
     bool wifiAvailable;
     const char *timeUrl = 0;
@@ -167,6 +170,7 @@ private:
 
     static OmNtp *lastNtpBegun; // handy global of if instance exists.
 public:
+    /*! client is public field so you can use it for URL queries too. */
     WiFiClient client; // shared, for sending requests
 };
 #endif //NOT_ARDUINO

@@ -1,5 +1,7 @@
 #include "OmEspHelpers.h"
 
+#ifndef NOT_ARDUINO
+
 #ifndef __OmEta__
 #define __OmEta__
 
@@ -10,6 +12,7 @@
 #include <ESP8266WebServer.h>
 #include <Updater.h>
 #include "OmWebPages.h"
+#include "OmWebServer.h"
 
 #define _ESPWEBSERVER ESP8266WebServer
 #endif
@@ -109,3 +112,5 @@ class OmOtaClass
 extern OmOtaClass OmOta;
 
 #endif // __OmEta__
+
+#endif

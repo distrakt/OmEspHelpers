@@ -60,13 +60,19 @@ static uint8_t *putInt(uint32_t value, int length, uint8_t *data)
 
 OmEepromClass::OmEepromClass()
 {
-    this->signature = "ee";
-    this->signatureSize = (int)strlen(this->signature) + 1;
     OmEepromClass::active = true;
 }
 
 OmEepromField *OmEepromClass::addField(const char *fieldName, EOmEepromFieldType type, uint8_t length, int omeFlags, const char *label)
 {
+    // dont add a field twice
+    for(OmEepromField &field : this->fields)
+        if(omStringEqual(fieldName, field.name))
+        {
+            OMLOG("%s already exists", fieldName);
+            return NULL;
+        }
+
     OmEepromField field;
     field.name = fieldName;
     field.type = type;
@@ -80,8 +86,6 @@ OmEepromField *OmEepromClass::addField(const char *fieldName, EOmEepromFieldType
 void OmEepromClass::end()
 {
     this->didBegin = false;
-    this->signature = "";
-    this->signatureSize = (int)strlen(this->signature) + 1;
     this->fields.clear();
     free(this->data);
     this->data = NULL;
@@ -90,7 +94,7 @@ void OmEepromClass::end()
 
 void OmEepromClass::begin(__attribute__((unused)) const char *signature)
 {
-    DUMPSTATE("begin");
+    DUMPSTATE("beforeBegin");
     if(this->didBegin)
     {
         OMERR("already did begin");
@@ -145,7 +149,17 @@ void OmEepromClass::begin(__attribute__((unused)) const char *signature)
     this->didBegin = true;
 
     // NOW, we walk the actual EEPROM and pull out fields where we can, to populate in-memory.
-    EEPROM.begin(4);
+    // Memory is precious on 8266, so we arbitrarily choose 512 (of max 4096) to claim here.
+    // Could make it a parameter in future. The full 4096 caused memory-frailty
+    // crashes on omino theatre lamps. :-/ dvb 2023-03-17
+
+    // 2024-01-23 conditionally bigger
+#ifdef ARDUINO_ARCH_ESP8266
+    const int espEepromSize = 512;
+#else
+    const int espEepromSize = 4096; // bigger for esp32 and emulated
+#endif
+    EEPROM.begin(espEepromSize);
 #define EER(_ix) ((uint8_t)EEPROM.read(_ix))
     if(EER(0) != 0x23 || EER(1) != 0x42)
         goto doneReadingEeprom;
@@ -155,7 +169,6 @@ void OmEepromClass::begin(__attribute__((unused)) const char *signature)
         int eepromLength = EER(2) + 0x100 * EER(3);
         if(eepromLength < 0 || eepromLength >= 0x1000)
             goto doneReadingEeprom;
-        EEPROM.begin(eepromLength);
         int ix = 4;
     readNextEepromField:
 #define EIX(_var) if(ix >= eepromLength) goto doneReadingEeprom; _var = EER(ix); ix++;
@@ -197,7 +210,9 @@ void OmEepromClass::begin(__attribute__((unused)) const char *signature)
             for(int vx = 0; vx < size; vx++)
             {
                 EIX(uint8_t byte);
-                this->set(fieldName.c_str(), vx, 1, &byte);
+                bool did = this->set(fieldName.c_str(), vx, 1, &byte);
+                if(!did)
+                    break; // quit trying on failed byte.
             }
         }
         else
@@ -209,8 +224,9 @@ doneReadingEeprom:
     // We've walked the eeprom, and pulled our data in as needed.
     // Now we know what size it should be, and we rewrite the data in this form.
     // Of course thankfully no actual writes occur if nothing has changed.
-    EEPROM.begin(this->dataSize);
     this->commit();
+    DUMPSTATE("afterBegin");
+
 }
 
 /// if string is shorter than field, zero out the rest.
@@ -232,7 +248,7 @@ void quellStringTail(OmEepromField *field, char *data)
     }
 }
 
-bool OmEepromClass::get(const char *fieldName, void *valueOut)
+bool OmEepromClass::get(const char *fieldName, void *valueOut, int valueLength)
 {
     if(!this->didBegin)
     {
@@ -243,13 +259,17 @@ bool OmEepromClass::get(const char *fieldName, void *valueOut)
     if(!field)
         return false;
     
-    memcpy(valueOut, this->data + field->offset, field->length);
+    int copyLength = field->length;
+    if(valueLength >= 0 && valueLength < copyLength)
+        copyLength = valueLength;
+
+    memcpy(valueOut, this->data + field->offset, copyLength);
     quellStringTail(field, (char *)valueOut);
     
     return true;
 }
 
-bool OmEepromClass::put(const char *fieldName, const void *value)
+bool OmEepromClass::put(const char *fieldName, const void *value, int valueLength)
 {
     if(!this->didBegin)
     {
@@ -259,8 +279,14 @@ bool OmEepromClass::put(const char *fieldName, const void *value)
     OmEepromField *field = this->findField(fieldName);
     if(!field)
         return false;
+
+    int copyLength = field->length;
+    if(valueLength >= 0 && valueLength < copyLength)
+        copyLength = valueLength;
     
-    memcpy(this->data + field->offset, value, field->length);
+    memcpy(this->data + field->offset, value, copyLength);
+    if(copyLength < field->length)
+        memset(this->data + field->offset + copyLength, 0, field->length - copyLength);
     quellStringTail(field, (char *)this->data + field->offset);
 
     // if it's a bonjour string, fix up the text.
@@ -357,14 +383,14 @@ void OmEepromClass::dumpState(const char *note)
     uint8_t dumpBuffer[128];
     char printBuffer[256];
     char *printBufferEnd = printBuffer + 240;
-    OMLOG("signature: %s", this->signature);
     OMLOG("didBegin: %d", this->didBegin);
     if(this->didBegin)
     {
-        OMLOG("data.signature[%d]: %s", this->signatureSize, this->data);
+        OMLOG("data.signature[2@0]: %02x %02x", this->data[0], this->data[1]);
+        OMLOG("data.size[2@2]: %02x %02x", this->data[2], this->data[3]);
         for(OmEepromField &f : this->fields)
         {
-            this->get(f.name, dumpBuffer);
+            this->get(f.name, dumpBuffer, sizeof(dumpBuffer));
             char *w = printBuffer;
             if(f.type == OME_TYPE_INT)
             {
@@ -390,6 +416,8 @@ void OmEepromClass::dumpState(const char *note)
 char *OmEepromClass::addString(const char *fieldName, uint8_t length, int omeFlags, const char *label)
 {
     OmEepromField *f = this->addField(fieldName, OME_TYPE_STRING, length, omeFlags, label);
+    if(!f)
+        return NULL;
     char *result = (char *)(this->data + f->offset);
     return result;
 }
@@ -407,25 +435,31 @@ void OmEepromClass::addBytes(const char *fieldName, uint8_t length, int omeFlags
 int8_t *OmEepromClass::addInt8(const char *fieldName, int omeFlags, const char *label)
 {
     OmEepromField *f = this->addField(fieldName, OME_TYPE_INT, 1, omeFlags, label);
+    if(!f)
+        return NULL;
     int8_t *result = (int8_t *)(this->data + f->offset);
     return result;
 }
 int16_t *OmEepromClass::addInt16(const char *fieldName, int omeFlags, const char *label)
 {
     OmEepromField *f = this->addField(fieldName, OME_TYPE_INT, 2, omeFlags, label);
+    if(!f)
+        return NULL;
     int16_t *result = (int16_t *)(this->data + f->offset);
     return result;
 }
 int32_t *OmEepromClass::addInt32(const char *fieldName, int omeFlags, const char *label)
 {
     OmEepromField *f = this->addField(fieldName, OME_TYPE_INT, 4, omeFlags, label);
+    if(!f)
+        return NULL;
     int32_t *result = (int32_t *)(this->data + f->offset);
     return result;
 }
 
 void OmEepromClass::set(const char *fieldName, String stringValue)
 {
-    this->put(fieldName, stringValue.c_str());
+    this->put(fieldName, stringValue.c_str(), stringValue.length());
 }
 void OmEepromClass::set(const char *fieldName, int32_t intValue)
 {
@@ -491,7 +525,7 @@ int OmEepromClass::getInt(const char *fieldName)
     return i;
 }
 
-void OmEepromClass::set(const char *fieldName, int first, int count, uint8_t *bytes)
+bool OmEepromClass::set(const char *fieldName, int first, int count, uint8_t *bytes)
 {
     OmEepromField *f = this->findField(fieldName);
     if(f && f->type == OME_TYPE_BYTES)
@@ -503,7 +537,9 @@ void OmEepromClass::set(const char *fieldName, int first, int count, uint8_t *by
             this->data[f->offset + first] = *bytes++;
             first++;
         }
+        return true;
     }
+    return false; // no such field
 }
 void OmEepromClass::getBytes(const char *fieldName, int first, int count, uint8_t *bytes)
 {
@@ -537,10 +573,6 @@ int OmEepromClass::getFieldCount()
     return (int)this->fields.size();
 }
 
-const char *OmEepromClass::getSignature()
-{
-    return this->signature;
-}
 int OmEepromClass::getDataSize()
 {
     return this->dataSize;
@@ -583,7 +615,7 @@ void OmEepromClass::setString(const char *fieldName, String value)
             }
 
             case OME_TYPE_STRING:
-                this->put(fieldName, value.c_str());
+                this->put(fieldName, value.c_str(), (int)value.length());
                 break;
 
             default:
