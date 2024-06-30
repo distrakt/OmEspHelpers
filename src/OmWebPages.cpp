@@ -1169,6 +1169,7 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
             w.addContentF(    "accessPoint: %s\n", ri->ap);
         else
             w.addContentF(    "wifiNetwork: %s\n", ri->ssid);
+        w.addContentF(    "wifiRssi:    %d\n", WiFi.RSSI());
     }
     if(OmNtp::ntp())
     {

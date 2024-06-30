@@ -20,6 +20,8 @@
 #ifndef __OmLog__
 #define __OmLog__
 
+#include <stdint.h>
+#include <stdlib.h>
 // just for IPAddress type.
 #ifdef ARDUINO_ARCH_ESP8266
 #include <ESP8266WiFi.h>
@@ -43,6 +45,16 @@ class OmLog
 {
 public:
     static void logS(const char *file, int line, char ch, const char *format, ...);
+
+    static void setBufferSize(uint32_t bufferSize);
+    static void clear();
+    static const char *getBufferA();
+    static const char *getBufferB();
+
+    static uint32_t bufferSize;
+    static uint32_t bufferW;
+    static char *buffer;
+
 };
 
 #endif // __OmLog__

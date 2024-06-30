@@ -96,11 +96,12 @@ public:
         int t = (int)millis();
         int tS = t / 1000;
         int tH = (t / 10) % 100;
-        Serial.printf("%4d.%02d (*) OmWebServer.%d: ", tS, tH, this->port);
-        Serial.print(s);
-        int k = (int)strlen(s);
-        if(s[k - 1] != '\n')
-            Serial.print('\n');
+//        Serial.printf("%4d.%02d (*) OmWebServer.%d: ", tS, tH, this->port);
+//        Serial.print(s);
+        OMLOG("%4d.%02d (*) OmWebServer.%d: %s", tS, tH, this->port, s);
+//        int k = (int)strlen(s);
+//        if(s[k - 1] != '\n')
+//            Serial.print('\n');
     }
 };
 
@@ -196,17 +197,17 @@ void OmWebServer::maybeStatusCallback(bool trying, bool failure, bool success)
     const char *ssid = this->getSsid();
     
     if(trying)
-        this->p->printf("Attempting to join wifi network \"%s\"\n", ssid);
+        this->p->printf("Attempting to join wifi network \"%s\"", ssid);
     if(failure)
-        this->p->printf("Failed to join wifi network \"%s\"\n", ssid);
+        this->p->printf("Failed to join wifi network \"%s\"", ssid);
     if(success)
     {
-        this->p->printf("Joined wifi network \"%s\"\n", ssid);
+        this->p->printf("Joined wifi network \"%s\"", ssid);
 
         this->p->printf("-----------------------------------");
-        this->p->printf("Accessible at http://%s:%d\n", omIpToString(this->getIp()), this->getPort());
+        this->p->printf("Accessible at http://%s:%d", omIpToString(this->getIp()), this->getPort());
         if(this->p->bonjourName.length() > 0)
-            this->p->printf("http://%s.local\n", this->p->bonjourName.c_str());
+            this->p->printf("http://%s.local", this->p->bonjourName.c_str());
     }
 
     // tell any UDP handlers
@@ -244,7 +245,7 @@ void OmWebServer::initiateConnectionTry(String wifi, String password)
     WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
     WiFi.begin(wifi.c_str(), password.c_str());
-    this->p->printf("ssid:%s[%d] password:%s[%d]\n", wifi.c_str(), (int)wifi.length(), password.c_str(), (int)password.length());
+    this->p->printf("ssid:%s[%d] password:%s[%d]", wifi.c_str(), (int)wifi.length(), password.c_str(), (int)password.length());
     this->p->ssid = wifi;
 
     this->p->state = OWS_CONNECTING_TO_WIFI;
@@ -254,7 +255,7 @@ void OmWebServer::initiateConnectionTry(String wifi, String password)
 
 void OmWebServer::owsBegin()
 {
-    this->p->printf("On port %d\n", this->p->port);
+    this->p->printf("On port %d", this->p->port);
 
     WiFi.persistent(false);
     WiFi.disconnect();
@@ -279,7 +280,7 @@ void OmWebServer::owsBegin()
         else
         {
             this->p->state = OWS_NO_WIFIS;
-            this->p->printf("No wifis. Try omWebServer->addWifi(ssid, password); or ->setAccessPoint(ssid, password);\n");
+            this->p->printf("No wifis. Try omWebServer->addWifi(ssid, password); or ->setAccessPoint(ssid, password);");
         }
         return;
     }
@@ -495,7 +496,7 @@ int OmWebServer::tick()
     if(wifiStatus != this->p->lastWifiStatus)
     {
         this->p->lastWifiStatus = wifiStatus;
-        this->p->printf("Wifi status became: %d:%s\n", wifiStatus, OmWebServer::statusString(wifiStatus));
+        this->p->printf("Wifi status became: %d:%s", wifiStatus, OmWebServer::statusString(wifiStatus));
     }
     
     switch(this->p->state)
@@ -522,7 +523,7 @@ int OmWebServer::tick()
                 {
                     MDNS.begin(this->p->bonjourName.c_str());
                     MDNS.addService("http", "tcp", 80);
-                    this->p->printf("Bonjour address: http://%s.local\n", this->p->bonjourName.c_str());
+                    this->p->printf("Bonjour address: http://%s.local", this->p->bonjourName.c_str());
                 }
                 // start the server, if there isnt one.
                 if(!this->p->wifiServer)
@@ -623,6 +624,10 @@ int OmWebServer::tick()
                 WiFi.onEvent(WiFiStationDisconnected, ARDUINO_EVENT_WIFI_AP_STADISCONNECTED);
 #else
                 // and version 1.0.6 has like 50k more free space left. :-/ dvb2024
+#ifndef SYSTEM_EVENT_AP_STACONNECTED
+#define SYSTEM_EVENT_AP_STACONNECTED ARDUINO_EVENT_WIFI_AP_STACONNECTED
+#define SYSTEM_EVENT_AP_STADISCONNECTED ARDUINO_EVENT_WIFI_AP_STADISCONNECTED
+#endif
                 WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_AP_STACONNECTED);
                 WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_AP_STADISCONNECTED);
 #endif
@@ -633,13 +638,13 @@ int OmWebServer::tick()
                 if(this->p->dns)
                     this->p->dns->start(53, "*", apIp); // port 53
 
-                this->p->printf("Access Point IP Address: %s\n", omIpToString(apIp, true));
+                this->p->printf("Access Point IP Address: %s", omIpToString(apIp, true));
                 // instantiate right here, now.
                 this->p->wifiServer = new WiFiServer(this->p->port);
                 this->p->wifiServer->begin();
                 this->p->state = OWS_RUNNING;
-                this->p->printf("Access point name:     %s\n", this->p->accessPointSsid.c_str());
-                this->p->printf("Access point password: %s\n", this->p->accessPointPassword.length() ? this->p->accessPointPassword.c_str() : "<none>");
+                this->p->printf("Access point name:     %s", this->p->accessPointSsid.c_str());
+                this->p->printf("Access point password: %s", this->p->accessPointPassword.length() ? this->p->accessPointPassword.c_str() : "<none>");
                 this->p->state = OWS_AP_RUNNING;
                 this->p->accessPoint = true;
 
@@ -741,7 +746,7 @@ void OmWebServer::handleRequest(String request, WiFiClient &client)
     IPAddress remoteIp = client.remoteIP();
     if(this->p->verbose >= 2)
     {
-      this->p->printf("Request from %s:%d %s\n", omIpToString(remoteIp, true), remotePort, uriS.c_str());
+      this->p->printf("Request from %s:%d %s", omIpToString(remoteIp, true), remotePort, uriS.c_str());
     }
 
     this->p->streamToClient = true; // streaming available!
@@ -797,7 +802,7 @@ void OmWebServer::handleRequest(String request, WiFiClient &client)
     this->p->streamToClient = false;
     if(this->p->verbose >= 2)
     {
-      this->p->printf("Replying %d bytes\n", this->p->streamCount);
+      this->p->printf("Replying %d bytes", this->p->streamCount);
     }
 }
 

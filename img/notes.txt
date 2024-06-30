@@ -5,3 +5,15 @@ esp32 must be package version 1.0.6, the next one up 2.0.0 and further breaks Om
 if upload fails for missing python, try:
 sed -i -e 's/=python /=python3 /g' ~/Library/Arduino15/packages/esp32/hardware/esp32/*/platform.txt
 
+------
+2024 it was just two symbols that broke past 1.0.6
+ARDUINO_EVENT_WIFI_AP_STACONNECTED, ARDUINO_EVENT_WIFI_AP_STADISCONNECTED
+easy fix
+
+Now I find that esp32 board package 2.0 is earliest with S2 support
+and 3.0.2 _seems_ to have a memory leak, visible if I refresh _info page on omesphelpers
+2024-06-28. 3 weeks post ginger. sad.
+2.0 -- no leak
+2.0.17 -- seems no leak
+3.0.0
+3.0.2 -- leak.
