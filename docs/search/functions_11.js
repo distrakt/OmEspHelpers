@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['wifistatus_278',['wifiStatus',['../class_om_udp.html#a40349371df4e7c565960b17077390af8',1,'OmUdp']]]
+  ['uptimemillis_0',['uptimeMillis',['../class_om_web_server.html#a3b0b49ea906b5c2d7f81ec4d5d371c54',1,'OmWebServer']]]
 ];

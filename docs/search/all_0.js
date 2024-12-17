@@ -38,5 +38,6 @@ var searchData=
   ['addwificonfigform_35',['addWifiConfigForm',['../class_om_ota_class.html#aef7b62993fefe65223c199e4a608005e',1,'OmOtaClass']]],
   ['allowfooter_36',['allowFooter',['../class_om_web_pages.html#ae953d08159a39297c292881d092e1b85',1,'OmWebPages']]],
   ['allowheader_37',['allowHeader',['../class_om_web_pages.html#a5f74acf1c37385445ce4ed72e74b24f0',1,'OmWebPages']]],
-  ['arrivalaction_38',['arrivalAction',['../class_page.html#a74ca865568bc377c507c2b212414412f',1,'Page']]]
+  ['arrivalaction_38',['arrivalAction',['../class_page.html#a74ca865568bc377c507c2b212414412f',1,'Page']]],
+  ['automata_39',['Automata',['../class_automata.html',1,'']]]
 ];
