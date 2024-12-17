@@ -1,14 +1,15 @@
 # OmEspHelpers #
 
+OmEspHelpers has been developed over nearly a decade, and provides two major catagories of functionality.
+
+1. Web Controls -- add a web front end to your ESP-based project with little code and no HTML
+1. LED -- Runs pixels or patterns on RGB Leds, with drivers for WS2812 and APA102. Using 16 bits per component, high range colors are supported on the APA102.
+
+# OmEspHelpers Web Controls #
+
 This library presents a very simple API for bringing up a web interface on your 
-*Arduino ESP8266* project. In its present form it is appropriate for:
-
-* Quick experiments
-* Beginner exercises
-* Simple projects and products
-
-If you need total flexibility and total control, this library may be too limited for you.
-But if you'd like to be freed from infinite choice, and get something running this afternoon, I think you'll be delighted!
+*Arduino ESP8266* project. It can be used for quick experiments or DIY projects.
+Rather than hand-code HTML, you define the list of pages and controls.
 
 ## Features ##
 
@@ -18,7 +19,7 @@ But if you'd like to be freed from infinite choice, and get something running th
 | Fast start          | Your main loop can be running other things, even while the initial wifi connection is established |
 | Connection management | Connection will be retried if lost |
 | Multiple WiFi credentials | You can specify a list of different WiFi credentials to try |
-| Basic UI elements   | With one line of code each, you can add buttons, sliders, or page links |
+| Basic UI elements   | With one line of code each, you can add buttons, sliders, page links, and other controls |
 | Custom HTML         | You can write a callback to provide custom content, such as a status page |
 | No stored pages     | To simplify development, you write only your sketch, no handwritten HTML pages |
 | Mobile ready        | The generated HTML works well on your phone, and is fine on desktop. |
@@ -155,3 +156,8 @@ setup() {
   s.addWifi(WIFI_SSID, WIFI_PASSWORD);
 }
 ```
+
+# OmEspHelpers LED #
+
+Examples are provided showing how to use the LED portion of the library.
+
