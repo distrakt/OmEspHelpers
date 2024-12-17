@@ -9,6 +9,9 @@
 #ifndef __OmUtil__
 #define __OmUtil__
 
+#include <string>
+#include <vector>
+
 bool omStringEqual(const char *s1, const char *s2, int maxLen = 100);
 /*! @brief Represent a number of milliseconds as a duration string, good for "uptime" displays. 1d2h3m4s like.
  result is in a shared static char[], so use or copy soon.
@@ -31,6 +34,12 @@ void omHsvToRgb(unsigned char *hsvIn, unsigned char *rgbOut);
 void omRgbToHsv(unsigned char *rgbIn, unsigned char *hsvOut);
 int omMigrate(int x, int dest, int delta);
 int omPinRange(int x, int low, int high);
+std::vector<std::string> omSplit(std::string s, std::string breaker, bool doStringTrim = true, bool discardEmpties = true);
+bool omContains(std::string s, std::string middle);
+bool omStartsWith(std::string s, std::string starter);
+std::string ssnprintf(const char *fmt, va_list v);
+std::string ssprintf(std::string fmt, ...);
+std::string ssprintf(const char *fmt, ...);
 
 
 

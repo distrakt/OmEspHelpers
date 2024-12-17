@@ -16,7 +16,7 @@ static long millis()
     return 0;
 }
 #else
-#define printf Serial.printf
+//#define printf Serial.printf
 #endif
 
 const char *ipAddressToString(IPAddress ip)
@@ -25,8 +25,7 @@ const char *ipAddressToString(IPAddress ip)
     return omIpToString(localIpInt);
 }
 
-/* static method */
-void OmLog::logS(const char *file, int line, char ch, const char *format, ...)
+void OmLogClass::logS(const char *file, int line, char ch, const char *format, ...)
 {
     va_list args;
     va_start (args, format);
@@ -49,17 +48,17 @@ void OmLog::logS(const char *file, int line, char ch, const char *format, ...)
         }
     }
 
-    printf("%4d.%02d (%c) %s.%d: ", tS, tH, ch, file + fileStringOffset, line);
-    printf("%s", s);
+    this->printf("%4d.%02d (%c) %s.%d: ", tS, tH, ch, file + fileStringOffset, line);
+    this->printf("%s", s);
 
-    if(OmLog::buffer)
+    if(this->buffer && this->bufferEnabled)
     {
         // we write at most half the buffer size.
         // when buffer passes half full we swap the halves
         // so we're never snprint-ing across the end loop.
-        OmLog::bufferW += snprintf(OmLog::buffer + OmLog::bufferW, OmLog::bufferSize / 2,
+        this->bufferW += snprintf(this->buffer + this->bufferW, this->bufferSize / 2,
                                    "%4d.%02d (%c) %s.%d: ", tS, tH, ch, file + fileStringOffset, line);
-        OmLog::bufferW += snprintf(OmLog::buffer + OmLog::bufferW, OmLog::bufferSize / 2,
+        this->bufferW += snprintf(this->buffer + this->bufferW, this->bufferSize / 2,
                                    "%s", s);
     }
     
@@ -67,72 +66,103 @@ void OmLog::logS(const char *file, int line, char ch, const char *format, ...)
     int len = (int)strlen(format);
     if(len == 0 || format[len - 1] > 13)
     {
-        printf("%s", "\n");
-        if(OmLog::buffer)
-            OmLog::buffer[OmLog::bufferW++] = '\n';
+        this->printf("%s", "\n");
+        if(this->buffer && this->bufferEnabled)
+            this->buffer[this->bufferW++] = '\n';
     }
 
     // double-ensure that it's zero terminated
-    if(OmLog::buffer)
-        OmLog::buffer[OmLog::bufferW] = 0;
+    if(this->buffer)
+        this->buffer[this->bufferW] = 0;
 
     // lastly, if we're printing in buffer, swap the halves when time.
-    if(OmLog::buffer)
+    if(this->buffer)
     {
-        uint32_t half = OmLog::bufferSize / 2;
-        if(OmLog::bufferW > half)
+        uint32_t half = this->bufferSize / 2;
+        if(this->bufferW > half)
         {
             for(uint32_t ix = 0; ix < half; ix++)
             {
-                char c = OmLog::buffer[ix];
-                OmLog::buffer[ix] = OmLog::buffer[ix + half];
-                OmLog::buffer[ix + half] = c;
+                char c = this->buffer[ix];
+                this->buffer[ix] = this->buffer[ix + half];
+                this->buffer[ix + half] = c;
             }
-            OmLog::bufferW -= half;
+            this->bufferW -= half;
         }
     }
-
-
 }
 
-void OmLog::setBufferSize(uint32_t bufferSize)
+void OmLogClass::setBufferSize(uint32_t bufferSize)
 {
-    if(OmLog::buffer)
+    if(this->buffer)
     {
-        free((void *)OmLog::buffer);
-        OmLog::buffer = NULL;
+        free((void *)this->buffer);
+        this->buffer = NULL;
     }
-    OmLog::bufferSize = bufferSize;
+    this->bufferSize = bufferSize;
     if(bufferSize)
-        OmLog::buffer = (char *)calloc(bufferSize+1, 1); // extra end byte is always 0.
+        this->buffer = (char *)calloc(bufferSize+1, 1); // extra end byte is always 0.
 }
 
-void OmLog::clear()
+// only affects the in-memory buffer writing; serial not affected by this.
+bool OmLogClass::setBufferEnabled(bool enabled)
+{
+    bool result = this->bufferEnabled;
+    this->bufferEnabled = enabled;
+    return result;
+}
+
+void OmLogClass::clear()
 {
 
 }
 
-const char *OmLog::getBufferA()
+const char *OmLogClass::getBufferA()
 {
     // first buffer starts just past the current write pointer, and can be zero-len.
     // the writer pointer just finished with null terminator write there
-    if(OmLog::buffer)
-        return OmLog::buffer + OmLog::bufferW + 1;
+    if(this->buffer)
+        return this->buffer + this->bufferW + 1;
     else
         return "";
 }
 
-const char *OmLog::getBufferB()
+const char *OmLogClass::getBufferB()
 {
     // second buffer starts at beginning of buffer, up to the write pointer
-    if(OmLog::buffer)
-        return OmLog::buffer;
+    if(this->buffer)
+        return this->buffer;
     else
         return "";
 }
 
+void OmLogClass::setVPrintf(OmVPrintfHandler vPrintfHandler)
+{
+    this->vPrintfHandler = vPrintfHandler;
+}
+size_t OmLogClass::printf(const char *format, ...)
+{
+    va_list arg;
+    va_start(arg, format);
+    size_t result = 0;
+
+    if(this->vPrintfHandler)
+    {
+        result = this->vPrintfHandler(format, arg);
+    }
+    else
+    {
+        result = vprintf(format, arg);
+    }
+
+    va_end(arg);
+    return result;
+}
 
 
-uint32_t OmLog::bufferSize = 0;
-uint32_t OmLog::bufferW = 0;
-char *OmLog::buffer = 0;
+
+//uint32_t OmLogClass::bufferSize = 0;
+//uint32_t OmLogClass::bufferW = 0;
+//char *OmLogClass::buffer = 0;
+
+OmLogClass OmLog;

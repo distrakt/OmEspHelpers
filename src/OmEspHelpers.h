@@ -18,5 +18,7 @@
 #include "OmBmp.h"
 #include "OmEeprom.h"
 #include "OmOta.h"
+#include "OmPrintfStream.h"
+#include "OmLedHelpers.h"
 
 #endif

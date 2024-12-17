@@ -678,7 +678,8 @@ void infoHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
 void statusXmlProc(OmXmlWriter &w, OmWebRequest &request, int ref1, void *ref2)
 {
     OmWebPages *owp = (OmWebPages *)ref2;
-    owp->renderStatusXml(w);
+    const char *text = request.getValue("text");
+    owp->renderStatusXml(w, text != NULL);
 }
 
 void defaultFooterHtmlProc(OmXmlWriter &w, int ref1, void *ref2)
@@ -972,9 +973,12 @@ bool OmWebPages::doAction(const char *pageName, const char *itemId)
     return false;
 }
 
-void OmWebPages::renderStatusXml(OmXmlWriter &w)
+void OmWebPages::renderStatusXml(OmXmlWriter &w, bool asText)
 {
-    this->renderHttpResponseHeader("text/xml", 200);
+    if(asText)
+        this->renderHttpResponseHeader("text/plain", 200);
+    else
+        this->renderHttpResponseHeader("text/xml", 200);
 
     /*
     // alternatively, plain text so iphone chrome can show it
@@ -1020,6 +1024,9 @@ void OmWebPages::renderStatusXml(OmXmlWriter &w)
     w.addAttributeF("built", "%s %s", this->__date__, this->__time__);
     if(this->__file__)
         w.addAttributeF("file", "%s", this->__file__);
+#ifdef ARDUINO_BOARD
+    w.addAttributeF("board", "%s", ARDUINO_BOARD);
+#endif
 
 #ifndef NOT_ARDUINO
     {
@@ -1129,20 +1136,31 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
 #ifndef NOT_ARDUINO
     w.addContentF("uptime:      %s\n", omTime(now));
 #endif
+
 #ifdef ARDUINO_ARCH_ESP8266
     w.addContentF("freeBytes:   %d\n", system_get_free_heap_size());
+#endif
+#ifdef ARDUINO_ARCH_ESP32
+    w.addContentF("freeBytes:   %d\n", esp_get_free_heap_size());
+#endif
+
+#ifdef ARDUINO_BOARD
+    w.addContentF("board:       %s\n", ARDUINO_BOARD);
+#endif
+
+#ifdef ARDUINO_ARCH_ESP8266
     w.addContentF("chipId:      %08x '8266 @%d\n", omGetChipId(), F_CPU / 1000000);
     w.addContentF("systemSdk:   %s/%d\n", system_get_sdk_version(), system_get_boot_version());
 #endif
 #ifdef ARDUINO_ARCH_ESP32
     // todo: try uint64_t chipid = ESP.getEfuseMac(); as per https://arduino.stackexchange.com/questions/58677/get-esp32-chip-id-into-a-string-variable-arduino-c-newbie-here
-    w.addContentF("freeBytes:   %d\n", esp_get_free_heap_size());
     w.addContentF("chipId:      %08x '32 @%d\n", omGetChipId(), F_CPU / 1000000);
 #endif
 #ifdef NOT_ARDUINO
     w.addContentF("what:        Not Arduino\n");
     w.addContentF("chipId:      %08x 'test\n", omGetChipId());
 #endif
+
 #ifndef NOT_ARDUINO
     if(this->ri)
     {
@@ -1160,7 +1178,7 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
             w.addContentF("bonjour:     ");
             w.beginElement("a");
             w.addAttributeF("href", "http://%s.local/",ri->bonjourName);
-            w.addContentF("%s:local",ri->bonjourName);
+            w.addContentF("%s",ri->bonjourName);
             w.endElement("a");
             w.addContent("\n");
         }
@@ -1200,6 +1218,11 @@ void OmWebPages::renderInfo(OmXmlWriter &w)
     w.addContentF("built:       %s %s\n", this->__date__, this->__time__);
     if(this->__file__)
         w.addContentF("file:%s\n", this->__file__);
+
+    w.beginElement("a");
+    w.addAttribute("href", "/_status?text=yes");
+    w.addContent("…");
+    w.endElement();
 
     w.endElement();
 }

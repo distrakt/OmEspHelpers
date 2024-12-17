@@ -33,28 +33,42 @@
 typedef unsigned char IPAddress[4];
 #endif
 
+#include <stdarg.h>
+
 /*! @brief A formatted printing helper. It adds the file and line number to the output. */
-#define OMLOG(_args...) OmLog::logS(__FILE__, __LINE__, '*', _args)
+#define OMLOG(_args...) OmLog.logS(__FILE__, __LINE__, '*', _args)
 /*! @brief A formatted printing helper. Like OMLOG, but has E for error. */
-#define OMERR(_args...) OmLog::logS(__FILE__, __LINE__, 'E', _args)
+#define OMERR(_args...) OmLog.logS(__FILE__, __LINE__, 'E', _args)
 
 /*! @brief Utility to convert an ESP8266 ip address to a printable string. */
 const char *ipAddressToString(IPAddress ip);
 
-class OmLog
+/// all of OmEspHelpers printing goes through here
+typedef size_t (* OmVPrintfHandler)(const char *format, va_list args);
+
+
+class OmLogClass
 {
 public:
-    static void logS(const char *file, int line, char ch, const char *format, ...);
+    uint32_t bufferSize = 0;
+    uint32_t bufferW = 0;
+    char *buffer = NULL;
+    OmVPrintfHandler vPrintfHandler = NULL;
 
-    static void setBufferSize(uint32_t bufferSize);
-    static void clear();
-    static const char *getBufferA();
-    static const char *getBufferB();
+    void logS(const char *file, int line, char ch, const char *format, ...);
 
-    static uint32_t bufferSize;
-    static uint32_t bufferW;
-    static char *buffer;
+    void setBufferSize(uint32_t bufferSize);
+    void clear();
+    const char *getBufferA();
+    const char *getBufferB();
 
+    void setVPrintf(OmVPrintfHandler vPrintfHandler);
+    size_t printf(const char *format, ...);
+
+    bool bufferEnabled = true;
+    bool setBufferEnabled(bool enabled);
 };
+
+extern OmLogClass OmLog;
 
 #endif // __OmLog__

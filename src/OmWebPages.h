@@ -268,7 +268,7 @@ public:
     // | But you could use them in a urlHandler.
     // |
     void renderInfo(OmXmlWriter &w); // builtin "_info" page
-    void renderStatusXml(OmXmlWriter &w); // builtin "_status" url
+    void renderStatusXml(OmXmlWriter &w, bool asText); // builtin "_status" url
 
     /*! @brief in a OmUrlHandlerProc, set the mimetype (like "text/plain") and response code (200 is OK) */
     void renderHttpResponseHeader(const char *contentType, int response);

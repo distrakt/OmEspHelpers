@@ -1,3 +1,6 @@
+#ifndef __OmBmp__
+#define __OmBmp__
+
 #include <stdint.h>
 #include "OmXmlWriter.h"
 
@@ -344,3 +347,5 @@ public:
         return result;
     }
 };
+
+#endif // __OmBmp__

@@ -1,3 +1,6 @@
+#ifndef __OmPrintfStream__
+#define __OmPrintfStream__
+
 #include "OmXmlWriter.h"
 
 
@@ -33,3 +36,5 @@ public:
     static bool putF(OmIByteStream *consumer, const char *fmt, ...);
     static bool putVF(OmIByteStream *consumer, const char *fmt, VA_LIST_ARG);
 };
+
+#endif // __OmPrintfStream__

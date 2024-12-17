@@ -379,11 +379,6 @@ void OmOtaClass::rebootToOta()
 //    ESP.restart();
 }
 
-static int ir(int low, int high)
-{
-    return rand() % (high - low) + low;
-}
-
 void OmOtaClass::addUpdateControl()
 {
     // enter upload mode

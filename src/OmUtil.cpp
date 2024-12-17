@@ -9,6 +9,8 @@
 #include "OmUtil.h"
 #include <stdio.h>
 #include <string.h>
+#include <string>
+#include <vector>
 
 bool omStringEqual(const char *s1, const char *s2, int maxLen)
 {
@@ -278,4 +280,135 @@ int omPinRange(int x, int low, int high)
     else if(x >= high)
         x = high - 1;
     return x;
+}
+
+std::string omTrim(std::string s)
+{
+    int len = (int)s.length();
+    int f = 0;
+    while(f < len)
+    {
+        if(s[f] <= ' ')
+            f++;
+        else
+            break;
+    }
+    int b = len;
+    while(--b > f)
+    {
+        if(s[b] > ' ')
+            break;
+    }
+    if(f > 0 || b < (len - 1))
+        return s.substr(f, b - f + 1);
+    else
+        return s;
+}
+
+static bool submatch(std::string s, int offset, std::string substring)
+{
+    if(offset + substring.length() > s.length())
+        return false;
+    std::string sSubstring = s.substr(offset, substring.length());
+    bool result = sSubstring == substring;
+    return result;
+}
+
+std::vector<std::string> omSplit(std::string s, std::string breaker, bool doStringTrim, bool discardEmpties)
+{
+    std::vector<std::string> result;
+    int len = (int)s.length();
+    // but still, if len is zero, return vector 0.
+    if(len == 0)
+        return result;
+
+    int last = 0;
+    for(int w = 0; w < len; w++)
+    {
+        if(submatch(s, w, breaker))
+        {
+            if(w > last || !discardEmpties) // skip empty lengths?
+            {
+                std::string part = s.substr(last, w - last);
+                if(doStringTrim)
+                    part = omTrim(part);
+                result.push_back(part);
+            }
+            w += breaker.length();
+            last = w;
+            w--; // loop will++ it.
+        }
+    }
+
+    std::string lastPart = s.substr(last);
+    if(lastPart.length() || !discardEmpties)
+    {
+        if(doStringTrim)
+            lastPart = omTrim(lastPart);
+        result.push_back(lastPart);
+    }
+    return result;
+}
+
+bool omContains(std::string s, std::string middle)
+{
+    std::size_t found = s.find(middle);
+    bool result = found!=std::string::npos;
+    return result;
+}
+
+
+
+bool omStartsWith(std::string s, std::string starter)
+{
+    for(int i = 0; i < starter.length(); i++)
+    {
+        if(i > s.length())
+            return false;
+        if(s[i] != starter[i])
+            return false;
+    }
+    return true;
+}
+
+
+std::string ssnprintf(const char *fmt, va_list v)
+{
+    va_list v2; // for the retry.
+    va_copy(v2, v);
+
+#define SSNPRINTFSIZE 512
+    char b[SSNPRINTFSIZE];
+    int k = vsnprintf(b, sizeof(b), fmt, v);
+    if(k < SSNPRINTFSIZE)
+    {
+        // it fit on first try.
+        std::string s = b;
+        return s;
+    }
+    else
+    {
+        // did not fit our guess-buffer. Go bigger.
+        char *b2 = (char *) calloc(k + 10, 1);
+        vsnprintf(b2, k + 1, fmt, v2);
+        std::string s = b2;
+        free(b2);
+        return s;
+    }
+}
+
+std::string ssprintf(std::string fmt, ...)
+{
+    va_list v;
+    va_start(v,fmt);
+    std::string s = ssnprintf(fmt.c_str(), v);
+    return s;
+}
+
+std::string ssprintf(const char *fmt, ...)
+{
+    va_list v;
+    va_start(v,fmt);
+    std::string s = ssnprintf(fmt, v);
+    return s;
 }

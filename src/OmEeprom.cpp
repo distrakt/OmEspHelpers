@@ -63,7 +63,7 @@ OmEepromClass::OmEepromClass()
     OmEepromClass::active = true;
 }
 
-OmEepromField *OmEepromClass::addField(const char *fieldName, EOmEepromFieldType type, uint8_t length, int omeFlags, const char *label)
+OmEepromField *OmEepromClass::addField(const char *fieldName, EOmEepromFieldType type, uint16_t length, int omeFlags, const char *label)
 {
     // dont add a field twice
     for(OmEepromField &field : this->fields)
@@ -135,8 +135,11 @@ void OmEepromClass::begin(__attribute__((unused)) const char *signature)
 
     for(OmEepromField &field : this->fields)
     {
-        *w++ = field.type;
-        *w++ = field.length;
+        // make modified bytes for type & length...
+        uint8_t bType = (field.type & 0x0f) | ((field.length >> 4) & 0xf0);
+        uint8_t bLength = field.length & 0x00ff;
+        *w++ = bType;
+        *w++ = bLength;
         int nameLength = (int)strlen(field.name) + 1;
         memcpy(w, field.name, nameLength);
         w += nameLength;
@@ -155,7 +158,7 @@ void OmEepromClass::begin(__attribute__((unused)) const char *signature)
 
     // 2024-01-23 conditionally bigger
 #ifdef ARDUINO_ARCH_ESP8266
-    const int espEepromSize = 512;
+    const int espEepromSize = 600;
 #else
     const int espEepromSize = 4096; // bigger for esp32 and emulated
 #endif
@@ -174,6 +177,14 @@ void OmEepromClass::begin(__attribute__((unused)) const char *signature)
 #define EIX(_var) if(ix >= eepromLength) goto doneReadingEeprom; _var = EER(ix); ix++;
         EIX(int type)
         EIX(int size)
+
+        {
+            // 2024-10-14 strip off the top four bits of type,
+            // and use to extend the size by four bits.
+            int top4 = (type & 0x00f0) >> 4;
+            type &= 0x0f;
+            size |= (top4 << 8);
+        }
         String fieldName;
         uint8_t ch;
         do {
@@ -427,9 +438,14 @@ char *OmEepromClass::addString(const char *fieldName, uint8_t length)
     return this->addString(fieldName, length, 0, NULL);
 }
 
-void OmEepromClass::addBytes(const char *fieldName, uint8_t length, int omeFlags, const char *label)
+void OmEepromClass::addBytes(const char *fieldName, int length, int omeFlags, const char *label)
 {
-    this->addField(fieldName, OME_TYPE_BYTES, length, omeFlags, label);
+    if(length > 4095)
+    {
+        OMERR("field %s %d bytes > 4095 max", fieldName, length);
+    }
+    else
+        this->addField(fieldName, OME_TYPE_BYTES, length, omeFlags, label);
 }
 
 int8_t *OmEepromClass::addInt8(const char *fieldName, int omeFlags, const char *label)

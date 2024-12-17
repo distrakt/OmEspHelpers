@@ -96,12 +96,7 @@ public:
         int t = (int)millis();
         int tS = t / 1000;
         int tH = (t / 10) % 100;
-//        Serial.printf("%4d.%02d (*) OmWebServer.%d: ", tS, tH, this->port);
-//        Serial.print(s);
         OMLOG("%4d.%02d (*) OmWebServer.%d: %s", tS, tH, this->port, s);
-//        int k = (int)strlen(s);
-//        if(s[k - 1] != '\n')
-//            Serial.print('\n');
     }
 };
 
@@ -746,7 +741,10 @@ void OmWebServer::handleRequest(String request, WiFiClient &client)
     IPAddress remoteIp = client.remoteIP();
     if(this->p->verbose >= 2)
     {
-      this->p->printf("Request from %s:%d %s", omIpToString(remoteIp, true), remotePort, uriS.c_str());
+        // but we never save to the in-memory online log. so.
+        bool wasE = OmLog.setBufferEnabled(false);
+        this->p->printf("Request from %s:%d %s", omIpToString(remoteIp, true), remotePort, uriS.c_str());
+        OmLog.setBufferEnabled(wasE);
     }
 
     this->p->streamToClient = true; // streaming available!
@@ -760,9 +758,9 @@ void OmWebServer::handleRequest(String request, WiFiClient &client)
         // require a const char * return.
         // TODO reconsider. dvb2019-11
         this->put("HTTP/1.1 200 OK\n"
-                              "Content-type:text/html\n"
-                              "Connection: close\n"
-                              "\n");
+                  "Content-type:text/html\n"
+                  "Connection: close\n"
+                  "\n");
 
         const char *response = (this->p->requestHandler)(uriS.c_str());
         this->put(response);
@@ -802,7 +800,9 @@ void OmWebServer::handleRequest(String request, WiFiClient &client)
     this->p->streamToClient = false;
     if(this->p->verbose >= 2)
     {
-      this->p->printf("Replying %d bytes", this->p->streamCount);
+        bool wasE = OmLog.setBufferEnabled(false);
+        this->p->printf("Replying %d bytes", this->p->streamCount);
+        OmLog.setBufferEnabled(wasE);
     }
 }
 

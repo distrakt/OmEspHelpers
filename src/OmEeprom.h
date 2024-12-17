@@ -12,6 +12,7 @@
 #include "Arduino.h"
 #endif
 
+/// this value gets stashed in only 4 bits of eeprom. 2024.
 typedef enum
 {
     OME_TYPE_STRING = 0,
@@ -52,7 +53,7 @@ class OmEepromClass
 public:
     OmEepromClass();
     static bool active;
-    OmEepromField *addField(const char *fieldName, EOmEepromFieldType type, uint8_t length, int omeFlags, const char *label);
+    OmEepromField *addField(const char *fieldName, EOmEepromFieldType type, uint16_t length, int omeFlags, const char *label);
 
     void begin(const char *signature = "x"); // signature is ignored.
     void end();
@@ -80,7 +81,7 @@ public:
     int16_t *addInt16(const char *fieldName, int omeFlags = 0, const char *label = NULL);
     int32_t *addInt32(const char *fieldName, int omeFlags = 0, const char *label = NULL);
 
-    void addBytes(const char *fieldName, uint8_t length, int omeFlags = 0, const char *label = NULL);
+    void addBytes(const char *fieldName, int length, int omeFlags = 0, const char *label = NULL);
 
     void set(const char *fieldName, String stringValue);
     void set(const char *fieldName, int32_t intValue);
